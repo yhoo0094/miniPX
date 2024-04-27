@@ -1,0 +1,842 @@
+@charset "UTF-8";
+/* 스타일 초기화 */
+html {
+  font-family: sans-serif;
+  line-height: 1.15;
+}
+
+body, html, div {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+textarea{
+	resize: none;
+}
+
+.wrap {
+    width: 100vw;
+    height: 100vh;
+    min-width: 600px;
+}
+
+.dataTables_scrollHeadInner {
+    background-color: #c3c3c3;
+}
+
+.dataTables_wrapper th, .dataTables_wrapper td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/*에디터 가로 길이 제한*/
+.form-control, .form-control p{
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    word-break: break-all;
+}
+
+.editor-container {
+    display: flex;
+	flex-direction: row;
+	flex-wrap: nowrap;
+	position: relative;
+	width: 100%;
+	justify-content: center;
+}
+
+.fixed-container {
+	overflow: auto;
+	height: 500px;
+}
+
+.byteDisplay {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    font-size: small;
+    color: gray;
+}
+
+.remove-a {
+	text-decoration: none;
+	color: black;
+	margin: 0;	
+}
+
+color-black{
+	color: black;
+}
+
+a:hover {
+    color: black;
+}
+
+*{
+	margin: 0;
+	padding: 0;
+}
+
+/* 스크롤바 시작*/
+/*webkit 브라우저*/
+::-webkit-scrollbar {	/* 스크롤바 배경 */
+    width: 10px;  
+    background: #c0c0c0; 
+}
+
+::-webkit-scrollbar-thumb {	/* 스크롤바 막대 */
+	background: #404036; 
+    border-radius: 10px;
+}
+/* 스크롤바 끝*/
+
+input[type = 'date']{
+	display: inline-block;
+    width: 140px;
+}
+
+:root {
+  --header-heigth: 100px;
+  --footer-heigth: 100px;
+  --right-width: 150px;
+  --left-width: 150px;  
+  --navMnu-color: #692626;
+  --navMnu-backGround: #ccc;
+  --hpp-color:rgb(255 224 112);
+}
+
+.modal, .blocker{
+	z-index: 100;
+}
+
+.mainsection{
+	position: relative;
+	width: 100vw;
+	height: 100vh;
+}
+
+.content {
+	min-height: calc(100vh - var(--header-heigth) - var(--footer-heigth));
+	display: flex;
+}
+
+#leftCon{
+	flex: 0 0 var(--left-width); /* flex-grow, flex-shrink, flex-basis */
+	padding: 20px;
+	line-height: 2;
+   	font-weight: bold;
+}
+
+#centerCon{
+	padding: 15px;
+    flex: 10% 1 0;
+    width: 0;
+}
+
+#rightCon{
+	flex: 0 0 var(--right-width); /* flex-grow, flex-shrink, flex-basis */
+	text-align: center;
+    display: flex;             /* Flexbox 레이아웃 사용 */
+    justify-content: center;   /* 수평 중앙 정렬 */
+    align-items: center;       /* 수직 중앙 정렬 */
+}
+
+.selectedRow{
+	background-color: red;
+}
+
+.form-control{
+	display: inline-block;
+}
+
+.form-control[readonly]{
+    background-color: #fff;
+}
+
+.form-control[readonly].gray{
+    background-color: #e9ecef;
+}
+
+.fadeIn {
+  animation-name: fadeIn;
+}
+
+.navMnu-color{
+/* 	color: var(--navMnu-color); */
+}
+
+/* 헤더, 사이드, 바디, 푸터 설정 시작 */
+.top {
+    top: 0;
+    position: sticky;
+    width: 100%;
+    height: var(--header-heigth);
+    background-color: #f4f8fa;
+    display: flex;
+    align-items: center;
+        box-shadow: 0px 2px 7px 0px rgba(0, 0, 0, 0.55);
+    z-index: 1;
+}
+
+.sideMnuTop{
+	font-size: 20px;
+	font-weight: 900;
+}
+
+.bannerImg{
+	width: 150px; 
+	height: 250px;
+}
+
+.bottom{
+	background-color: var(--navMnu-backGround);
+	height: var(--footer-heigth);
+	text-align: center;
+/*     position: relative; */
+/*     z-index: 1; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.bottom .devInfo{
+	color: var(--navMnu-color);
+	font-weight: 900;
+    font-size: small;
+}
+
+.devInfo{
+	margin-bottom: 10px;
+}
+
+.bottom .blank{
+	width: 10px;
+	display: inline-block;
+}
+
+/* 헤더, 사이드, 바디, 푸터 설정 끝 */
+
+.closeBtn {
+	position: absolute;
+    top: -10px;
+    right: 5px;
+    font-size: 36px;
+}
+
+/* 네비게이터 css 시작 */
+.logo-font{
+	font-family: 나눔손글씨 가람연꽃; 
+	font-size: 26px; 
+	font-weight: 900;
+    padding: 8px 16px;
+    float: left;
+    width: auto;
+    border: none;
+    display: block;
+    outline: 0;	
+    letter-spacing: 4px;
+}
+
+.navMnu{
+    padding: 4px 16px;	
+}
+
+.navDiv {
+    flex-grow: 1;
+    text-align: right;
+    height: 100%;
+    display: flex;
+    flex-direction: column; /* 내부 콘텐츠를 세로 방향으로 정렬 */
+    justify-content: flex-end;
+}
+
+.navMnuThDiv{
+  	height: 100%;
+  	list-style: none;
+}
+
+.navMnuTdDiv{
+	position: absolute; /* 절대 위치 설정 */
+    top: 100%; /* 부모 요소의 하단에 위치 */
+    left: 0; /* 부모 요소의 왼쪽 정렬 */
+    width: 100%; /* 부모 요소의 전체 너비를 차지하도록 설정 */
+	height: 100%;
+	list-style: none;
+	display: none;
+	background-color: var(--navMnu-backGround);
+	font-size: 1.0rem;
+}
+
+.loginMnuDiv{
+	font-size: 0.8rem;
+    width: 100%;
+    display: inline-block;	
+    height: 30px; /* 고정 높이 */
+    flex: 1 0 0;
+}
+
+.loginMnu{
+    padding: 5px 3px 0px 3px;
+	float: right;
+	cursor: pointer;
+	font-weight: bold;
+}
+
+.logoDiv{
+    height: 100%;
+    padding: 10px;
+}
+
+.logoImg{
+	height: 100%;
+}
+
+.navMnuDiv{
+	display: flex;	
+	align-items: center;
+    height: 60px;
+}
+
+.navMnuCol{
+	position: relative; /* 상대 위치 설정 */
+	display: flex;
+	flex-direction: column;
+	align-items: center;	
+	height: 100%;
+	font-size: 0.8rem;
+  	font-weight: 900;
+  	text-align: center;
+  	margin: 0 0.8rem;
+  	cursor: pointer;
+}
+
+.navSearchDiv{
+	display: flex;
+	flex: 1 0 0;
+	align-items: center;
+	position: relative;
+	justify-content: center;
+}
+
+.navSearchCol{
+	display: flex;
+    align-items: center;
+	width: 100%;
+    max-width: 800px;
+    position: relative;
+}
+
+.navSearchType{
+	flex: 0 0 100px;
+}
+
+.navSearchImg{
+    position: absolute;
+    right: 5px;
+    height: 2rem;
+    cursor: pointer;
+}
+
+.navImg{
+    height: 2rem;
+}
+/* 네비게이터 css 끝 */
+
+.menuNmDiv{
+	font-size: 20px;
+    padding: 5px;
+    font-weight: 900;	
+}
+
+.titleDiv{
+	font-size: 16px;
+    padding: 5px;
+    font-weight: 900;	
+}
+
+.menuPathDiv{
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 900;
+}
+
+/* 버튼 시작 */
+.table_btn_wrapper{
+    padding: 0.5em 1em;
+    float: right;
+}
+
+.modal_btn_wrapper{
+	float: right;
+	margin-top: 0.5rem
+}
+
+.right_btn_wrapper{
+	float: right;
+}
+
+.papang_btn{
+    font-weight: bold;
+    color: #0c0c0c;
+    padding: 0.15rem 0.75rem;
+    font-size: 1rem;
+    border-radius: 0.3rem;
+    border: 2px solid #0c0c0c00;
+    margin: 0 0 0 0.2rem;
+}
+
+.papang-create-btn, .papang-search-btn{
+    background-color: #ffc107;
+} 
+
+.papang-excel-btn{
+    background-color: rgb(5 148 77 / 89%);
+}   
+
+.papang-save-btn{
+	background-color: #0dcaf0;
+}
+
+.papang-transparent-btn{
+	background-color: transparent;
+}
+
+.papang-del-btn{
+	background-color: #f83b2f;
+}
+
+.papang-close-btn{
+	background-color: #8996a1;
+}
+
+table.dataTable.no-footer{
+	border-top: 1px solid #111;
+}
+/* 버튼 끝 */
+
+/* 모달 시작 */
+.modal {
+	max-width: none;
+	overflow: visible;
+}
+/* 모달 끝 */
+
+/* 테이블 시작 */
+.papang-table, .papang-search-table, .papang-info-table{
+	width: 100%;
+}
+
+.papang-table > tr{
+	line-height: 2.5;	
+}
+
+.papang-table th{
+	text-align: center;
+	padding: 2px;
+}
+
+.papang-search-table th, .papang-info-table th{
+	text-align: right;
+	padding: 2px;	
+}
+
+.papang-info-table th{
+	padding-right: 5px;
+}
+
+.papang-table td, .papang-search-table td, .papang-info-table td{
+	padding: 2px;
+}
+
+.papang-search-table input, .papang-info-table input{
+	padding-left: 5px;	
+}
+/* 테이블 끝 */
+
+/* 파일첨부 시작 */
+.fileListDiv{
+    height: 120px;
+    /* border: solid 1px grey; */
+}
+
+#fileAttachBtn{
+	float: right;
+	cursor: pointer;
+	display: none;
+}
+
+.attachedFile{
+	display: inline-block;
+	cursor: pointer;
+}
+/* 파일첨부 끝 */
+
+/* 로딩바 시작 */
+.loadingPanel{
+	display: none;
+	position: fixed;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	justify-content: center;
+	align-items: center;
+	z-index: 9999;
+}
+
+.loadingImg{
+	width: 120px;
+	height: 120px;
+	border: 7px solid rgba(168, 151, 198, 0.2);
+	border-top-color: #5894cf;
+	border-radius: 50%;
+	animation: spinner 800ms infinite linear;
+}
+
+.loadingText{
+	position: fixed;
+	font-weight: bold;
+	animation: flicker 1100ms infinite alternate;
+}
+
+@keyframes spinner{
+	from {transform: rotate(0deg);}
+	to   {transform: rotate(359deg);}
+}
+
+@keyframes flicker{
+	from {opacity: 1;}
+	to   {opacity: 0;}
+}
+/* 로딩바 끝 */
+
+/* 에디터 시작 */
+.editor {
+	border: 1px solid #ced4da !important;
+	min-height: 500px;
+}
+/* 에디터 끝 */
+
+/* 전체 공용 시작 */
+table.dataTable thead th{
+	text-align: center;
+}
+
+/* table.dataTable td{ */
+/* 	overflow: hidden; */
+/* 	white-space: pre; */
+/* } */
+
+.dataTables_paginate{
+	float: left !important;
+}
+
+.align_items_center{
+	align-items: center;
+}
+
+.text_align_center{
+	text-align: center;
+}
+
+.text_align_left{
+	text-align: left;
+}	
+
+.deleteFileBtn {
+	color: red;
+}
+
+.fileAttachBtn {
+	border: 1px solid #0c0c0c66;
+    border-radius: 3px;
+    background-color: #e9ecef;
+    font-weight: bold;
+    padding: 3px;
+    color: #434343;
+    font-size: 13px;
+}
+
+.centerTable{
+	display: inline-block;
+}
+
+.papang_input{
+	margin: 5px 0;
+}
+
+/* 필수 값에 별표 */
+.required{
+	color: red;
+	font-weight: bold;
+}
+
+.papang_disabled {
+	cursor: default;
+	background-color: #eee;
+	opacity: 1;
+	pointer-events: none;
+}
+
+label{
+	cursor: pointer;
+}
+
+.sessionTimer {
+	padding: 5px 3px 0px 3px;
+    float: right;
+    font-weight: bold;
+}
+
+.overFlowHidden{
+	overflow: hidden;
+}
+
+.whiteSpacePre{
+	white-space: pre;
+}
+
+.papang-search-div, .papang-info-div{
+	margin: 5px 0px 10px 0px;
+    background-color: #f3f3f3;
+    border-radius: 10px;
+    padding: 5px;
+}
+
+.papang-content-div{
+	display: inline-block;
+	width: 100%;
+}
+
+.invisibleInput{
+	border: none;
+}
+
+.byteDisplay{
+	text-align: right;
+	display: none;
+}
+
+.color-hpp{
+	color : var(--hpp-color);	
+}
+/* 전체 공용 끝 */
+
+
+/* active 관련 시작 */
+.cardWrap {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.cardItem {
+    display: flex;
+    background-color: var(--navMnu-backGround);
+    padding: 1rem;
+    border-radius: 1rem;
+}
+
+.cardImg {
+    flex: 13% 0 0;
+    margin-right: 1rem;
+    position: relative; /* Add position relative here */
+}
+
+.cardContent {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.cardTitle, .cardIntro, .cardBtn {
+    border-radius: 5px;
+}
+
+.cardTitle, .cardIntro{
+	font-weight: bold;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+}
+
+.cardBtn {
+	text-align: right;	
+}
+
+.cardBtnImg{
+	margin-left: 0.2rem;
+	cursor: pointer;
+}
+
+.cardIntro {
+	flex-grow: 1;
+}
+
+.viewCardWrap{
+	padding: 1.5rem 0;
+}
+
+.cardBtn > img{
+	height: 2rem;
+}
+
+.thumbnailImg{
+	width: 100%; 
+	height: 0px;
+	cursor: pointer;
+}
+/* active 관련 끝 */
+
+/* enterprise 관련 시작 */
+.container {
+	padding: 0;
+}
+
+.row{
+	margin-bottom: 1rem;
+}
+
+.gridCardImg {
+  object-fit: fill;	/* 이미지를 크기에 맞게 늘이기 */
+  height: 300px; /* 이미지 높이를 고정합니다 */
+  width: 100%;
+}
+
+.gridCardBody {
+    padding: 5px;
+}
+
+#gridCardWrap .card{
+	overflow: hidden;
+	cursor: pointer;
+}
+
+#gridCardWrap .card:hover {
+    -webkit-transform:scale(1.2);
+    -moz-transform:scale(1.2);
+    -ms-transform:scale(1.2);   
+    -o-transform:scale(1.2);
+    transform:scale(1.05);
+    transition-duration: 0.5s;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.card-text {
+  text-align: right;
+  font-weight: bold;
+  color: blue;
+}
+
+/* 아래는 부트스트랩 그리드 시스템을 사용하여 카드를 가로로 나열합니다 */
+.card-deck .col {
+  padding: 0 15px; /* 카드 사이의 간격을 조정합니다 */
+  overflow: hidden;
+  flex: 0 0 25%;
+}
+/* enterprise 관련 끝 */
+
+/* 미완성 메뉴(notComp.jsp) 관련 시작 */
+.not-comp-box{
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 10rem;
+	text-align: center;	
+}
+
+.not-comp-msg{
+	font-weight: bold;
+	color: blue;
+}
+/* 미완성 메뉴(notComp.jsp) 관련 끝 */
+
+/* 예외 페이지(error.jsp) 관련 시작*/
+.error-box{
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	height: 10rem;
+	text-align: center;	
+}
+
+.error-msg{
+	font-weight: bold;
+}
+/* 예외 페이지(error.jsp) 관련 끝 */
+
+.modal a.close-modal{
+	background-image : url("/resources/images/etc/remove_red.png"); 
+}
+
+/* 로그인 화면 시작 */
+.banner_wrap{
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 100%;
+}
+
+.banner_con{
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.banner_login{
+	position: relative;
+	display: flex;
+	text-align: center;
+	box-sizing: border-box;
+	align-items: center;
+	justify-content: center;
+	background-color: rgba(255, 255, 255, 0.12);
+	box-shadow: 5px 5px 10px 0px rgba(0, 0, 0, 0.55);
+	border-radius: 10px;	
+}
+
+.login_box{
+	position: relative;
+	width: 550px;
+	padding: 30px 40px;
+}
+
+.fade_in_box{
+    animation: fadein 2s; /* 표준 문법 */
+    -webkit-animation: fadein 2s; /* 구 Safari 및 구 Chrome 등을 위한 벤더 프리픽스 */
+}
+
+/* 페이드인 애니메이션을 위한 keyframes 정의 */
+@keyframes fadein {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+/* 브라우저별 호환성을 위한 벤더 프리픽스를 포함한 keyframes 정의 */
+@-webkit-keyframes fadein {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+
+.user_box {
+    margin: 1rem 0px;
+}
+
+#bannerImg{
+	width: 500px;
+	height: 500px;
+}
+/* 로그인 화면 끝 */
+

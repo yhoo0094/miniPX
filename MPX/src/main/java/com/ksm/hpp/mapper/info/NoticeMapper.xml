@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.info.NoticeMapper">
+	
+	<!-- 공지사항 조회-->
+	<select id="selectNotice" parameterType="map" resultType="camelCaseMap">
+		SELECT COUNT(*) OVER() AS ROW_CNT									/*전체 레코드 수(페이징)*/
+			 , T1.BOARD_SEQ													/*게시글일련번호*/
+		     , T1.TITLE 													/*공지사항제목*/
+		     , T1.CN														/*공지사항내용*/
+		     , T1.STR_DT													/*공지사항게시시작일*/
+		     , T1.END_DT													/*공지사항게시종료일*/
+		     , CONCAT(DATE_FORMAT(T1.STR_DT, "%Y-%m-%d"), " ~ ", DATE_FORMAT(T1.END_DT, "%Y-%m-%d")) AS PERIOD		/*게시기간*/
+		     , T1.POP_YN													/*공지사항팝업여부*/
+		     , T1.CN														/*공지사항내용*/
+		     , T1.HIT														/*공지사항조회수*/
+		     , T1.FST_REG_SEQ 												/*최초등록자ID*/
+		     , DATE_FORMAT(T1.FST_REG_DTTI, "%Y/%m/%d %H:%i") FST_REG_DTTI	/*최초등록일시*/
+		     , T1.LT_UPD_SEQ 												/*최종수정자ID*/
+		     , DATE_FORMAT(T1.LT_UPD_DTTI, "%Y/%m/%d %H:%i") LT_UPD_DTTI	/*최종수정일시*/
+		  FROM TB_BOARD_NOTICE T1											/*테이블_공지사항*/
+		 WHERE 1 = 1
+		<if test='periodToggle == "true"'>
+		   AND DATE_FORMAT(NOW(), "%Y%m%d") BETWEEN T1.STR_DT AND T1.END_DT
+		</if>
+		<if test='boardSeq != null and boardSeq != ""'>
+		   AND T1.BOARD_SEQ = ${boardSeq}
+		</if>	
+		<if test='popYn != null and popYn != ""'>
+		   AND T1.POP_YN = #{popYn}
+		</if>
+		 ORDER BY T1.STR_DT DESC
+		 
+		<if test='strIdx != null and strIdx != ""'>
+		 LIMIT ${strIdx}, ${pageLength}
+		</if>			 
+	</select>		
+	
+	<!-- 공지사항 등록 -->
+	<insert id="insertNotice" parameterType="map">
+		<selectKey resultType="integer" keyProperty="boardSeq" order="BEFORE">
+			SELECT nextval('BOARD_SEQ') FROM DUAL	/*boardSeq 값을 map에 반환*/
+		</selectKey>	
+		INSERT 
+		  INTO TB_BOARD_NOTICE			/*테이블_공지사항*/
+		     (
+		       BOARD_SEQ				/*게시글일련번호*/
+		     , TITLE 					/*공지사항제목*/
+		     , CN						/*공지사항내용*/
+		     , STR_DT					/*공지사항게시시작일*/
+		     , END_DT					/*공지사항게시종료일*/
+		     , POP_YN					/*공지사항팝업여부*/
+		     , FST_REG_SEQ 				/*최초등록자ID*/
+		     , LT_UPD_SEQ 				/*최종수정자ID*/
+		     )
+		VALUES
+			 (
+			   #{boardSeq}	
+			 , #{title}	
+			 , #{cn}
+			 , #{strDt}
+			 , #{endDt}
+			 , #{popYn}
+		     , #{loginInfo.userId} 	
+		     , #{loginInfo.userId}		 
+			 )   
+	</insert>
+	
+	<!-- 공지사항 수정 -->
+	<update id="updateNotice" parameterType="map">
+		UPDATE TB_BOARD_NOTICE							/*테이블_공지사항*/
+		   SET TITLE			= #{title}				/*공지사항제목*/
+		     , CN				= #{cn}					/*공지사항내용*/
+		     , STR_DT			= #{strDt}				/*공지사항게시시작일*/
+		     , END_DT			= #{endDt}				/*공지사항게시종료일*/
+		     , POP_YN			= #{popYn}				/*공지사항팝업여부*/
+		     , LT_UPD_SEQ 		= #{loginInfo.userId}	/*최종수정자ID*/
+		     , LT_UPD_DTTI		= NOW() 				/*최종수정일시*/
+		 WHERE BOARD_SEQ		= #{boardSeq}			/*게시글일련번호*/    
+	</update>
+	
+	<!-- 공지사항 조회수 증가 -->
+	<update id="increaseHit" parameterType="map">
+		UPDATE TB_BOARD_NOTICE							/*테이블_공지사항*/
+		   SET HIT				= HIT + 1				/*공지사항제목*/
+		 WHERE BOARD_SEQ		= #{boardSeq}			/*게시글일련번호*/    
+	</update>	
+	
+	<!-- 게시글 삭제 -->
+	<delete id="deleteNotice" parameterType="map">
+		DELETE
+		  FROM TB_BOARD_NOTICE							/*테이블_공지사항*/
+		 WHERE BOARD_SEQ		= #{boardSeq}			/*게시글일련번호*/
+	</delete>
+
+</mapper>

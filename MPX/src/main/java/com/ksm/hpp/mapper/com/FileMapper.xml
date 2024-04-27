@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.com.FileMapper">
+	
+	<!-- 파일 조회 -->
+	<select id="selectFile" parameterType="map" resultType="camelCaseMap">
+		SELECT BOARD_SEQ			/*게시글일련번호*/
+			,  ATCFILE_NUM			/*파일번호*/
+			,  BOARD_CODE			/*게시판구분코드(01:공지사항,02:자유게시판,03:질문게시판,04:지역게시판)*/
+			,  ATC_FILE_NM			/*파일명*/
+			,  SAVE_ATC_FILE_NM		/*파일 저장명*/
+			,  ATC_FILE_PATH		/*파일 경로*/
+			,  ATC_FILE_CAPA_VAL	/*파일 용량*/
+			,  ATC_FILE_EXTS		/*파일 확장자*/
+		  FROM TB_ATCFILE			/*테이블_첨부파일*/
+		<trim prefix="WHERE" prefixOverrides="AND">  
+			<if test='boardCode != null and boardCode != ""'>
+				AND BOARD_CODE = #{boardCode}
+			</if>		
+			<if test='boardSeq != null and boardSeq != ""'>
+				AND BOARD_SEQ = #{boardSeq}
+			</if>
+			<if test='atcfileNum != null and atcfileNum != ""'>
+				AND ATCFILE_NUM = #{atcfileNum}
+			</if>			
+		</trim>		  
+	</select>
+	
+	<!-- 삭제할 파일 조회 -->
+	<select id="selectDelFile" parameterType="map" resultType="camelCaseMap">
+		SELECT BOARD_SEQ			/*게시글일련번호*/
+			,  ATCFILE_NUM			/*파일번호*/
+			,  BOARD_CODE			/*게시판구분코드(01:공지사항,02:자유게시판,03:질문게시판,04:지역게시판)*/
+			,  ATC_FILE_NM			/*파일명*/
+			,  SAVE_ATC_FILE_NM		/*파일 저장명*/
+			,  ATC_FILE_PATH		/*파일 경로*/
+			,  ATC_FILE_CAPA_VAL	/*파일 용량*/
+			,  ATC_FILE_EXTS		/*파일 확장자*/
+		  FROM TB_ATCFILE					/*테이블_첨부파일*/
+		 WHERE BOARD_SEQ = #{boardSeq}		/*게시글일련번호*/
+		   AND BOARD_CODE = #{boardCode}	/*게시판구분코드*/
+		   AND ATCFILE_NUM IN (
+				   <foreach collection="delFilesArr" item="delFilesArr" separator=",">
+				   		#{delFilesArr}
+				   </foreach>
+		   	   )	  
+	</select>	
+	
+	<!-- 파일 저장 -->
+	<insert id="insertFile" parameterType="map">
+		<selectKey resultType="integer" keyProperty="atcfileNum" order="BEFORE">
+			SELECT IFNULL(MAX(ATCFILE_NUM), 0) + 1
+			  FROM TB_ATCFILE
+			 WHERE BOARD_SEQ = #{boardSeq}
+		</selectKey>
+		INSERT 
+		  INTO TB_ATCFILE			/*테이블_첨부파일*/
+		     ( 
+		       BOARD_CODE			/*게시판구분코드*/
+		     , BOARD_SEQ			/*게시글일련번호*/
+		     , ATCFILE_NUM 			/*파일번호*/
+		     , ATC_FILE_NM			/*파일명*/
+		     , SAVE_ATC_FILE_NM		/*파일저장명*/
+		     , ATC_FILE_PATH		/*파일경로*/
+		     , ATC_FILE_CAPA_VAL	/*파일용량*/
+		     , ATC_FILE_EXTS		/*파일확장자*/
+		     , FST_REG_SEQ 			/*최초등록자ID*/
+		     , LT_UPD_SEQ 			/*최종수정자ID*/
+		     )
+		VALUES
+			 (
+			   #{boardCode}			/*게시판구분코드*/ 
+			 , #{boardSeq}			/*게시글일련번호*/
+			 , #{atcfileNum}		/*파일일련번호*/
+			 , #{atcFileNm}			/*파일명*/
+			 , #{saveAtcFileNm}		/*파일저장명*/
+			 , #{atcFilePath}		/*파일경로*/
+			 , #{atcFileCapaVal}	/*파일용량*/
+			 , #{atcFileExts}		/*파일확장자*/
+		     , #{loginInfo.userId} 	/*최초등록자ID*/
+		     , #{loginInfo.userId}	/*최종수정자ID*/		 
+			 )
+	</insert>
+	
+	<!-- 파일 삭제 -->
+	<delete id="deleteFile">
+		DELETE 
+		  FROM TB_ATCFILE						/*테이블_첨부파일*/
+		 WHERE BOARD_SEQ = #{boardSeq}			/*게시글일련번호*/
+		   AND BOARD_CODE = #{boardCode}		/*게시판구분코드*/
+		<if test='delFilesArr != null and delFilesArr != ""'>
+		   AND ATCFILE_NUM IN (
+				   <foreach collection="delFilesArr" item="delFilesArr" separator=",">
+				   		#{delFilesArr}
+				   </foreach>
+		   	   )
+		</if>	
+	</delete>
+</mapper>

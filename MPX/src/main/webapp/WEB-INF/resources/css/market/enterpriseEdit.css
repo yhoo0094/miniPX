@@ -1,0 +1,42 @@
+@charset "UTF-8";
+/**
+ * @화면명: 기업장터 
+ * @작성자: KimSangMin
+ * @생성일: 2023. 12. 14. 오후 3:12:47
+ * @설명: 기업장터 입력, 수정 화면
+**/
+
+#thumbnail{
+	display: none;
+}
+
+.thumbnailDiv {
+  position: relative; /* 상대적 위치 지정 */
+  height: 10rem;
+  width: 10rem;
+  /* 아래의 세 줄은 Flexbox를 이용해 자식 요소들을 중앙 정렬합니다. */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.thumbnailImg {
+  height: 100%;
+  width: 100%;
+}
+
+#cardImgMsg {
+  position: absolute; /* 절대 위치 지정 */
+  top: 50%; /* 상단에서부터 50% 위치 */
+  left: 50%; /* 왼쪽에서부터 50% 위치 */
+  transform: translate(-50%, -50%); /* 자기 자신의 크기만큼 오프셋을 줘서 정확히 중앙에 오도록 설정 */
+  color: white; /* 텍스트 색상은 하얀색으로 */
+  background: rgba(0, 0, 0, 0.5); /* 배경 색은 약간 투명한 검정색으로 */
+  padding: .5em 1em; /* 패딩 설정 */
+  border-radius: 5px; /* 모서리 둥글게 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+  white-space: nowrap; /* 텍스트 줄바꿈 없음 */
+  overflow: hidden; /* 텍스트가 넘칠 경우 숨김 */
+  text-overflow: ellipsis; /* 텍스트가 넘칠 경우 말줄임표로 표시 */
+  cursor: pointer; /* 마우스 오버 시 커서 변경 */
+}

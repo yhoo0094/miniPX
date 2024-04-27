@@ -1,0 +1,20 @@
+@charset "UTF-8";
+
+#signUpForm{
+    text-align: center;
+    margin-top: 250px;
+}
+
+.idUniChkBf::after {
+	content: "아이디 중복확인이 필요합니다!";
+    color: red;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.idUniChkAf::after {
+	content: "사용 가능한 아이디입니다!";
+	color: blue;
+	font-size: 12px;
+	font-weight: bold;
+}

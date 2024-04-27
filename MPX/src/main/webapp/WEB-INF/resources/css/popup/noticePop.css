@@ -1,0 +1,11 @@
+@charset "UTF-8";
+
+.noticePop{
+	padding: 30px 30px 15px 30px;
+	width: 100%;
+}
+
+.content{
+	margin: 0;
+	height: 100%;
+}

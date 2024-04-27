@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.admin.AdminHomeMapper">
+	<!-- 접속기록 그래프 그리기 -->
+	<select id="drawLoginLogChart" parameterType="map" resultType="camelCaseMap">
+	SELECT COALESCE(B.LOGIN_DT, A.CALENDAR_DATE) 			AS LOGIN_DT              /* 로그인_일자 */
+	  	 , COUNT(B.LOGIN_DTTI) 								AS cnt
+	  	 , A.CALENDAR_DATE_YYYYMMDD
+	  FROM (SELECT DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL -(N-1) DAY), '%m.%d') AS CALENDAR_DATE 
+	  			 , DATE_ADD(CURDATE(), INTERVAL -(N-1) DAY) AS CALENDAR_DATE_YYYYMMDD
+			  FROM (SELECT a.N + b.N * 10 + 1 N
+		   	    	  FROM (SELECT 0 AS N 
+		   	    	  		 UNION SELECT 1  
+		   	    	  		 UNION SELECT 2 
+		   	    	  		 UNION SELECT 3 
+		   	    	  		 UNION SELECT 4 
+		   	    	  		 UNION SELECT 5 
+		   	    	  		 UNION SELECT 6 
+		   	    	  		 UNION SELECT 7 
+		   	    	  		 UNION SELECT 8 
+		   	    	  		 UNION SELECT 9) a 
+				   		 , (SELECT 0 AS N 
+				   		     UNION SELECT 1 
+				   		     UNION SELECT 2 
+				   		     UNION SELECT 3 
+				   		     UNION SELECT 4 
+				   		     UNION SELECT 5 
+				   		     UNION SELECT 6 
+				   		     UNION SELECT 7 
+				   		     UNION SELECT 8 
+				   		     UNION SELECT 9) b  
+		  	 	   ) NUMBERS
+	         WHERE DATE_ADD(CURDATE(), INTERVAL -(N-1) DAY) <![CDATA[>=]]> DATE_ADD(CURDATE(), INTERVAL -30 DAY)
+	       ) A
+	  LEFT JOIN 
+   (SELECT DATE_FORMAT(T1.LOGIN_DTTI, '%m.%d') AS LOGIN_DT
+	     , T1.LOGIN_DTTI
+	  FROM TB_LOG_LOGIN T1
+	 WHERE T1.LOGIN_CODE = #{loginCode}
+	     ) B 
+	    ON A.CALENDAR_DATE = B.LOGIN_DT
+	 GROUP BY A.CALENDAR_DATE
+	 ORDER BY A.CALENDAR_DATE_YYYYMMDD ASC
+	</select>	
+	
+	<!-- 요청기록 그래프 그리기 -->
+	<select id="drawRequestLogChart" parameterType="map" resultType="camelCaseMap">
+	SELECT COALESCE(B.REQ_DT, A.CALENDAR_DATE) 				AS REQ_DT              /* 요청_일자 */
+	  	 , COUNT(B.REQ_DTTI) 								AS cnt
+	  	 , A.CALENDAR_DATE_YYYYMMDD
+	  FROM (SELECT DATE_FORMAT(DATE_ADD(CURDATE(), INTERVAL -(N-1) DAY), '%m.%d') AS CALENDAR_DATE 
+	  			 , DATE_ADD(CURDATE(), INTERVAL -(N-1) DAY) AS CALENDAR_DATE_YYYYMMDD
+			  FROM (SELECT a.N + b.N * 10 + 1 N
+		   	    	  FROM (SELECT 0 AS N 
+		   	    	  		 UNION SELECT 1  
+		   	    	  		 UNION SELECT 2 
+		   	    	  		 UNION SELECT 3 
+		   	    	  		 UNION SELECT 4 
+		   	    	  		 UNION SELECT 5 
+		   	    	  		 UNION SELECT 6 
+		   	    	  		 UNION SELECT 7 
+		   	    	  		 UNION SELECT 8 
+		   	    	  		 UNION SELECT 9) a 
+				   		 , (SELECT 0 AS N 
+				   		     UNION SELECT 1 
+				   		     UNION SELECT 2 
+				   		     UNION SELECT 3 
+				   		     UNION SELECT 4 
+				   		     UNION SELECT 5 
+				   		     UNION SELECT 6 
+				   		     UNION SELECT 7 
+				   		     UNION SELECT 8 
+				   		     UNION SELECT 9) b  
+		  	 	   ) NUMBERS
+	         WHERE DATE_ADD(CURDATE(), INTERVAL -(N-1) DAY) <![CDATA[>=]]> DATE_ADD(CURDATE(), INTERVAL -30 DAY)
+	       ) A
+	  LEFT JOIN 
+   (SELECT DATE_FORMAT(T1.REQ_DTTI, '%m.%d') AS REQ_DT
+	     , T1.REQ_DTTI
+	  FROM TB_LOG_REQ T1
+	 <if test='reqTypeCode != null and reqTypeCode != ""'>
+	 WHERE T1.REQ_TYPE_CODE = #{reqTypeCode}
+	 </if>
+	     ) B 
+	    ON A.CALENDAR_DATE = B.REQ_DT
+	 GROUP BY A.CALENDAR_DATE
+	 ORDER BY A.CALENDAR_DATE_YYYYMMDD ASC
+	</select>		
+	
+</mapper>

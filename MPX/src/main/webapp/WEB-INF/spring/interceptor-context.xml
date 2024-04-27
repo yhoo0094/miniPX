@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.3.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-4.3.xsd">
+	
+	<!-- 인터셉터 설정 -->
+	<mvc:interceptors>
+		<!-- 요청 로그 기록 인터셉터 -->
+		<mvc:interceptor>
+			<!-- 제외할 URL를 뺀 모든 URL에 입터셉터 적용 -->
+			<mvc:mapping path="/**/**"/>
+			
+			<!-- 제외할 URL 형식 -->
+			<mvc:exclude-mapping path="/"/>					<!-- 홈페이지 -->
+			<mvc:exclude-mapping path="/home"/>				<!-- 홈페이지 -->
+			<mvc:exclude-mapping path="/aws"/>				<!-- aws연결 검증 -->
+			<mvc:exclude-mapping path="/resources/**"/> 	<!-- 리소스 -->
+			<mvc:exclude-mapping path="/favicon.ico"/> 		<!-- favicon.ico -->
+			<mvc:exclude-mapping path="/common/images/**"/> <!-- 이미지 조회 -->
+			<bean id="RequestInterceptor" class="com.ksm.hpp.framework.interceptor.RequestInterceptor"></bean>
+		</mvc:interceptor>	
+		
+		<!-- 로그인 체크 인터셉터 -->
+		<mvc:interceptor>
+			<!-- 제외할 URL를 뺀 모든 URL에 입터셉터 적용 -->
+			<mvc:mapping path="/**/**"/>
+			
+			<!-- 제외할 URL 형식 -->
+ 			<mvc:exclude-mapping path="/**/**.do"/> 						<!-- 페이지 미이동 요청 -->
+ 			<mvc:exclude-mapping path="/error/**"/> 						<!-- 에러페이지 -->
+ 			<mvc:exclude-mapping path="/resources/**"/> 					<!-- 리소스 -->
+			
+			<!-- 제외할 URL 개별 -->
+ 			<mvc:exclude-mapping path="/login"/>							<!-- 로그인 -->
+			
+			<bean id="LoginCheckInterceptor" class="com.ksm.hpp.framework.interceptor.LoginCheckInterceptor"></bean>
+		</mvc:interceptor>			
+	</mvc:interceptors>
+
+</beans>

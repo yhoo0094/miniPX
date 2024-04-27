@@ -1,0 +1,79 @@
+@charset "UTF-8";
+/**
+ * @화면명: 자유게시판 
+ * @작성자: KimSangMin
+ * @생성일: 2023. 11. 23. 오후 7:01:06
+ * @설명: 자유롭운 주제로 이야기를 나눌 수 있는 게시판입니다.
+**/
+
+#marketItem {
+    display: flex; /* Flex container로 설정 */
+/*     background-color: var(--navMnu-backGround); */
+    padding: 10px;
+    margin-bottom: 10px;     
+}
+
+#marketThumbnail {
+	flex: 50% 0 0;
+    margin-right: 20px; /* 오른쪽 여백 설정 */
+    width: 50%;
+}
+
+#marketContent{
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between; /* 모든 자식 요소를 수직으로 정렬하고, #btnBox를 아래로 밀어냄 */
+    overflow: hidden;
+    width: 100%;
+}
+
+#marketContent * {
+	font-weight: bold;
+	font-size: 25px;
+}
+
+#starBox *{
+	font-size: 20px;	
+}
+
+#stars{
+	color: #fd0000;	
+}
+
+#btnBox {
+    flex-grow: 1;
+    display: flex; /* Flexbox를 사용하여 버튼들을 정렬 */
+    flex-direction: column; /* 버튼들을 수직으로 정렬 */
+    justify-content: flex-end; /* 버튼들을 #btnBox의 아래쪽으로 정렬 */
+    text-align: right; /* 내부 텍스트를 오른쪽으로 정렬 */
+    align-items: flex-end; /* 버튼들을 오른쪽으로 정렬 */
+    margin-bottom: 0; /* 마지막 요소이므로 아래 여백 제거 */
+}
+
+#proName {
+    display: inline-block;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+#proName:hover {
+    overflow: auto;
+    text-overflow: clip;
+}
+
+.productInfo{
+    width: 100px;
+    display: inline-block;
+}
+
+/* input 타입이 number인 요소의 화살표를 항상 표시 */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+}
+
+/* Firefox를 위한 추가 스타일 */
+input[type="number"] {
+  -moz-appearance: textfield;
+}

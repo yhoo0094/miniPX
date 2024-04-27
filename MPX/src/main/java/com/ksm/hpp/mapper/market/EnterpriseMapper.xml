@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.market.EnterpriseMapper">
+
+	<!-- 기업장터 조회 -->
+	<select id="selectEnterprise" parameterType="map" resultType="camelCaseMap">
+		SELECT COUNT(*) OVER() AS ROW_CNT									/*전체 레코드 수(페이징)*/
+		     , T1.ENT_MARKET_SEQ                                            /*기업장터일련번호*/
+		     , T1.PRO_NAME                                                  /*상품명*/
+		     , T1.PRICE                                                     /*가격*/
+		     , T1.CNT                                                       /*재고수량*/
+		     , T1.CN                                                        /*상세내용*/
+		     , T1.MARKET_TYPE_CODE                                          /*상품분류코드(01:의류,02:장난감:03:생활용품)*/
+		     , T1.THUMBNAIL                                                 /*썸네일 파일명*/
+		     , T1.USE_YN                                                    /*사용여부*/
+		     , T1.FST_REG_SEQ                                                /*최초등록자아이디*/
+		     , DATE_FORMAT(T1.FST_REG_DTTI, "%Y/%m/%d %H:%i") FST_REG_DTTI	/*최초등록일시*/
+		     , T1.LT_UPD_SEQ                                                 /*최종수정자아이디*/
+		     , DATE_FORMAT(T1.LT_UPD_DTTI, "%Y/%m/%d %H:%i") LT_UPD_DTTI	/*최종수정일시*/
+		  FROM TB_ENT_MARKET T1												/*테이블_기업장터*/
+		 WHERE 1 = 1
+		   AND T1.USE_YN = 'Y'
+		<if test='entMarketSeq != null and entMarketSeq != ""'>
+		   AND T1.ENT_MARKET_SEQ = #{entMarketSeq}
+		</if>
+		<if test='proName != null and proName != ""'>
+		   AND T1.PRO_NAME LIKE CONCAT('%',TRIM(#{proName}),'%')
+		</if>
+		<if test='marketTypeCode != null and marketTypeCode != ""'>
+		   AND T1.MARKET_TYPE_CODE = #{marketTypeCode}
+		</if>
+		 
+		<if test='marketOrderCode != null and marketOrderCode != ""'>
+			<choose>
+				<when test='marketOrderCode == "01"'><!-- 등록일 내림차순 -->
+		 			ORDER BY T1.FST_REG_DTTI DESC			
+				</when>
+				<when test='marketOrderCode == "02"'><!-- 가격 오름차순 -->
+		 			ORDER BY T1.PRICE ASC		
+				</when>
+				<when test='marketOrderCode == "03"'><!-- 별점 내림차순 -->
+		 			ORDER BY T1.FST_REG_DTTI DESC		
+				</when>
+			</choose>			
+		</if> 
+			 
+		<if test='strIdx != null and strIdx != ""'>
+		 LIMIT ${strIdx}, ${pageLength}
+		</if>			 
+	</select>	
+	
+	<!-- 기업장터 조회(홈 화면) -->
+	<select id="selectEnterpriseHome" parameterType="map" resultType="camelCaseMap">
+		SELECT COUNT(*) OVER() AS ROW_CNT									/*전체 레코드 수(페이징)*/
+		     , T1.ENT_MARKET_SEQ                                            /*기업장터일련번호*/
+		     , T1.PRO_NAME                                                  /*상품명*/
+		     , T1.PRICE                                                     /*가격*/
+		     , T1.CNT                                                       /*재고수량*/
+		     , T1.CN                                                        /*상세내용*/
+		     , T1.MARKET_TYPE_CODE                                          /*상품분류코드(01:의류,02:장난감:03:생활용품)*/
+		     , T1.THUMBNAIL                                                 /*썸네일 파일명*/
+		     , T1.USE_YN                                                    /*사용여부*/
+		     , T1.FST_REG_SEQ                                                /*최초등록자아이디*/
+		     , DATE_FORMAT(T1.FST_REG_DTTI, "%Y/%m/%d %H:%i") FST_REG_DTTI	/*최초등록일시*/
+		     , T1.LT_UPD_SEQ                                                 /*최종수정자아이디*/
+		     , DATE_FORMAT(T1.LT_UPD_DTTI, "%Y/%m/%d %H:%i") LT_UPD_DTTI	/*최종수정일시*/
+		  FROM TB_ENT_MARKET T1												/*테이블_기업장터*/
+		 WHERE T1.USE_YN = 'Y'
+		 ORDER BY T1.FST_REG_DTTI DESC
+		 LIMIT 0, ${colCnt}
+	</select>			
+
+	<!-- 기업장터 등록 -->
+	<insert id="insertEnterprise" parameterType="map">
+		<selectKey resultType="integer" keyProperty="entMarketSeq" order="BEFORE">
+			SELECT nextval('ENT_MARKET_SEQ') FROM DUAL	/*sequence 값을 map에 반환*/
+		</selectKey>	
+		INSERT 
+		  INTO TB_ENT_MARKET			/*테이블_기업장터*/
+		     (
+		       ENT_MARKET_SEQ          	/*기업장터일련번호*/
+		     , PRO_NAME                	/*상품명*/
+		     , PRICE                   	/*가격*/
+		     , CNT                     	/*재고수량*/
+		     , CN                      	/*상세내용*/
+		     , MARKET_TYPE_CODE        	/*상품분류코드*/
+		     , THUMBNAIL               	/*썸네일*/
+		     , FST_REG_SEQ 				/*최초등록자ID*/
+		     , LT_UPD_SEQ 				/*최종수정자ID*/
+		     )
+		VALUES
+			 (
+			   #{entMarketSeq}
+			 , #{proName}
+			 , #{price}
+			 , #{cnt}
+			 , #{cn}
+			 , #{marketTypeCode}
+			 , #{thumbnail}
+		     , #{loginInfo.userId} 	
+		     , #{loginInfo.userId}		 
+			 )   
+	</insert>	
+	
+	<!-- 기업장터 수정 -->
+	<update id="updateEnterprise" parameterType="map">
+		UPDATE TB_ENT_MARKET							/*테이블_기업장터*/
+		   SET PRO_NAME          = #{proName}      		/*상품명*/    
+		   	 , PRICE             = #{price}     		/*가격*/     
+		     , CNT               = #{cnt}     			/*재고수량*/   
+		     , CN                = #{cn}     			/*상세내용*/   
+		     , MARKET_TYPE_CODE  = #{marketTypeCode}    /*상품분류코드*/ 
+			<if test='thumbnail != null and thumbnail != ""'>		     
+		     , THUMBNAIL         = #{thumbnail}     	/*썸네일*/
+		    </if>    
+		     , LT_UPD_SEQ 		= #{loginInfo.userId}	/*최종수정자ID*/
+		     , LT_UPD_DTTI		= NOW() 				/*최종수정일시*/
+		 WHERE ENT_MARKET_SEQ		= #{entMarketSeq}			/*기업장터일련번호*/    
+	</update>		
+	
+	<!-- 기업장터 삭제 -->
+	<update id="deleteEnterprise" parameterType="map">
+		UPDATE TB_ENT_MARKET							/*테이블_기업장터*/
+		   SET USE_YN			= 'N'					/*사용여부*/
+		   	 , LT_UPD_SEQ 		= #{loginInfo.userId}	/*최종수정자ID*/
+		     , LT_UPD_DTTI		= NOW() 				/*최종수정일시*/
+		 WHERE ENT_MARKET_SEQ	= #{entMarketSeq}		/*기업장터일련번호*/    
+	</update>		
+</mapper>

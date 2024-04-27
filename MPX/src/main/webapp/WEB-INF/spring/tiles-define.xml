@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE tiles-definitions PUBLIC
+       "-//Apache Software Foundation//DTD Tiles Configuration 3.0//EN"
+       "http://tiles.apache.org/dtds/tiles-config_3_0.dtd">
+
+<tiles-definitions>
+	<!-- 홈페이지 -->
+	<definition name="com/login" template="/WEB-INF/views/tiles/login-layout.jsp">
+		<put-attribute name="commonLib" value="/WEB-INF/views/tiles/commonLib.jsp" />
+	    <put-attribute name="js" value="/resources/js/com/login.js" />
+		<put-attribute name="css" value="/resources/css/com/login.css" />
+		<put-attribute name="body" value="/WEB-INF/views/com/login.jsp" />
+	</definition>	
+
+	<!-- 홈페이지 -->
+	<definition name="com/home" template="/WEB-INF/views/tiles/home-layout.jsp">
+		<put-attribute name="commonLib" value="/WEB-INF/views/tiles/commonLib.jsp" />
+	    <put-attribute name="header" value="/WEB-INF/views/tiles/headerTemplate.jsp" />
+	    <put-attribute name="foot" value="/WEB-INF/views/tiles/footerTemplate.jsp" />
+	    <put-attribute name="js" value="/resources/js/com/home.js" />
+		<put-attribute name="css" value="/resources/css/com/home.css" />
+		<put-attribute name="body" value="/WEB-INF/views/com/home.jsp" />
+	</definition>	
+	
+	<!-- popup은 tiles 제외 -->
+	<definition name="popup/*" template="/WEB-INF/views/tiles/popup-layout.jsp">
+		<put-attribute name="commonLib" value="/WEB-INF/views/tiles/commonLib.jsp" />
+		<put-attribute name="js" value="/resources/js/popup/{1}.js" />
+		<put-attribute name="css" value="/resources/css/popup/{1}.css" />
+		<put-attribute name="body" value="/WEB-INF/views/popup/{1}.jsp" />
+	</definition>
+
+	<!-- main layout -->
+	<definition name="layout-tiles" template="/WEB-INF/views/tiles/tiles-layout.jsp">
+		<put-attribute name="commonLib" value="/WEB-INF/views/tiles/commonLib.jsp" />
+		<put-attribute name="header" value="/WEB-INF/views/tiles/headerTemplate.jsp" />
+		<put-attribute name="left" value="/WEB-INF/views/tiles/leftTemplate.jsp" />
+		<put-attribute name="right" value="/WEB-INF/views/tiles/rightTemplate.jsp" />
+		<put-attribute name="body" value="" />
+		<put-attribute name="foot" value="/WEB-INF/views/tiles/footerTemplate.jsp" />
+	</definition>
+	
+	<!-- 기본 페이지 이동 -->
+	<definition name="*/*" extends="layout-tiles">
+		<put-attribute name="js" value="/resources/js/{1}/{2}.js" />
+		<put-attribute name="css" value="/resources/css/{1}/{2}.css" />
+		<put-attribute name="body" value="/WEB-INF/views/{1}/{2}.jsp" />
+	</definition>
+</tiles-definitions>

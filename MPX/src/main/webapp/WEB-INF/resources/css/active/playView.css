@@ -1,0 +1,35 @@
+@charset "UTF-8";
+/**
+ * @화면명: 놀이 조회
+ * @작성자: KimSangMin
+ * @생성일: 2023. 12. 5. 오후 1:20:45
+ * @설명: 놀이 등록/조회/수정 화면 
+**/
+
+
+
+#thumbnail{
+	display: none;
+}
+
+#intro{
+	height: 100%;
+}
+
+#cardImgMsg {
+    position: absolute; /* Position the span absolutely */
+    top: 50%; /* Position at the center from the top */
+    left: 50%; /* Position at the center from the left */
+    transform: translate(-50%, -50%); /* Offset the span by its own dimensions */
+    color: white; /* Example text color for visibility */
+    background: rgba(0, 0, 0, 0.5); /* Example background for visibility */
+    padding: .5em 1em; /* Example padding */
+    border-radius: 5px; /* Example border radius */
+    max-width: 100%; /* Prevent span from being wider than its container */
+    text-align: center; /* Center the text inside the span */
+    white-space: nowrap; /* Prevent the text from wrapping */
+    overflow: hidden; /* Prevent overflow of the text */
+    text-overflow: ellipsis; /* Add an ellipsis if the text is too long */
+    display: none;
+    cursor: pointer;
+}

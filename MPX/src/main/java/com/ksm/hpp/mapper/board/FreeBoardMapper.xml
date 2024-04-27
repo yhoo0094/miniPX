@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.board.FreeBoardMapper">
+	
+	<!-- 자유게시판 조회-->
+	<select id="selectFreeBoard" parameterType="map" resultType="camelCaseMap">
+		SELECT COUNT(*) OVER() AS ROW_CNT									/*전체 레코드 수(페이징)*/
+		     , T1.BOARD_SEQ                                                 /*게시글일련번호*/
+		     , T1.TITLE                                                     /*자유게시판제목*/
+		     , T1.CN                                                        /*자유게시판내용*/
+		     , T1.BOARD_FREE_CODE                                           /*자유게시판코드*/
+		     , (SELECT CODE_DETAIL_NM 
+		     	  FROM TB_CODE_DETAIL 
+		     	 WHERE CODE_GROUP = 'BOARD_FREE_CODE' 
+		     	   AND CODE_DETAIL = T1.BOARD_FREE_CODE) AS BOARD_FREE_CODE_NM	/*자유게시판코드_한글명*/
+		     , T1.USE_YN													/*자유게시판사용여부*/
+		     , T1.HIT                                                       /*자유게시판조회수*/
+		     , T1.FST_REG_SEQ                                                /*최초등록자아이디*/
+		     , DATE_FORMAT(T1.FST_REG_DTTI, "%Y/%m/%d %H:%i") FST_REG_DTTI	/*최초등록일시*/
+		     , T1.LT_UPD_SEQ                                                 /*최종수정자아이디*/
+		     , DATE_FORMAT(T1.LT_UPD_DTTI, "%Y/%m/%d %H:%i") LT_UPD_DTTI	/*최종수정일시*/
+		  FROM TB_BOARD_FREE T1												/*테이블_자유게시판*/
+		 WHERE 1 = 1
+		<if test='boardSeq != null and boardSeq != ""'>
+		   AND T1.BOARD_SEQ = ${boardSeq}
+		</if>	
+		<if test='title != null and title != ""'>
+		   AND T1.TITLE LIKE CONCAT('%',TRIM(#{title}),'%')
+		</if>
+		<if test='userId != null and userId != ""'>
+		   AND T1.FST_REG_SEQ LIKE CONCAT('%',TRIM(#{userId}),'%')
+		</if>
+		<if test='dttiStr != null and dttiStr != ""'>
+		   AND FST_REG_DTTI BETWEEN #{dttiStr} AND DATE_ADD(#{dttiEnd}, INTERVAL 1 DAY)
+		</if>
+		<if test='boardFreeCode != null and boardFreeCode != ""'>
+		   AND T1.BOARD_FREE_CODE = #{boardFreeCode}
+		</if>
+		<if test='useYn != null and useYn != ""'>
+		   AND T1.USE_YN = #{useYn}
+		</if>
+		 ORDER BY T1.LT_UPD_DTTI DESC
+		 
+		<if test='strIdx != null and strIdx != ""'>
+		 LIMIT ${strIdx}, ${pageLength}
+		</if>			 
+	</select>	
+	
+	<!-- 자유게시판 등록 -->
+	<insert id="insertFreeBoard" parameterType="map">
+		<selectKey resultType="integer" keyProperty="boardSeq" order="BEFORE">
+			SELECT nextval('BOARD_SEQ') FROM DUAL	/*boardSeq 값을 map에 반환*/
+		</selectKey>	
+		INSERT 
+		  INTO TB_BOARD_FREE			/*테이블_자유게시판*/
+		     (
+		       BOARD_SEQ                /*게시글일련번호*/ 
+		     , TITLE                    /*자유게시판제목*/ 
+		     , CN                       /*자유게시판내용*/ 
+		     , BOARD_FREE_CODE          /*자유게시판코드(01:잡담,02:정보,03:질문)*/ 
+		     , FST_REG_SEQ 				/*최초등록자ID*/
+		     , LT_UPD_SEQ 				/*최종수정자ID*/
+		     )
+		VALUES
+			 (
+			   #{boardSeq}	
+			 , #{title}	
+			 , #{cn}
+			 , #{boardFreeCode}
+		     , #{loginInfo.userId} 	
+		     , #{loginInfo.userId}		 
+			 )   
+	</insert>	
+	
+	<!-- 자유게시판 수정 -->
+	<update id="updateFreeBoard" parameterType="map">
+		UPDATE TB_BOARD_FREE							/*테이블_자유게시판*/
+		   SET TITLE			= #{title}				/*자유게시판제목*/
+		     , CN				= #{cn}					/*자유게시판내용*/
+		     , BOARD_FREE_CODE  = #{boardFreeCode}		/*자유게시판코드(01:잡담,02:정보,03:질문)*/
+		     , LT_UPD_SEQ 		= #{loginInfo.userId}	/*최종수정자ID*/
+		     , LT_UPD_DTTI		= NOW() 				/*최종수정일시*/
+		 WHERE BOARD_SEQ		= #{boardSeq}			/*게시글일련번호*/    
+	</update>
+	
+	<!-- 자유게시판 삭제 -->
+	<update id="deleteFreeBoard" parameterType="map">
+		UPDATE TB_BOARD_FREE							/*테이블_자유게시판*/
+		   SET USE_YN			= 'N'					/*자유게시판사용여부*/
+		     , LT_UPD_SEQ 		= #{loginInfo.userId}	/*최종수정자ID*/
+		     , LT_UPD_DTTI		= NOW() 				/*최종수정일시*/
+		 WHERE BOARD_SEQ		= #{boardSeq}			/*게시글일련번호*/    
+	</update>	
+	
+	<!-- 자유게시판 조회수 증가 -->
+	<update id="increaseHit" parameterType="map">
+		UPDATE TB_BOARD_FREE							/*테이블_자유게시판*/
+		   SET HIT				= HIT + 1				/*자유게시판조회수*/
+		 WHERE BOARD_SEQ		= #{boardSeq}			/*게시글일련번호*/    
+	</update>
+</mapper>

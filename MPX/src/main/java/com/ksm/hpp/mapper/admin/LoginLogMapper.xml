@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.admin.LoginLogMapper">
+	
+	<!-- 사용자 접속 기록 조회-->
+	<select id="selectLoginLog" parameterType="map" resultType="camelCaseMap">
+		SELECT COUNT(*) OVER() AS ROW_CNT													/*전체 레코드 수(페이징)*/
+			 , T1.LOGIN_SEQ																	/*로그인일련번호*/
+		     , DATE_FORMAT(T1.LOGIN_DTTI, '%Y/%m/%d %H:%i:%s') AS LOGIN_DTTI 				/*로그인일시*/
+		     , T1.USER_ID																	/*사용자아이디*/
+		     , T1.IP																		/*사용자아이피*/
+		     , T1.LOGIN_CODE																/*로그인코드*/
+		     , T2.CODE_DETAIL_NM AS LOGIN_CODE_NM											/*로그인코드명*/
+		  FROM TB_LOG_LOGIN T1																/*테이블_로그_로그인*/
+		 INNER JOIN TB_CODE_DETAIL T2
+    		ON T2.CODE_GROUP = 'LOGIN_CODE'
+		   AND T1.LOGIN_CODE = T2.CODE_DETAIL	
+		 WHERE LOGIN_DTTI BETWEEN DATE_FORMAT(#{dttiStr}, '%Y-%m-%d %H:%i') AND DATE_FORMAT(#{dttiEnd}, '%Y-%m-%d %H:%i')		   
+		<if test='userId != null and userId != ""'>
+		   AND T1.USER_ID LIKE CONCAT('%',#{userId},'%')
+		</if>
+		<if test='ip != null and ip != ""'>
+		   AND T1.IP LIKE CONCAT('%',#{ip},'%')
+		</if>	
+		<if test='loginCode != null and loginCode != ""'>
+		   AND T1.LOGIN_CODE = #{loginCode}
+		</if>			
+		 ORDER BY LOGIN_DTTI DESC
+		 
+		<if test='strIdx != null and strIdx != ""'>
+		 LIMIT ${strIdx}, ${pageLength}
+		</if>			 
+	</select>
+	
+	<!-- 사용자 접속 기록 개수-->
+<!-- 	<select id="selectLoginLogCnt" parameterType="map" resultType="int"> -->
+<!-- 		SELECT COUNT(*) -->
+<!-- 		  FROM TB_LOG_LOGIN T1				/*테이블_로그_로그인*/ -->
+<!-- 		 WHERE LOGIN_DTTI BETWEEN DATE_FORMAT(#{dttiStr}, '%Y-%m-%d %H:%i') AND DATE_FORMAT(#{dttiEnd}, '%Y-%m-%d %H:%i') -->
+<!-- 		<if test='userId != null and userId != ""'> -->
+<!-- 		   AND T1.USER_ID LIKE CONCAT('%',#{userId},'%') -->
+<!-- 		</if> -->
+<!-- 		<if test='ip != null and ip != ""'> -->
+<!-- 		   AND T1.IP LIKE CONCAT('%',#{ip},'%') -->
+<!-- 		</if>	 -->
+<!-- 		<if test='loginCode != null and loginCode != ""'> -->
+<!-- 		   AND T1.LOGIN_CODE = #{loginCode} -->
+<!-- 		</if>			 -->
+<!-- 	</select>		 -->
+</mapper>

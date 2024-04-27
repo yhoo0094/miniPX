@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.admin.ManageRoleMapper">
+	
+	<!-- 권한그룹 목록 조회-->
+	<select id="selectRoleList" parameterType="map" resultType="camelCaseMap">
+		SELECT T1.ROLE_SEQ							/*권한그룹일련번호*/
+		     , T1.ROLE_NM							/*권한그룹명*/
+		     , T1.ROLE_ORDER						/*권한그룹표시순서*/
+		     , T1.RMRK								/*권한그룹비고*/
+		  FROM TB_ROLE T1							/*테이블_권한그룹*/
+		 ORDER BY ROLE_ORDER ASC
+	</select>
+	
+	<!-- 권한그룹에 속한 사용자 목록 조회-->
+	<select id="selectGroupUser" parameterType="map" resultType="camelCaseMap">
+		SELECT COUNT(*) OVER() AS ROW_CNT			/*전체 레코드 수(페이징)*/
+			 , T1.USER_ID							/*사용자아이디*/
+		     , T1.USER_NAME							/*이름*/
+		  FROM TB_USER T1							/*테이블_사용자*/
+		  	 , TB_USER_ROLE_MAP T2					/*테이블_사용자_권한그룹_매핑*/
+		  	 , TB_ROLE T3							/*테이블_권한그룹*/
+		 WHERE T1.USER_ID = T2.USER_ID
+		   AND T3.ROLE_SEQ = T2.ROLE_SEQ
+		   AND T3.ROLE_SEQ = #{roleSeq}
+		 ORDER BY T1.USER_NAME ASC
+		 
+		<if test='strIdx != null and strIdx != ""'>
+		 LIMIT ${strIdx}, ${pageLength}
+		</if>			 
+	</select>	
+	
+	<!-- 권한그룹 사용자 제거 -->
+	<delete id="deleteGroupUser" parameterType="map">
+		DELETE
+		  FROM TB_USER_ROLE_MAP						/*테이블_사용자_권한그룹_매핑*/
+		 WHERE USER_ID IN (${userIdList}) 				
+	</delete>	
+</mapper>

@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.user.UserMapper">
+	
+	<!-- 사용자 조회-->
+	<select id="selectUser" parameterType="map" resultType="camelCaseMap">
+		SELECT T1.USER_ID										/*아이디*/
+			 , T1.USER_PW										/*비밀번호*/
+			 , T1.USER_NAME										/*이름*/
+			 , T1.BIRTH_DT										/*생년월일*/
+			 , T1.PHONE											/*연락처*/
+			 , DATE_FORMAT(T1.FST_REG_DTTI, '%Y%m%d') SIGNUP_DT	/*가입일*/
+			 , DATE_FORMAT(T1.PW_CH_DTTI, '%Y%m%d') PW_CH_DTTI	/*비밀번호 최종수정일시*/
+			 , T1.PW_ERR_CNT									/*비밀번호 오입력 횟수*/
+			 , T1.PW_INIT_YN									/*비밀번호 초기화 여부*/
+			 , T2.ROLE_SEQ										/*권한그룹일련번호*/
+			 , T3.ROLE_NM										/*권한그룹명*/
+		  FROM TB_USER T1										/*테이블_사용자*/
+		  	 , TB_USER_ROLE_MAP	T2								/*테이블_사용자_권한그룹_매핑*/
+		  	 , TB_ROLE T3										/*테이블_권한그룹*/
+		 WHERE T1.USER_ID = T2.USER_ID
+		   AND T3.ROLE_SEQ = T2.ROLE_SEQ
+		<if test='userId != null and userId != ""'>
+		   AND T1.USER_ID = #{userId}
+		</if>
+	</select>
+
+	<!-- 권한 조회-->
+	<select id="selectAuthList" parameterType="map" resultType="camelCaseMap">
+		SELECT T4.URL							/*메뉴경로*/
+			 , MAX(T2.AUTH_GRADE) AUTH_GRADE	/*권한등급(01:읽기, 02:읽기/쓰기, 03:기타권한1, 04:기타권한2 ...)*/
+		  FROM TB_USER_ROLE_MAP T1				/*테이블_사용자_권한그룹_매핑*/
+		  JOIN TB_AUTH T2						/*테이블_권한*/
+		    ON T1.ROLE_SEQ = T2.ROLE_SEQ
+		  JOIN TB_MNU T4						/*테이블_메뉴*/
+		    ON T2.MNU_SEQ = T4.MNU_SEQ  		    
+		 WHERE T4.MNU_LV = 2					/*메뉴레벨*/
+		   AND T1.USER_ID = #{loginInfo.userId}			/*사용자아이디*/
+		 GROUP BY T4.URL	
+	</select>
+	
+	<!-- 권한이 필요없는 메뉴 목록-->
+	<select id="selectFreeAuthList" parameterType="map" resultType="camelCaseMap">
+		SELECT T4.URL							/*메뉴경로*/
+			 , MAX(T2.AUTH_GRADE) AUTH_GRADE	/*권한등급(01:읽기, 02:읽기/쓰기, 03:기타권한1, 04:기타권한2 ...)*/
+		  FROM TB_USER_ROLE_MAP T1				/*테이블_사용자_권한그룹_매핑*/
+		  JOIN TB_AUTH T2						/*테이블_권한*/
+		    ON T1.ROLE_SEQ = T2.ROLE_SEQ
+		  JOIN TB_MNU T4						/*테이블_메뉴*/
+		    ON T2.MNU_SEQ = T4.MNU_SEQ  		    
+		 WHERE T4.MNU_LV = 2					/*메뉴레벨*/
+		   AND T4.AUTH_YN = 'N'					/*권한검사여부*/
+		   AND T1.USER_ID = #{loginInfo.userId}	/*사용자아이디*/
+		 GROUP BY T4.URL		
+	</select>		
+	
+	<!-- 권한이 필요없는 메뉴 여부 확인 -->
+	<select id="isFreeAuth" parameterType="map" resultType="boolean">
+		SELECT IF(COUNT(*) = 1, 1, 0)		
+		  FROM TB_MNU						/*테이블_메뉴*/
+		 WHERE AUTH_YN = 'N'				/*권한검사여부*/
+		   AND URL = #{url}					/*메뉴경로*/
+	</select>	
+	
+	<!-- 비밀번호 일치여부 확인 -->
+	<select id="userPwChk" parameterType="map" resultType="boolean">
+		SELECT IF(COUNT(*) = 1, 1, 0)		
+		  FROM TB_USER							/*테이블_사용자*/
+		 WHERE USER_ID = #{loginInfo.userId}	/*사용자아이디*/
+		   AND USER_PW = #{bfoUserPwModal}		/*사용자비밀번호*/
+	</select>		
+	
+	<!-- 사용자 생성 -->
+	<insert id="insertUser" parameterType="map">
+		INSERT 
+		  INTO TB_USER				/*테이블_사용자*/
+		     ( USER_ID				/*아이디*/
+		     , USER_PW 				/*비밀번호*/
+		     , FST_REG_SEQ 			/*최초등록자ID*/
+		     , LT_UPD_SEQ 			/*최종수정자ID*/
+		     )
+		VALUES
+			 ( #{userId}			/*아이디*/
+			 , #{userPw}			/*비밀번호*/
+		     , 'SYSTEM' 			/*최초등록자ID*/
+		     , 'SYSTEM' 			/*최종수정자ID*/			 
+			 )    
+	</insert>
+	
+	<!-- 로그인 로그 -->
+	<insert id="insertLoginLog" parameterType="map">
+		INSERT 
+		  INTO TB_LOG_LOGIN			/*테이블_로그_로그인*/
+		     ( USER_ID 				/*사용자_아이디*/
+		     , IP 					/*사용자_아이피*/
+		     , LOGIN_CODE 			/*로그인_코드(01:로그인, 02:로그아웃, 03:존재하지 않는 사용자, 04: 잘못된 비밀번호, 05: 비밀번호 오입력 횟수 초과)*/
+		     )
+		VALUES
+			 ( #{userId}			/*사용자_아이디*/
+		     , #{ip}				/*사용자_아이피*/
+		     , #{loginCode} 		/*로그인_코드(01:로그인, 02:로그아웃, 03:존재하지 않는 사용자, 04: 잘못된 비밀번호, 05: 비밀번호 오입력 횟수 초과)*/		 
+			 )    
+	</insert>	
+	
+	<!-- 기본 사용자 그룹 매핑 -->
+	<insert id="insertDefaultGroup" parameterType="map">
+		INSERT 
+		  INTO TB_USER_ROLE_MAP			/*테이블_사용자_권한그룹_매핑*/
+		     ( USER_ID 					/*사용자_아이디*/
+		     , ROLE_SEQ 				/*권한그룹일련번호*/
+		     , FST_REG_SEQ 				/*최초등록자ID*/
+		     )
+		VALUES
+			 ( #{userId}			/*사용자_아이디*/
+			 , '1'					/*권한그룹일련번호*/
+		     , 'SYSTEM' 			/*최초등록자ID*/
+			 )    
+	</insert>	
+	
+	<!-- 비밀번호 오입력 횟수 증가 -->
+	<update id="pwErr" parameterType="map">
+		UPDATE TB_USER
+		   SET PW_ERR_CNT 	= PW_ERR_CNT + 1		/*비밀번호 오입력 횟수*/
+		     , LT_UPD_SEQ 	= 'SYSTEM'				/*최종수정자ID*/
+		     , LT_UPD_DTTI	= NOW() 				/*최종수정일시*/		   
+		 WHERE USER_ID 		= #{userId}				/*아이디*/
+	</update>
+	
+	<!-- 비밀번호 오입력 횟수 초기화 -->
+	<update id="resetPwErrCnt" parameterType="map">
+		UPDATE TB_USER
+		   SET PW_ERR_CNT 	= 0						/*비밀번호 오입력 횟수*/
+		     , LT_UPD_SEQ 	= 'SYSTEM'				/*최종수정자ID*/
+		     , LT_UPD_DTTI	= NOW() 				/*최종수정일시*/		   
+		 WHERE USER_ID 		= #{userId}				/*아이디*/
+	</update>	
+	
+	<!-- 비밀번호 변경 -->
+	<update id="chngUserPw" parameterType="map">
+		UPDATE TB_USER
+		   SET USER_PW 		= #{userPw}				/*비밀번호*/
+		   	 , PW_CH_DTTI   = NOW()					/*비밀번호 최종수정일시*/
+		     , PW_INIT_YN   = 'N'					/*비밀번호 초기화 여부*/
+		     , LT_UPD_SEQ 	= #{loginInfo.userId}	/*최종수정자ID*/
+		     , LT_UPD_DTTI	= NOW() 				/*최종수정일시*/
+		 WHERE USER_ID 		= #{loginInfo.userId}	/*아이디*/
+	</update>		
+</mapper>

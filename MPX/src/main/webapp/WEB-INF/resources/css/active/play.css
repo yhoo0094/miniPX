@@ -1,0 +1,13 @@
+@charset "UTF-8";
+/**
+ * @화면명: 놀이
+ * @작성자: KimSangMin
+ * @생성일: 2023. 11. 29. 오후 8:12:18
+ * @설명: 아이와 함께할 수 있는 놀이 정보를 나누는 메뉴입니다.
+**/
+
+.cardIntro {
+	white-space: pre-line;
+	overflow: auto;
+	height: 0;
+}

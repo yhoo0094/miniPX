@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="mapper.admin.ManageUserMapper">
+
+	<!-- 권한그룹 select태그 만들기-->
+	<select id="makeRoleSelectTag" parameterType="map" resultType="camelCaseMap">
+		SELECT T1.ROLE_SEQ							/*권한그룹일련번호*/
+		     , T1.ROLE_NM							/*권한그룹명*/
+		     , T1.ROLE_ORDER						/*권한그룹표시순서*/
+		     , T1.RMRK								/*권한그룹비고*/
+		  FROM TB_ROLE T1							/*테이블_권한그룹*/
+		 ORDER BY ROLE_ORDER ASC
+	</select>
+	
+	<!-- 사용자 조회 -->
+	<select id="selectUser" parameterType="map" resultType="camelCaseMap">
+		SELECT COUNT(*) OVER() AS ROW_CNT									/*전체 레코드 수(페이징)*/
+		     , T1.USER_ID                                                   /*사용자아이디*/
+		     , T1.USER_NAME                                                 /*사용자이름*/
+		     , T1.BIRTH_DT                                                  /*사용자생년월일*/
+             , T1.PHONE                                                     /*사용자연락처*/
+             , T1.POST                                                      /*사용자우편번호*/
+             , T1.ADDR_1                                                    /*사용자상세주소1*/
+             , T1.ADDR_2                                                    /*사용자상세주소2*/
+		     , T1.BANK                                                      /*사용자계좌은행*/
+		     , T1.ACCOUNT_NUM                                               /*사용자계좌번호*/
+		     , T1.SIGNUP_DT                                                 /*사용자가입일*/
+		     , T1.USER_STATUS_CODE                                          /*사용자상태코드*/
+		     , (SELECT CODE_DETAIL_NM 
+		     	  FROM TB_CODE_DETAIL 
+		     	 WHERE CODE_GROUP = 'USER_STATUS_CODE' 
+		     	   AND CODE_DETAIL = T1.USER_STATUS_CODE) AS USER_STATUS_CODE_NM	/*사용자상태코드_한글명*/
+		     , T1.GENDER                                                    /*사용자성별*/
+		     , T1.MAIL                                                      /*사용자이메일*/
+		     , T1.PIC                                                       /*사용자사진*/
+		     , T1.USE_YN                                                    /*사용자사용여부*/
+		     , T1.RMRK                                                      /*사용자비고*/
+		     , T1.PW_CH_DTTI                                                /*비밀번호최종수정일시*/
+		     , T1.PW_BF                                                     /*이전 비밀번호*/
+		     , T1.PW_ERR_CNT                                                /*비밀번호 오입력 횟수*/
+		     , T1.PW_INIT_YN                                                /*비밀번호 초기화 여부*/
+		     , T1.FST_REG_SEQ                                                /*최초등록자아이디*/
+		     , DATE_FORMAT(T1.FST_REG_DTTI, "%Y/%m/%d %H:%i") FST_REG_DTTI	/*최초등록일시*/
+		     , T1.LT_UPD_SEQ                                                 /*최종수정자아이디*/
+		     , DATE_FORMAT(T1.LT_UPD_DTTI, "%Y/%m/%d %H:%i") LT_UPD_DTTI	/*최종수정일시*/
+		     , T2.ROLE_SEQ													/*권한그룹일련번호*/
+		     , T3.ROLE_NM		     										/*권한그룹명*/
+		  FROM TB_USER T1													/*테이블_사용자*/
+		  	  , TB_USER_ROLE_MAP T2											/*테이블_사용자_권한그룹_매핑*/
+		  	  , TB_ROLE	T3													/*테이블_권한그룹*/
+ 		 WHERE T1.USER_ID = T2.USER_ID
+ 		   AND T2.ROLE_SEQ = T3.ROLE_SEQ		
+ 		<if test='userId != null and userId != ""'>
+		   AND T1.USER_ID = #{userId}
+		</if>			   
+ 		<if test='userName != null and userName != ""'>
+		   AND T1.USER_NAME LIKE CONCAT('%',TRIM(#{userName}),'%')
+		</if>
+		<if test='roleSeq != null and roleSeq != ""'>
+		   AND T2.ROLE_SEQ = #{roleSeq}
+		</if>	
+		<if test='userStatusCode != null and userStatusCode != ""'>
+		   AND T1.USER_STATUS_CODE = #{userStatusCode}
+		</if>				
+		<choose>
+			<when test='orderCol == "userId"'><!-- 아이디 오름차순 -->
+	 			ORDER BY T1.USER_ID ASC
+			</when>
+			<when test='orderCol == "userName"'><!-- 이름 오름차순 -->
+	 			ORDER BY T1.USER_NAME ASC			
+			</when>
+			<when test='orderCol == "fstRegDtti"'><!-- 등록일 내림차순 -->
+	 			ORDER BY T1.FST_REG_DTTI DESC				
+			</when>
+		</choose>			   
+		<if test='strIdx != null and strIdx != ""'>
+		 LIMIT ${strIdx}, ${pageLength}
+		</if>			 
+	</select>	
+	
+	<!-- 사용자 정보 등록 -->
+	<insert id="insertUserInfo" parameterType="map">
+		INSERT 
+		  INTO TB_USER					/*테이블_사용자*/
+		     (
+		       USER_ID					/*사용자아이디*/
+		     , USER_PW					/*사용자비밀번호*/
+		     , USER_NAME 				/*사용자이름*/
+		     , USER_STATUS_CODE			/*사용자상태코드*/
+		     , RMRK						/*사용자비고*/
+		     , FST_REG_SEQ 				/*최초등록자ID*/
+		     , LT_UPD_SEQ 				/*최종수정자ID*/
+		     )
+		VALUES
+			 (
+			   #{userId}	
+			 , 'SXRLcrGA1f5nK8A5cvZICY86tW2d/Rekkm3lrWEgqJU='  	/*1*/
+			 , #{userName}	
+			 , #{userStatusCode}
+			 , #{rmrkModal}
+		     , #{loginInfo.userId} 	
+		     , #{loginInfo.userId}		 
+			 )   
+	</insert>	
+	
+	<!-- 사용자 권한그룹 매핑 등록 -->
+	<insert id="insertUserRoleMap" parameterType="map">
+		INSERT 
+		  INTO TB_USER_ROLE_MAP					/*테이블_사용자_권한그룹_매핑*/
+		     (
+		       USER_ID					/*사용자아이디*/
+		     , ROLE_SEQ 				/*권한그룹일련번호*/
+		     , FST_REG_SEQ 				/*최초등록자ID*/
+		     , LT_UPD_SEQ 				/*최종수정자ID*/
+		     )
+		VALUES
+			 (
+			   #{userId}	
+			 , #{roleSeq}	
+		     , #{loginInfo.userId} 	
+		     , #{loginInfo.userId}		 
+			 )   
+	</insert>		
+	
+	<!-- 사용자 정보 수정 -->
+	<update id="updateUserInfo" parameterType="map">
+		UPDATE TB_USER  											/*테이블_사용자*/
+           SET USER_NAME				= #{userNameModal}			/*사용자이름*/
+			 , USER_STATUS_CODE			= #{userStatusCode}			/*사용자상태코드*/
+			 , RMRK						= #{rmrkModal}				/*사용자비고*/          
+		     , LT_UPD_SEQ 				= #{loginInfo.userId}		/*최종수정자ID*/
+		     , LT_UPD_DTTI				= NOW() 					/*최종수정일시*/
+         WHERE USER_ID					= #{userId}			/*사용자아이디*/
+	</update>		
+	
+	<!-- 사용자 권한그룹 매핑 수정 -->
+	<update id="updateUserRoleMap" parameterType="map">
+		UPDATE TB_USER_ROLE_MAP  									/*테이블_사용자_권한그룹_매핑*/
+           SET ROLE_SEQ					= #{roleSeq}				/*권한그룹일련번호*/
+		     , LT_UPD_SEQ 				= #{loginInfo.userId}		/*최종수정자ID*/
+		     , LT_UPD_DTTI				= NOW() 					/*최종수정일시*/
+         WHERE USER_ID					= #{userId}			/*사용자아이디*/
+	</update>		
+	
+	<!-- 비밀번호 초기화 -->
+	<update id="pwReset" parameterType="map">
+		UPDATE TB_USER  											/*테이블_사용자*/
+           SET USER_PW					= 'SXRLcrGA1f5nK8A5cvZICY86tW2d/Rekkm3lrWEgqJU=' 			/*사용자비밀번호*/
+		     , LT_UPD_SEQ 				= #{loginInfo.userId}		/*최종수정자ID*/
+		     , LT_UPD_DTTI				= NOW() 					/*최종수정일시*/
+         WHERE USER_ID					= #{userId}			/*사용자아이디*/
+	</update>			
+		
+</mapper>

@@ -16,9 +16,21 @@ textarea{
 }
 
 .wrap {
-    width: 100vw;
-    height: 100vh;
+/*     width: 100vw; */
+/*     height: 100vh; */
     min-width: 600px;
+}
+
+.mpxCommomGrid{
+	width: 100%;	
+	text-align: center;
+}
+
+.mpxCommomGrid th{
+	text-align: center;
+    border-top: solid 3px gray;
+    border-bottom: solid 1px gray;
+    line-height: 2;	
 }
 
 .dataTables_scrollHeadInner {
@@ -288,6 +300,7 @@ input[type = 'date']{
 .logoDiv{
     height: 100%;
     padding: 10px;
+    cursor: pointer;
 }
 
 .logoImg{
@@ -840,3 +853,78 @@ label{
 }
 /* 로그인 화면 끝 */
 
+/* 장바구니 화면 시작 */
+.cartImgBox{
+	
+}
+
+.cartImg{
+    width: 120px;
+    height: 120px;
+    margin: 10px;
+}
+
+.cartNm{
+	font-weight: bold;
+}
+
+.cartInfo{
+	vertical-align: top;
+	padding: 1rem;
+}
+
+.cartCnt{
+	width: 3rem;
+}
+
+.amountInfo{
+    border: 1px solid #a99f9f;
+    box-sizing: border-box;	
+    height: 33px;
+    text-align: center;
+}
+
+.minusBtn, .plusBtn{
+    width: 33px;
+    height: 33px;
+    border: none;
+    background-color: #ffffff00;
+    font-weight: bold;
+    font-size: 22px;
+}
+
+.icon-like .on {
+    background: url(/resources/images/etc/icon_like_on.png) no-repeat center;
+    display: inline-block;
+}
+
+.icon-like {
+    width: 25px;
+    height: 23px;
+    background: url(/resources/images/etc/icon_like.png) no-repeat center;
+    display: inline-block;
+}
+
+.btn-like, .btn-delete{
+    background-color: #ffffff00;
+    border: none;	
+}
+
+.icon-trash{
+	width: 25px;
+    height: 23px;
+    background: url(/resources/images/etc/trash-can.png) no-repeat center;
+    display: inline-block;
+    background-size: contain;
+}
+
+.totalPriceBox {
+    position: sticky;
+    /* right: 0; */
+    bottom: 0;
+    text-align: right;
+    background-color: white;
+    height: 50px;
+}
+
+/* 장바구니 화면 끝 */

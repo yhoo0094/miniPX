@@ -94,3 +94,33 @@ button{
 	}	
 } 
 /* 반응형 스타일 끝 */
+
+.category{
+    border-top: 2px solid #475967;
+    margin-bottom: 45px;
+}
+
+.listpage-wrap ul, .listpage-wrap li{
+	list-style: none;
+	padding-left: 0;
+}
+
+.listpage-wrap .category li.active {
+    font-weight: bold;
+    color: #333;
+}
+.listpage-wrap .category li:nth-child(4n+1) {
+    border-left: 1px solid #e0e0e0;
+}
+.listpage-wrap .category li {
+    width: 25%;
+    float: left;
+    line-height: 45px;
+    padding-left: 20px;
+    border-right: 1px solid #e0e0e0;
+    border-bottom: 1px solid #e0e0e0;
+    box-sizing: border-box;
+    font-size: 14px;
+    color: #666;
+    cursor: pointer;
+}

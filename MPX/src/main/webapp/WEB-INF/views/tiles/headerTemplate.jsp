@@ -53,8 +53,10 @@
 <!-- Navbar (sit on top) -->
 <div class="top">
 	<div class="logoDiv">  
-		<img class="logoImg" src="<%=request.getContextPath()%>/resources/images/etc/title_icon.png">
-<!-- 		<a href="/" class="logo-font remove-a">와싸다!</a> -->
+		<a href="<%=request.getContextPath()%>/home">
+			<img class="logoImg" src="<%=request.getContextPath()%>/resources/images/etc/title_icon.png">
+	<!-- 		<a href="/" class="logo-font remove-a">와싸다!</a> -->
+		</a>
  	</div>
  	<div class="navDiv">
 	 	<div class="loginMnuDiv">
@@ -74,7 +76,7 @@
 					<img class="navSearchImg" src="<%=request.getContextPath()%>/resources/images/etc/search_blue.png">
 				</div>
 			</div>
-			<div class="navMnuCol">
+			<div class="navMnuCol" onclick="location.href='/mart/cart'">
 				<img class="navImg" src="<%=request.getContextPath()%>/resources/images/etc/shopping_cart.png">
 				<span> 장바구니</span>
 			</div>

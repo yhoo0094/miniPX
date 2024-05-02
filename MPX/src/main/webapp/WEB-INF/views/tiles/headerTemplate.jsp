@@ -67,15 +67,15 @@
 				<span class="loginMnu grayText"><span id="sessionUserId">김상민</span>님 환영합니다.</span>
 		</div>	
 		<div id="navMnuDiv" class="navMnuDiv">
-			<div class="navSearchDiv">
+			<form id="navSearchForm" class="navSearchDiv" action="#"> 
 				<div class="navSearchCol">
-					<select class="navSearchType form-select">
-						<option>분류</option>
+					<select id="navSearchType" name="navSearchType" class="navSearchType form-select">
+						<option value="">분류</option>
 					</select>
-					<input type="text" class="form-control">
-					<img class="navSearchImg" src="<%=request.getContextPath()%>/resources/images/etc/search_blue.png">
+					<input type="text" id="navSearchItemNm" name="navSearchItemNm" class="form-control" onkeypress="if(event.keyCode == 13){searchItem(event)}">
+					<img class="navSearchImg" src="<%=request.getContextPath()%>/resources/images/etc/search_blue.png" onclick="searchItem(event)">
 				</div>
-			</div>
+			</form>
 			<div class="navMnuCol" onclick="location.href='/mart/cart'">
 				<img class="navImg" src="<%=request.getContextPath()%>/resources/images/etc/shopping_cart.png">
 				<span> 장바구니</span>

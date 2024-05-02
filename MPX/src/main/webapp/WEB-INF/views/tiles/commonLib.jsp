@@ -21,6 +21,7 @@
 
   	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
 	<link rel="stylesheet" href="<%=request.getContextPath()%>/resources/css/font.css"> <!-- 폰트적용 -->
+  	
 	<link rel="preconnect" href="https://fonts.googleapis.com"> <!-- google 폰트적용 -->
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin> <!-- google 폰트적용 -->
 	<link href="https://fonts.googleapis.com/css2?family=Open+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400;1,500;1,600;1,700;1,800&display=swap" rel="stylesheet"> <!-- google 폰트적용 -->
@@ -75,4 +76,22 @@
 	<script>
 		const authGrade = '<%= request.getAttribute("authGrade") %>';
 		const contextPath = "<%=request.getContextPath()%>";
+		
+		//bootstrap cdn 오류 대응
+        window.onload = function() {
+//         	// CDN에서 CSS 로드 시도
+//             var script = document.createElement('script');
+//             script.src = 'https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css';
+//             // 로드 실패 시 로컬 CSS를 로드하는 함수
+//             script.onerror = function() {
+//             	var link = document.createElement('link');
+//                 link.rel = 'stylesheet';
+//                 link.type = 'text/css';
+//                 link.href = '/resources/lib/bootstrap-5.1.3-dist/css/bootstrap.min.css';
+//                 document.getElementsByTagName('head')[0].appendChild(link);
+//             };
+//          	// 현재 스크립트에 추가
+//             document.getElementsByTagName('head')[0].appendChild(script);
+        };		
+		
 	</script>

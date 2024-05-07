@@ -74,4 +74,5 @@ public class MartService {
 		result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
 		return result;
 	}	
+	
 }

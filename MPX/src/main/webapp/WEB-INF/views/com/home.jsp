@@ -5,7 +5,7 @@
 	<ul id="schCategory" class="category clear"></ul>
 	<div class="filter clear">
 		<ul id="sorting" class="sorting">
-			<li class="active">상품명순</li>
+			<li class="active" sortingCode="01">상품명순</li>
 			<li>판매량순</li>
 			<li>낮은 가격순</li>
 			<li>높은 가격순</li>

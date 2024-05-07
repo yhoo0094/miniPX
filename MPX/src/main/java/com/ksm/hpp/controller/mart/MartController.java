@@ -67,7 +67,7 @@ public class MartController extends BaseController {
 		Map<String, Object> outData = martService.selectDtlTypeList((StringBuilder)request.getAttribute("IN_LOG_STR"), inData);
 		
 		ResponseUtil.setResAuto(response, inData, outData);
-	}		
+	}	
 }
 
 

@@ -9,6 +9,7 @@
 		     , T1.ITEM_NM                                            		/*상품명*/	
 		     , T1.PRICE                                            			/*가격*/	
 		     , T1.UNIT                                            			/*판매단위*/	
+		     , T1.PRICE * T1.UNIT AS SELL_PRICE								/*판매가격*/
 		     , T1.RMRK                                            			/*비고*/	
 		     , T1.IMG                                            			/*이미지*/	
 		     , T1.ITEM_TYPE_CODE                                            /*상품 분류코드*/	
@@ -38,7 +39,25 @@
 		<if test='navSearchType != null and navSearchType != ""'>     	
 		   AND T1.ITEM_NM LIKE CONCAT('%',TRIM(#{navSearchItemNm}),'%')
 		</if>
-		 ORDER BY T1.ITEM_TYPE_CODE ASC, T1.ITEM_DTL_TYPE_CODE ASC, T1.ITEM_NM ASC 
+		
+		<choose>
+		    <when test='itemSortCode == null or itemSortCode == ""'>
+		        ORDER BY T1.ITEM_TYPE_CODE ASC, T1.ITEM_DTL_TYPE_CODE ASC, T1.ITEM_NM ASC 
+		    </when>
+		    <when test='itemSortCode == "01"'><!-- 상품명순 -->
+		        ORDER BY T1.ITEM_NM ASC 
+		    </when>
+		    <when test='itemSortCode == "02"'><!-- 판매량순 -->
+		        ORDER BY T1.ITEM_NM ASC 
+		    </when>
+		    <when test='itemSortCode == "03"'><!-- 낮은 가격순 -->
+		        ORDER BY SELL_PRICE ASC 
+		    </when>
+		    <when test='itemSortCode == "04"'><!-- 높은 가격순 -->
+		        ORDER BY SELL_PRICE DESC 
+		    </when>
+		</choose>			 
+		 
 		<if test='strIdx != null and strIdx != ""'>
 		 LIMIT ${strIdx}, ${pageLength}
 		</if>			 

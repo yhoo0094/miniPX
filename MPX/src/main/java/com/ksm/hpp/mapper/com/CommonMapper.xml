@@ -46,12 +46,13 @@
 			,  T1.CODE_DETAIL_NM              /*코드상세명*/
 			,  T1.MODIFY_YN                   /*코드수정가능여부*/
 			,  T1.DETAIL_ORDER                /*코드상세정렬순서*/
-			,  T1.FST_REG_SEQ                  /*최초등록자아이디*/
+			,  T1.FST_REG_SEQ                 /*최초등록자아이디*/
 			,  T1.FST_REG_DTTI                /*최초등록일시*/
-			,  T1.LT_UPD_SEQ                   /*최종수정자아이디*/
+			,  T1.LT_UPD_SEQ                  /*최종수정자아이디*/
 			,  T1.LT_UPD_DTTI                 /*최종수정일시*/
 		  FROM TB_CODE_DETAIL T1			  /*테이블_코드상세*/
 		 WHERE T1.CODE_GROUP = #{codeGroup}  
+		 ORDER BY T1.DETAIL_ORDER
 	</select>
 	
 	<!-- 사이드바 메뉴 목록 조회 -->

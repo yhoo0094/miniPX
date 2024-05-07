@@ -1,6 +1,52 @@
 $(() => {
-	selectDtlTypeList();//상세 분류 목록 조회
+	selectItemSortCode();	//상품 정렬 코드 조회
 })
+
+//상품 정렬 코드 조회
+function selectItemSortCode(){
+	$com.loadingStart();	
+
+	$.ajax({
+        url: '/common/selectCodeList.do',
+        type: 'POST',
+        data: {codeGroup: 'ITEM_SORT_CODE',},
+        contentType: 'application/x-www-form-urlencoded; charset=UTF-8', 
+        dataType: 'json',
+        success: function (result) {
+			let totalTag = '';
+			for(let item of result.OUT_DATA){
+				let isActive = (totalTag == '')?' active':'';
+				let tag = '<li class="' + isActive + '" itemSortCode="' + item.codeDetail + '">' + item.codeDetailNm + '</li>';
+				totalTag += tag;		
+			}
+			
+			if(totalTag == ''){
+				totalTag = '<div class="noItemMsgBox">정렬 기준이 존재하지 않습니다.</div>';
+			}
+			
+			$('#sorting').html(totalTag);				
+			
+			$com.loadingEnd();
+			
+			setSchItemSortCode()	//상품 정렬 코드 선택 이벤트
+			selectDtlTypeList();	//상세 분류 목록 조회
+        },
+	    error: function(textStatus, jqXHR, thrownError){
+			$com.loadingEnd();
+		} 
+    });		
+}
+
+//상품 정렬 코드 선택 이벤트
+function setSchItemSortCode(){
+	$('#sorting > li').on({
+		click : function(){
+			$('#sorting > li').removeClass('active');
+			$(this).addClass('active');
+			selectItemList();	//상품 리스트 조회
+		}
+	})
+}
 
 //상세 분류 목록 조회
 function selectDtlTypeList(){
@@ -37,8 +83,7 @@ function setSchCategoryList(){
 		click : function(){
 			$('.schCategoryList').removeClass('active');
 			$(this).addClass('active');
-
-			selectItemList();
+			selectItemList();	//상품 리스트 조회
 		}
 	})
 }
@@ -55,6 +100,8 @@ function selectItemList() {
 	formObject.useYn = 'Y';
 	let itemDtlTypeCode = $('.schCategoryList.active').attr('itemDtlTypeCode');
 	formObject.itemDtlTypeCode = itemDtlTypeCode;
+	
+	formObject.itemSortCode = $('#sorting > .active').attr('itemSortCode');
 
 	$.ajax({
         url: '/mart/selectItemList.do',
@@ -88,9 +135,8 @@ function selectItemList() {
 			
 			$com.loadingEnd();
         },
-    error: function(textStatus, jqXHR, thrownError){
-		$com.loadingEnd();
-	} 
-        
+	    error: function(textStatus, jqXHR, thrownError){
+			$com.loadingEnd();
+		} 
     });		
 }

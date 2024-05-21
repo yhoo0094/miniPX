@@ -4,13 +4,13 @@
 <div class="listpage-wrap">
 	<ul id="schCategory" class="category clear"></ul>
 	<div class="filter clear">
-		<ul id="sorting" class="sorting">
-			<li class="active" sortingCode="01">상품명순</li>
-			<li>판매량순</li>
-			<li>낮은 가격순</li>
-			<li>높은 가격순</li>
-		</ul>
+		<ul id="sorting" class="sorting"></ul>
 	</div>	
 </div>
 
 <div id="itemBox" class="itemBox"></div>
+<div class="pagination" id="pagination"></div>
+
+<div class="table_btn_wrapper">
+	<button type="button" id="createBtn" class="papang-create-btn papang_btn lh30px display-n" onclick="mvCreateItem()">신규</button>
+</div>

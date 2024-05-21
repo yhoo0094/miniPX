@@ -86,7 +86,6 @@ public class UserService extends BaseService {
 			if(loginInfo == null) {	//해당 계정이 조회되지 않을 때
 				loginInfo = new HashMap();
 				loginCode = "03";
-				cnt = sqlSession.insert("mapper.user.UserMapper.insertLoginLog", inData);
 				result.put(Constant.OUT_RESULT_MSG, "존재하지 않는 아이디이거나 비밀번호가 일치하지 않습니다.");	
 				result.put(Constant.RESULT, Constant.RESULT_FAILURE);
 				break;
@@ -95,6 +94,9 @@ public class UserService extends BaseService {
 				inData.put("poliCode", "01");	//정책분류코드(01:사용자)
 				List<Map<String, Object>> userPoli = sqlSession.selectList("mapper.com.CommonMapper.selectPoli", inData);
 				result.put("userPoli", userPoli);
+				
+				//로그 등록을 위한 사용자 일련번호 저장
+				inData.put("userSeq", loginInfo.get("userSeq"));
 				
 				//해당 계정의 비밀번호 오입력 횟수가 초과된 경우
 				int pwErrCnt = Integer.parseInt((String) loginInfo.get("pwErrCnt"));	//사용자 비밀번호 오입력 횟수
@@ -110,30 +112,30 @@ public class UserService extends BaseService {
 				String userPw = StringUtil.getSHA256("HPP" + (String)inData.get("userPw") + "MELONA");
 				inData.put("userPw", userPw);				
 				
-				//비밀번호가 일치하지 않을 때
-				if(!userPw.equals(loginInfo.get("userPw"))) {		
-					cnt = sqlSession.update("mapper.user.UserMapper.pwErr", inData);
-					if(cnt != 1) {throw new ConfigurationException("비밀번호 불일치 횟수 증가 오류 발생");}
-					
-					loginCode = "04";
-					result.put(Constant.OUT_RESULT_MSG, "존재하지 않는 아이디이거나 비밀번호가 일치하지 않습니다.");	
-					result.put(Constant.RESULT, Constant.RESULT_FAILURE);
-					log.info(inData.get("userId") + " 계정 비밀번호 오입력 횟수 " + cnt + "회 증가");
-					break;					
-				}
+				//비밀번호가 일치하지 않을 때 => 불필요
+//				if(!userPw.equals(loginInfo.get("userPw"))) {		
+//					cnt = sqlSession.update("mapper.user.UserMapper.pwErr", inData);
+//					if(cnt != 1) {throw new ConfigurationException("비밀번호 불일치 횟수 증가 오류 발생");}
+//					
+//					loginCode = "04";
+//					result.put(Constant.OUT_RESULT_MSG, "존재하지 않는 아이디이거나 비밀번호가 일치하지 않습니다.");	
+//					result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+//					log.info(inData.get("userId") + " 계정 비밀번호 오입력 횟수 " + cnt + "회 증가");
+//					break;					
+//				}
 				
-				//비밀번호 유효기간이 만료된 경우
-				int pswdLimDays = Integer.parseInt((String) PapangUtil.getMapFromList(userPoli, "poliNm", "PSWD_LIM_DAYS").get("poliVal"));	//비밀번호 변경 주기(일)
-				String pwChDtti = (String) loginInfo.get("pwChDtti");	//비밀번호 최종수정일시
-				String pswdLimDate = DateUtil.addDate(pwChDtti, 0, 0, pswdLimDays);	//비밀번호 변경 기한
-				
-		        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
-		        Calendar cal = Calendar.getInstance();
-		        String strToday = sdf.format(cal.getTime());				
-				
-				if(DateUtil.isBefore(pswdLimDate, strToday)) {	//비밀번호 변경 기한이 현재 날짜보다 이전이면
-					result.put(Constant.RESULT_DETAIL, Constant.PSWD_LIM_ISSUE);
-				}
+				//비밀번호 유효기간이 만료된 경우 => 불필요
+//				int pswdLimDays = Integer.parseInt((String) PapangUtil.getMapFromList(userPoli, "poliNm", "PSWD_LIM_DAYS").get("poliVal"));	//비밀번호 변경 주기(일)
+//				String pwChDtti = (String) loginInfo.get("pwChDtti");	//비밀번호 최종수정일시
+//				String pswdLimDate = DateUtil.addDate(pwChDtti, 0, 0, pswdLimDays);	//비밀번호 변경 기한
+//				
+//		        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
+//		        Calendar cal = Calendar.getInstance();
+//		        String strToday = sdf.format(cal.getTime());				
+//				
+//				if(DateUtil.isBefore(pswdLimDate, strToday)) {	//비밀번호 변경 기한이 현재 날짜보다 이전이면
+//					result.put(Constant.RESULT_DETAIL, Constant.PSWD_LIM_ISSUE);
+//				}
 				
 				//비밀번호 오입력 횟수 초기화
 				cnt = sqlSession.update("mapper.user.UserMapper.resetPwErrCnt", inData);

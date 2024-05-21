@@ -1,5 +1,9 @@
 @charset "UTF-8";
 
+#centerCon{
+	flex: 10% 0.8 0;
+}
+
 button{
 	font-size: 1rem;
 }
@@ -143,7 +147,7 @@ button{
 }
 
 .filter .sorting li.active {
-    color: #475967;
+    color: #3153ff;
     font-weight: bold;
 }
 

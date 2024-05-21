@@ -4,10 +4,11 @@
 	
 	<!-- 사용자 조회-->
 	<select id="selectUser" parameterType="map" resultType="camelCaseMap">
-		SELECT T1.USER_ID										/*아이디*/
+		SELECT T1.USER_SEQ										/*사용자일련번호*/
+			 , T1.USER_ID										/*아이디*/
 			 , T1.USER_PW										/*비밀번호*/
-			 , T1.USER_NAME										/*이름*/
-			 , T1.BIRTH_DT										/*생년월일*/
+			 , T1.USER_NM										/*이름*/
+			 , T1.NICKNAME										/*별명*/
 			 , T1.PHONE											/*연락처*/
 			 , DATE_FORMAT(T1.FST_REG_DTTI, '%Y%m%d') SIGNUP_DT	/*가입일*/
 			 , DATE_FORMAT(T1.PW_CH_DTTI, '%Y%m%d') PW_CH_DTTI	/*비밀번호 최종수정일시*/
@@ -18,7 +19,7 @@
 		  FROM TB_USER T1										/*테이블_사용자*/
 		  	 , TB_USER_ROLE_MAP	T2								/*테이블_사용자_권한그룹_매핑*/
 		  	 , TB_ROLE T3										/*테이블_권한그룹*/
-		 WHERE T1.USER_ID = T2.USER_ID
+		 WHERE T1.USER_SEQ = T2.USER_SEQ
 		   AND T3.ROLE_SEQ = T2.ROLE_SEQ
 		<if test='userId != null and userId != ""'>
 		   AND T1.USER_ID = #{userId}
@@ -35,7 +36,7 @@
 		  JOIN TB_MNU T4						/*테이블_메뉴*/
 		    ON T2.MNU_SEQ = T4.MNU_SEQ  		    
 		 WHERE T4.MNU_LV = 2					/*메뉴레벨*/
-		   AND T1.USER_ID = #{loginInfo.userId}			/*사용자아이디*/
+		   AND T1.USER_SEQ = #{loginInfo.userSeq}			/*사용자일련번호*/
 		 GROUP BY T4.URL	
 	</select>
 	
@@ -50,7 +51,7 @@
 		    ON T2.MNU_SEQ = T4.MNU_SEQ  		    
 		 WHERE T4.MNU_LV = 2					/*메뉴레벨*/
 		   AND T4.AUTH_YN = 'N'					/*권한검사여부*/
-		   AND T1.USER_ID = #{loginInfo.userId}	/*사용자아이디*/
+		   AND T1.USER_SEQ = #{loginInfo.userSeq}			/*사용자일련번호*/
 		 GROUP BY T4.URL		
 	</select>		
 	
@@ -94,11 +95,17 @@
 		     ( USER_ID 				/*사용자_아이디*/
 		     , IP 					/*사용자_아이피*/
 		     , LOGIN_CODE 			/*로그인_코드(01:로그인, 02:로그아웃, 03:존재하지 않는 사용자, 04: 잘못된 비밀번호, 05: 비밀번호 오입력 횟수 초과)*/
+			<if test="userSeq != null and userSeq != ''">
+			 , USER_SEQ
+			</if>		     
 		     )
 		VALUES
 			 ( #{userId}			/*사용자_아이디*/
 		     , #{ip}				/*사용자_아이피*/
-		     , #{loginCode} 		/*로그인_코드(01:로그인, 02:로그아웃, 03:존재하지 않는 사용자, 04: 잘못된 비밀번호, 05: 비밀번호 오입력 횟수 초과)*/		 
+		     , #{loginCode} 		/*로그인_코드(01:로그인, 02:로그아웃, 03:존재하지 않는 사용자, 04: 잘못된 비밀번호, 05: 비밀번호 오입력 횟수 초과)*/		
+			<if test="userSeq != null and userSeq != ''">
+			 , #{userSeq}
+			</if>			     
 			 )    
 	</insert>	
 	
@@ -121,7 +128,7 @@
 	<update id="pwErr" parameterType="map">
 		UPDATE TB_USER
 		   SET PW_ERR_CNT 	= PW_ERR_CNT + 1		/*비밀번호 오입력 횟수*/
-		     , LT_UPD_SEQ 	= 'SYSTEM'				/*최종수정자ID*/
+		     , LT_UPD_SEQ 	= 1						/*최종수정자ID*/
 		     , LT_UPD_DTTI	= NOW() 				/*최종수정일시*/		   
 		 WHERE USER_ID 		= #{userId}				/*아이디*/
 	</update>
@@ -130,7 +137,7 @@
 	<update id="resetPwErrCnt" parameterType="map">
 		UPDATE TB_USER
 		   SET PW_ERR_CNT 	= 0						/*비밀번호 오입력 횟수*/
-		     , LT_UPD_SEQ 	= 'SYSTEM'				/*최종수정자ID*/
+		     , LT_UPD_SEQ 	= 1						/*최종수정자ID*/
 		     , LT_UPD_DTTI	= NOW() 				/*최종수정일시*/		   
 		 WHERE USER_ID 		= #{userId}				/*아이디*/
 	</update>	

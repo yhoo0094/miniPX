@@ -32,13 +32,11 @@ public class MartService {
 		Map<String, Object> result = new HashMap<String, Object>();
 		
 		List<Map<String, Object>> list = sqlSession.selectList("mapper.mart.MartMapper.selectItemList", inData);
-		result.put("data", list);
 		result.put(Constant.OUT_DATA, list);
-		if(!list.isEmpty()) {
-			result.put("recordsFiltered", list.get(0).get("rowCnt"));	//필터링 후의 총 레코드 수
-		} else {
-			result.put("recordsFiltered", "0");	//필터링 후의 총 레코드 수
-		}		
+		
+		int cnt = sqlSession.selectOne("mapper.mart.MartMapper.selectItemListCount", inData);
+		result.put("TOTAL_COUNT", cnt);	//필터링 후의 총 레코드 수
+
 		result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
 		return result;
 	}		

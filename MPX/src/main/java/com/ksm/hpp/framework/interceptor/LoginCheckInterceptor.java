@@ -33,8 +33,8 @@ public class LoginCheckInterceptor extends HandlerInterceptorAdapter {
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		Map<String, Object> loginInfo = RequestUtil.getLoginInfo(request);
 		if(loginInfo == null) {
-//			response.sendRedirect("/login");
-//			return false; // 추가 처리 중단
+			response.sendRedirect("/login");
+			return false; // 추가 처리 중단
 		} else {
 			HttpSession session = request.getSession();
 			int sessionTime = (Integer) session.getAttribute(Constant.SESSION_TIME);

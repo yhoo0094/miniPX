@@ -32,7 +32,7 @@
 	<span id='mnuTitle'></span>
 </div>
 <div class="menuPathDiv">
-	<a href="/" class="remove-a"><span>와사다 마트</span></a> &gt
+	<a href="/" class="remove-a"><span>wasada mart</span></a> &gt
 	<a href="/" id='infoTopUrl' class="remove-a"><span id='infoMnuUpperNm'></span></a> &gt
 	<a href="/" id='infoUrl' class="remove-a"><span id='infoMnuNm'></span></a> -
 	<span id='infoTxt'></span>

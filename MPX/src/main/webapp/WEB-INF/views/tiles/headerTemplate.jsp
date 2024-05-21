@@ -64,7 +64,7 @@
 				<span class="sessionTimer"><i class="fa-solid fa-clock loginMnuIcon"></i>자동 로그아웃: <span id="sessionTimer">02:00:00</span></span> 
 				<a href="<%=request.getContextPath()%>/user/myPage" class="loginMnu remove-a"><i class="fa-solid fa-user loginMnuIcon"></i>마이페이지</a>
 				<a href="javascript:loginOut()" class="loginMnu remove-a"><i class="fa-solid fa-door-open loginMnuIcon"></i>로그아웃</a>	
-				<span class="loginMnu grayText"><span id="sessionUserId">김상민</span>님 환영합니다.</span>
+				<span class="loginMnu grayText"><span id="sessionUserId"></span>님 환영합니다.</span>
 		</div>	
 		<div id="navMnuDiv" class="navMnuDiv">
 			<form id="navSearchForm" class="navSearchDiv" action="#"> 
@@ -79,10 +79,20 @@
 			<div class="navMnuCol" onclick="location.href='/mart/cart'">
 				<img class="navImg" src="<%=request.getContextPath()%>/resources/images/etc/shopping_cart.png">
 				<span> 장바구니</span>
+				
+		        <div class="hiddenDiv">
+		            <p>Here is the hidden content that appears on hover.</p>
+		        </div>					
+				
 			</div>
-			<div class="navMnuCol">
+			<div id="navMnuBox" class="navMnuCol">
 				<img class="navImg" src="<%=request.getContextPath()%>/resources/images/etc/menu.png">
 				<span> 메뉴</span>
+		        <div id="mnuBox" class="hiddenDiv tl">
+		        	<p class="mnuItem">메뉴1</p>
+		        	<p class="mnuItem">메뉴2</p>
+		        	<p class="mnuItem">메뉴3</p>
+		        </div>	
 			</div>			
 		</div>
 	</div>

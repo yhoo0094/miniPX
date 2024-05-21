@@ -1,6 +1,14 @@
 $(() => {
 	selectItemSortCode();	//상품 정렬 코드 조회
+	setBtn();	//버튼 표시여부 설정
 })
+
+//버튼 표시여부 설정
+function setBtn(){
+	if (loginInfo.roleSeq == 3) {			//권한그룹이 관리자 일 때
+		$('#createBtn').css('display', 'inline-block');
+	}
+}
 
 //상품 정렬 코드 조회
 function selectItemSortCode(){
@@ -89,7 +97,10 @@ function setSchCategoryList(){
 }
 
 //상품 리스트 조회
-function selectItemList() {
+let currentPage = 1;
+const pageSize = 10;
+function selectItemList(page = 1) {
+    currentPage = page;
 	$com.loadingStart();	
 	
 	let formData = new FormData($("#navSearchForm")[0]);
@@ -102,6 +113,9 @@ function selectItemList() {
 	formObject.itemDtlTypeCode = itemDtlTypeCode;
 	
 	formObject.itemSortCode = $('#sorting > .active').attr('itemSortCode');
+    formObject.page = currentPage;
+    formObject.pageSize = pageSize;
+    formObject.offset = (currentPage - 1) * pageSize;
 
 	$.ajax({
         url: '/mart/selectItemList.do',
@@ -120,7 +134,7 @@ function selectItemList() {
 								+ '<div class="itemName itemInfo">' + item.itemNm + '(' + item.unit + '개)</div>'
 								+ '<div class="itemPrice itemInfo">' + $util.numberWithCommas(item.price * item.unit )+ '원</div>'
 								+ '<div class="itemBtn itemInfo">'
-									+ '<button type="button" class="btn btn-dark font-bold" onClick="copyNm(this)" data-nm="' + item.itemNm + '">장바구니 담기</button>'
+									+ '<button type="button" class="btn btn-dark font-bold" onClick="insertBasket(this)" data-item-Seq="' + item.itemSeq + '">장바구니 담기</button>'
 								+ '</div>'
 							+ '</div>'
 						+ '</div>';
@@ -132,6 +146,7 @@ function selectItemList() {
 			}
 			
 			$('#itemBox').html(totalTag);				
+			updatePagination(result.TOTAL_COUNT, pageSize, currentPage);
 			
 			$com.loadingEnd();
         },
@@ -139,4 +154,26 @@ function selectItemList() {
 			$com.loadingEnd();
 		} 
     });		
+}
+
+//페이지네이션
+function updatePagination(totalCount, pageSize, currentPage) {
+    let totalPages = Math.ceil(totalCount / pageSize);
+    let paginationHTML = '';
+
+    for (let i = 1; i <= totalPages; i++) {
+        paginationHTML += `<button class="${i === currentPage ? 'active' : ''}" onclick="selectItemList(${i})">${i}</button>`;
+    }
+
+    $('#pagination').html(paginationHTML);
+}
+
+//장바구니 담기
+function insertBasket(target){
+	let itemSeq = $(target).data('itemSeq');
+}
+
+//신규 상품 등록 페이지 이동
+function mvCreateItem(){
+	location.href = "/mart/item/itemEdit"
 }

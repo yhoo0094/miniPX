@@ -144,8 +144,12 @@ public class PageController {
 			//읽기 권한검사
 			inData.put("url", url1 + "/" + url2);
 			Map<String, Object> readAuth = commonService.readAuthChk((StringBuilder)request.getAttribute("IN_LOG_STR"), request, inData);
+			
 			if(!(Boolean)readAuth.get("result")) {	
 				//권한이 없을 경우
+				result.setViewName("error/noAuth");
+			} else if(url3.toLowerCase().indexOf("edit") != -1 && (int)readAuth.get("authGrade") < 2) {	
+				//수정 페이지 이동인 경우 && 쓰기 권한이 없을 경우
 				result.setViewName("error/noAuth");
 			} else {			
 				//최종 권한 확인 성공한 경우

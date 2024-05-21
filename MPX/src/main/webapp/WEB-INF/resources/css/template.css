@@ -115,7 +115,7 @@ input[type = 'date']{
   --right-width: 150px;
   --left-width: 150px;  
   --navMnu-color: #692626;
-  --navMnu-backGround: #ccc;
+  --navMnu-backGround: #f4f8fa;
   --hpp-color:rgb(255 224 112);
 }
 
@@ -132,6 +132,7 @@ input[type = 'date']{
 .content {
 	min-height: calc(100vh - var(--header-heigth) - var(--footer-heigth));
 	display: flex;
+	justify-content: center;
 }
 
 #leftCon{
@@ -185,10 +186,10 @@ input[type = 'date']{
     position: sticky;
     width: 100%;
     height: var(--header-heigth);
-    background-color: #f4f8fa;
+    background-color: var(--navMnu-backGround);
     display: flex;
     align-items: center;
-        box-shadow: 0px 2px 7px 0px rgba(0, 0, 0, 0.55);
+    box-shadow: 0px 2px 7px 0px rgba(0, 0, 0, 0.55);
     z-index: 1;
 }
 
@@ -212,10 +213,11 @@ input[type = 'date']{
     justify-content: center;
     align-items: center;
     flex-direction: column;
+    box-shadow: 1px 0px 4px 1px rgb(0 0 0 / 75%);
 }
 
 .bottom .devInfo{
-	color: var(--navMnu-color);
+/* 	color: var(--navMnu-color); */
 	font-weight: 900;
     font-size: small;
 }
@@ -402,7 +404,7 @@ input[type = 'date']{
 }
 
 .papang-create-btn, .papang-search-btn{
-    background-color: #ffc107;
+    background-color: #0dcaf0;;
 } 
 
 .papang-excel-btn{
@@ -929,3 +931,58 @@ label{
 }
 
 /* 장바구니 화면 끝 */
+
+
+.navMnuCol {
+    position: relative;
+}
+
+.hiddenDiv {
+    display: none;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background-color: white;
+    border: 1px solid #ccc;
+    padding: 10px;
+    z-index: 1;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    width: 200px;
+}
+
+.hiddenDiv::after {
+    content: '';
+    position: absolute;
+    top: -10px;
+    right: 1px;
+    transform: translateX(-50%);
+    border-width: 0 10px 10px 10px;
+    border-style: solid;
+    border-color: transparent transparent white transparent;
+}
+
+.navMnuCol:hover .hiddenDiv {
+    display: block;
+}
+
+.pagination {
+	display: flex;
+	justify-content: center;
+	margin-top: 20px;
+}
+
+.pagination button {
+	margin: 0 5px;
+	padding: 10px 20px;
+	border: 1px solid #ccc;
+	background-color: #fff;
+	cursor: pointer;
+}
+
+.pagination button.active {
+	background-color: #212529;
+	color: #fff;
+	border-color: #212529;
+	font-weight: bold;
+}

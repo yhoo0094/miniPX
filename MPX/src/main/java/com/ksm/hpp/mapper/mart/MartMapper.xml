@@ -4,8 +4,8 @@
 
 	<!-- 상품 리스트 조회 -->
 	<select id="selectItemList" parameterType="map" resultType="camelCaseMap">
-		SELECT COUNT(*) OVER() AS ROW_CNT									/*전체 레코드 수(페이징)*/
-		     , T1.ITEM_SEQ                                            		/*상품일련번호*/	
+		SELECT SQL_CALC_FOUND_ROWS
+		       T1.ITEM_SEQ                                            		/*상품일련번호*/	
 		     , T1.ITEM_NM                                            		/*상품명*/	
 		     , T1.PRICE                                            			/*가격*/	
 		     , T1.UNIT                                            			/*판매단위*/	
@@ -58,9 +58,14 @@
 		    </when>
 		</choose>			 
 		 
-		<if test='strIdx != null and strIdx != ""'>
-		 LIMIT ${strIdx}, ${pageLength}
-		</if>			 
+		<if test='page != null and page != ""'>
+		 LIMIT ${pageSize} OFFSET ${offset}
+		</if>
+	</select>
+	
+	<!-- 상품 리스트 수 조회 -->
+	<select id="selectItemListCount" parameterType="map" resultType="int">
+	    SELECT FOUND_ROWS()
 	</select>	
 	
 	<!-- 분류 목록 조회 -->

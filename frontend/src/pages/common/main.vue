@@ -33,8 +33,6 @@
   //로그아웃
   const logout = () => {
     userStore.logout();
-    // Cookies.remove('accessToken');
-    // router.push('Login')
   }
 
   //로그인 여부 확인

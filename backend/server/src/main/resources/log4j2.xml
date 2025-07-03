@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration status="INFO">
+<!-- 로그레벨 OFF > FATAL > ERROR > WARN > INFO > DEBUG > TRACE > ALL -->
+ 
+<!--  
+%m: 로그 내용 출력
+%p: debug, info, warn, error, fatal 등의 priority 출력
+%r: 어플이 시작 후 이벤트가 발생하는 시점까지의 경과시간 밀리세컨드로 출력
+%c: package 출력
+%c{n}: n(숫자) 만큼의 package를 가장 하단 부터 역으로 출력
+예) %c{2} 일때 a.b.c 는 b.c 로 출력된다.
+%n: 개행문자 출력. 플렛폼에 따라 \r\n 또는 \n 출력.
+%d: 이벤트 발생 날짜 출력 ( 프로그램의 실행속도를 느리게 한다.)
+예) %d{HH:mm:ss} 또는 %d{dd MMMM yyyy HH:mm:ss}
+%C: 호출자의 클래스명 출력
+예) %C{2} 일때 a.b.c.TestClass 는 c.TestClass 로 출력된다.
+%M: method 이름.
+%F: 프로그램 파일명.
+%l: caller의 정보
+%L: caller의 라인수
+%x: thread와 관련된 NDC(nested diagnostic context)
+%X: thread와 관련된 MDC(mapped diagnostic context)
+%%: % 표시를 출력
+%t: 쓰레드 이름
+-->
+ 
+    <appenders>
+    	<!-- 콘솔 -->
+        <console name="console" target="SYSTEM_OUT"><!-- 콘솔에 출력하는 방식 설정 -->
+            <patternLayout pattern="%5p %d{yyyy-MM-dd hh:mm:ss,SSS} [%C{3}.%M] %m%n"/>
+        </console>
+        
+        <console name="sql" target="SYSTEM_OUT"><!-- 콘솔에 출력하는 방식 설정 -->
+            <patternLayout pattern="%5p %d{yyyy-MM-dd hh:mm:ss,SSS} [%C{3}.%M] %n%n %m %n%n"/>
+        </console>
+        
+        <!-- 파일  -->
+        <RollingFile name ="RollingFile">
+        	<!-- 개발환경 로그 경로 -->
+            <FileName>C:/log/MPX/MPX.log</FileName>
+            <FilePattern>C:/log/MPX/MPX_%d{yyyy-MM-dd-hh-mm}.log</FilePattern>
+            <PatternLayout>
+                <Pattern>%5p %d{yyyy-MM-dd hh:mm:ss,SSS} [%C{3}.%M] %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+<!--                 <TimeBasedTriggeringPolicy interval = "1" modulate = "true"/> -->
+                <!-- <SizeBasedTriggeringPolicy size="100MB"/> -->
+                <!-- <CronTriggeringPolicy schedule="0 0/2 * 1/1 * ? *" /> -->
+            </Policies>
+            <DefaultRolloverStrategy max="5" />
+        </RollingFile>
+        
+        <RollingFile name ="RollingFileError">
+            <FileName>C:/log/mylog_error.txt</FileName>
+            <FilePattern>C:/log/%d{yyyy-MM-dd-hh-mm}/mylog_error.zip</FilePattern>
+            <PatternLayout>
+                <Pattern>%d{yyyy-MM-dd HH:mm:ss} %5p [%c] %m%n</Pattern>
+            </PatternLayout>
+            <Policies>
+<!--                 <TimeBasedTriggeringPolicy interval = "1" modulate = "true"/> -->
+            </Policies>
+        </RollingFile>        
+        
+    </appenders>
+    
+    
+    
+	 <!-- SQL Logger -->
+	<loggers>	 
+		<!--  SQL문과 해당 SQL을 실행시키는데 수행된 시간 정보(milliseconds) -->
+		<logger name="jdbc.sqltiming" level="INFO" additivity="false">
+		    <appender-ref ref="console"/> 
+		    <AppenderRef ref="RollingFile"/>
+		</logger>
+		
+		<!--  SQL 쿼리 문장 -->
+		<logger name="jdbc.sqlonly" level="INFO" additivity="false"> 
+		    <appender-ref ref="sql"/> 
+		    <AppenderRef ref="RollingFile"/>
+		</logger>
+		 
+		<!--  ResultSet을 제외한 모든 JDBC 호출 정보 -->
+		<logger name="jdbc.audit" level="OFF" additivity="false"> 
+		    <appender-ref ref="console"/> 
+		</logger>
+		 
+		<!--  ResultSet을 포함한 모든 JDBC 호출 정보 -->
+		<logger name="jdbc.resultset" level="OFF" additivity="false">
+		    <appender-ref ref="console"/> 
+		</logger>
+		
+		<!-- SQL 결과 조회된 데이터의 table을 로그 -->
+		<logger name="jdbc.resultsettable" level="OFF" additivity="false"> 
+		    <appender-ref ref="console"/> 
+		</logger>
+		
+		<!-- Spring 로그 -->
+		<logger name="org.springframework" level="DEBUG" additivity="false">
+		    <appender-ref ref="console"/>
+		</logger>
+		
+		<!-- Hibernate 로그 -->
+		<logger name="org.hibernate" level="OFF" additivity="false">
+		    <appender-ref ref="console"/>
+		</logger>
+		
+		<!--rmi.runtime-->
+		<logger name="rmi.runtime" level="OFF" additivity="false">
+		  <appender-ref ref="console"/>
+		</logger>
+		
+		<!--com.zaxxer.hikari-->
+		<logger name="com.zaxxer.hikari" level="OFF" additivity="false">
+		  <appender-ref ref="console"/>
+		</logger>		
+		
+        <root level="INFO">
+           	<appenderRef ref="console"/>
+           	<AppenderRef ref="RollingFile"/>
+        </root>		
+	</loggers>
+</configuration>

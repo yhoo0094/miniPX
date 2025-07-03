@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mpx.minipx.mapper.UserMapper">
+
+  <select id="getUserList" resultType="map">
+    SELECT *
+    FROM tb_user
+  </select>
+
+
+	<!-- 메뉴 목록 조회-->
+	<select id="getMnuList" parameterType="map" resultType="camelCaseMap">
+		SELECT T1.MNU_SEQ					/*메뉴일련번호*/
+			 , T1.URL						/*메뉴경로*/
+			 , T1.MNU_NM					/*메뉴명*/
+			 , T1.COMPNT_PATH				/*컴퍼넌트경로*/
+			 , T1.COMPNT_NM					/*컴퍼넌트명*/
+			 , T1.UPPER_MNU_SEQ				/*상위메뉴일련번호*/
+			 , T1.MNU_LV					/*메뉴레벨*/
+			 , T1.MNU_ORDER					/*메뉴표시순서*/
+			 , T1.MNU_INFO					/*메뉴정보*/
+			 , T2.ROLE_SEQ					/*권한그룹일련번호*/
+			 , T2.AUTH_GRADE				/*권한등급(1:읽기, 2:읽기/쓰기, 3:기타권한1, 4:기타권한2 ...)*/
+			 , T2.AUTH_NM					/*권한명(1:읽기, 2:읽기/쓰기, 3:기타권한1, 4:기타권한2 ...)*/
+			 , IF(T1.MNU_LV = 1
+			 		, T1.MNU_ORDER * 1000
+			 		, (SELECT MNU_ORDER * 1000 + T1.MNU_ORDER 
+			 			 FROM TB_MNU
+			 			WHERE MNU_SEQ = T1.UPPER_MNU_SEQ)
+			 	 ) AS ORDER_VAL				/*메뉴순서 값(lv1 order * 1000 + lv2 order)*/
+		  FROM TB_MNU T1					/*테이블_메뉴*/
+		  	 , TB_AUTH T2					/*테이블_권한*/
+		 WHERE T1.MNU_SEQ = T2.MNU_SEQ
+		   AND T2.ROLE_SEQ = #{roleSeq}	  
+		   AND T1.OPEN_YN = 'Y'
+		 ORDER BY ORDER_VAL ASC
+	</select>	
+</mapper>

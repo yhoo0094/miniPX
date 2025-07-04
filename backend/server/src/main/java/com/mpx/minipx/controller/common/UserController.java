@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mpx.minipx.entity.TbUser;
 import com.mpx.minipx.framework.util.JwtUtil;
-import com.mpx.minipx.repository.TbTokenRepository;
 import com.mpx.minipx.service.UserService;
 
 import io.jsonwebtoken.Claims;
@@ -35,9 +33,6 @@ public class UserController {
     
     @Value("${jwt.secret}")
     private String jwtSecret;  // JWT 비밀 키 (application.properties에서 가져오기)       
-    
-    @Autowired
-    private TbTokenRepository tbTokenRepository;    
 
     /**
      * @메소드명: getUserList

@@ -1,28 +1,19 @@
 <template>
     <div class="login-container">
-      <BaseInput
-        v-model="userId"
-        placeholder="아이디를 입력하세요"
-        class="input"
-        label="아이디"
-        @keydown.enter.prevent="login"
-      />
-      <BaseInput
-        v-model="userPw"
-        type="password"
-        placeholder="비밀번호를 입력하세요"
-        class="input"
-        label="비밀번호"
-        @keydown.enter.prevent="login"
-      />
-      <label class="remember-checkbox">
-        <input type="checkbox" v-model="rememberId" />
-        아이디 저장
-      </label>      
-      <BaseButton 
-        @click="login" 
-        class="button"
-        type="button">로그인</BaseButton>
+      <div class="login-info-box">
+        <BaseInput v-model="userId" class="input" label="아이디" placeholder="아이디를 입력하세요"
+          @keydown.enter.prevent="login"/>
+        <BaseInput v-model="userPw" type="password" class="input" label="비밀번호" placeholder="비밀번호를 입력하세요"
+          @keydown.enter.prevent="login"/>
+        <label class="remember-checkbox">
+          <input id="rememberId" type="checkbox" v-model="rememberId"/>
+          <label>아이디 저장</label>
+        </label>      
+        <BaseButton type="button" class="button" @click="login">로그인</BaseButton>
+      </div>
+      <div class="login-banner-container">
+        <img :src="delivery_man" alt="no img"/>
+      </div>    
     </div>
   </template>
   
@@ -34,6 +25,7 @@
   import BaseButton from '@/components/common/BaseButton.vue'
   import router from '@/router'  // main에서 사용 중인 라우터 인스턴스 사용
   import api from '@/plugins/axios'
+  import delivery_man from '@/assets/img/delivery_man.webp';
 
   
   const userId = ref('');
@@ -100,7 +92,15 @@
   </script>
   
   <style scoped>
+  .login-banner-container{
+    display: flex;
+    height: 330px;  
+  }
+
   .login-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;    
     max-width: 400px;
     margin: 100px auto;
     padding: 30px;
@@ -108,6 +108,11 @@
     border-radius: 8px;
     background: #fff;
   }
+
+  .login-info-box {
+    display: flex;
+    flex-wrap: wrap;
+  }  
   
   .input {
     margin-bottom: 15px;

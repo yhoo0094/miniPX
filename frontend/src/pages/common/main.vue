@@ -13,16 +13,16 @@
         class="button"
         type="button">AdminHome</BaseButton>         
         <BaseButton 
-        @click="getUserList" 
+        @click="market" 
         class="button"
-        type="button">getUserList</BaseButton>            
+        type="button">market</BaseButton>            
     </div>
   </template>
   
   <script setup>
   import { ref } from 'vue'
   import { useRouter } from 'vue-router'  
-  import { useUserStore } from '@/stores/user';
+  import { useUserStore } from '@/stores/userStore';
   import BaseButton from '@/components/common/BaseButton.vue'
   import api from '@/plugins/axios'
 
@@ -47,6 +47,11 @@
   const adminHome = () => {
     router.push('/admin/admin-home');
   }
+
+  //마켓 이동
+  const market = async () => {
+    router.push('/market/item');
+  }    
 
   //getUserList
   const getUserList = async () => {

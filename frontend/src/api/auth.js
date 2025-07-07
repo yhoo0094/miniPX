@@ -1,9 +1,8 @@
-// src/api/auth.js
-import axios from 'axios'
+import api from '@/plugins/axios'
 
 export const checkAuth = async () => {
   try {
-    const response = await axios.get('/api/auth/check', {withCredentials: true}) // 토큰은 쿠키로 자동 전송됨
+    const response = await api.get('/api/auth/check');
     return response.data.authenticated === true
   } catch (error) {
     return false

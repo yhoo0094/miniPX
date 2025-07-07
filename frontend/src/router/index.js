@@ -3,7 +3,7 @@ import { checkAuth } from '@/api/auth'
 
 const routes = [
   { path: '/', redirect: '/main' },
-  { path: '/login', name: 'Login', component: () => import('@/pages/common/login.vue') },
+  { path: '/login', component: () => import('@/pages/common/login.vue') },
   {
     path: '/',
     name: 'DefaultLayout',

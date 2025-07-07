@@ -19,7 +19,8 @@
   
   <script setup>
   import { ref, onMounted } from 'vue'
-  import { useUserStore } from '@/stores/user';
+  import { useUserStore } from '@/stores/userStore';
+  import { useMenuStore } from '@/stores/menuStore';
   import Cookies from 'js-cookie'
   import BaseInput from '@/components/common/BaseInput.vue'
   import BaseButton from '@/components/common/BaseButton.vue'
@@ -33,6 +34,7 @@
   const rememberId = ref(false)
 
   const userStore = useUserStore();
+  const menuStore = useMenuStore();
 
   // ▶ 저장된 쿠키 아이디 로딩
   onMounted(() => {
@@ -73,20 +75,14 @@
 
         // 메뉴를 동적으로 routes에 추가
         const mnuList = response.data.mnuList;
-        mnuList.forEach(menu => {
-            router.addRoute('DefaultLayout', {
-                path: menu.url,
-                component: () => import(`@/pages/${menu.compntPath}/${menu.compntNm}.vue`),
-                meta: { requiresAuth: true },
-            });
-        });
+        menuStore.setMenuList(mnuList); //pinia로 저장
 
         router.push('/main');
       } else {
         alert(response.data.message)
       }
     } catch (error) {
-      alert('로그인에 실패했습니다.');
+      alert('로그인에 실패했습니다. \n ' + error);
     }
   };
   </script>

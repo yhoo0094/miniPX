@@ -30,7 +30,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
             	.requestMatchers( "/api/user/login.do"
-            					, "/api/auth/check"
+//            					, "/api/auth/check"
             					, "/api/auth/reissue"
             					, "/css/**", "/js/**").permitAll()  // 로그인 등은 허용
                 .anyRequest().authenticated()

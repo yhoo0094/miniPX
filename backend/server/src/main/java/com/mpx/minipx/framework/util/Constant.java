@@ -5,9 +5,8 @@ public class Constant
 {
 	//토큰 관련
 	public static final long   REFRESH_TOKEN_VALIDITY 		  = 1000L * 60 * 60 * 24 * 30; 	// 30일
-	public static final int    REFRESH_TOKEN_VALIDITY_INT 	  = 60 * 60 * 24 * 30; 			// 30일
-	public static final long   ACCESS_TOKEN_VALIDITY 		  = 1000L * 60 * 15; 			// 15분
-	public static final int    ACCESS_TOKEN_VALIDITY_INT 	  = 60 * 15; 					// 15분
+//	public static final long   ACCESS_TOKEN_VALIDITY 		  = 1000L * 60 * 15; 			// 15분
+	public static final long   ACCESS_TOKEN_VALIDITY 		  = 1000L * 30 * 1; 			// 30초(테스트용)
 	
 	//request, response 관련
 	public static final String OUT_DATA 		= "OUT_DATA";			    //리턴할 데이터

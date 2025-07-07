@@ -118,22 +118,24 @@ public class AuthController {
         Cookie accessCookie = new Cookie("accessToken", newAccessToken);
         accessCookie.setHttpOnly(true);
         accessCookie.setSecure(true);
-        accessCookie.setMaxAge(Constant.ACCESS_TOKEN_VALIDITY_INT);
+        accessCookie.setMaxAge((int)Constant.ACCESS_TOKEN_VALIDITY);
         accessCookie.setPath("/");     
         response.addCookie(accessCookie);
+        
         
         // refreshToken 생성
         String newRefreshToken = JwtUtil.generateToken(user, jwtSecret, Constant.REFRESH_TOKEN_VALIDITY);
         Cookie refreshCookie = new Cookie("refreshToken", newRefreshToken);
         refreshCookie.setHttpOnly(true);  // JavaScript에서 쿠키에 접근 불가
         refreshCookie.setSecure(true);    // HTTPS에서만 전송
-        refreshCookie.setMaxAge(Constant.REFRESH_TOKEN_VALIDITY_INT);
+        refreshCookie.setMaxAge((int)Constant.REFRESH_TOKEN_VALIDITY);
         refreshCookie.setPath("/");       // 전체 경로에 대해 유효 
         response.addCookie(refreshCookie);	// 쿠키를 응답에 추가
         
         // refreshToken을 DB에 저장
         authService.saveRefreshToken(
     	    user.getUserId(),
+    	    user.getUserSeq(),
     	    newRefreshToken,                     // JWT 문자열
     	    Constant.REFRESH_TOKEN_VALIDITY,  
     	    (String) inData.get("remoteAddr") // 사용자 기기 정보

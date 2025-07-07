@@ -24,7 +24,7 @@ export const useUserStore = defineStore('user', {
 
       try {
         const res = await api.post('/api/user/logout.do', {});
-        if(res.status === 200){router.push('Login')};
+        if(res.status === 200){router.push('/login')};
       } catch (e) {
         console.error('서버 로그아웃 실패', e);
       }

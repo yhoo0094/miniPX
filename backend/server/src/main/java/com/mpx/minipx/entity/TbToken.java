@@ -19,8 +19,8 @@ import lombok.NoArgsConstructor;
 public class TbToken {
     
 	@Id
-    @Column(name = "USER_ID") // 생략 가능, 컬럼명이 같다면 자동 매핑
-	@JsonProperty("userId")
+    @Column(name = "USER_ID")
+    @JsonProperty("userId")
     private String userId;
 
     @Column(name = "TOKEN")
@@ -39,17 +39,17 @@ public class TbToken {
     @JsonProperty("deviceInfo")
     private String deviceInfo;
 
-    @Column(name = "FST_REG_ID")
-    @JsonProperty("fstRegId")
-    private String fstRegId;
+    @Column(name = "FST_REG_SEQ")
+    @JsonProperty("fstRegSeq")
+    private String fstRegSeq;
 
     @Column(name = "FST_REG_DTTI", insertable = false, updatable = false)
     @JsonProperty("fstRegDtti")
     private LocalDateTime fstRegDtti;
 
-    @Column(name = "LST_UPD_ID")
-    @JsonProperty("lstUpdId")
-    private String lstUpdId;
+    @Column(name = "LST_UPD_SEQ")
+    @JsonProperty("lstUpdSeq")
+    private String lstUpdSeq;
 
     @Column(name = "LST_UPD_DTTI")
     @JsonProperty("lstUpdDtti")

@@ -114,7 +114,7 @@ public class UserService {
         Cookie accessCookie = new Cookie("accessToken", accessToken);
         accessCookie.setHttpOnly(true);
         accessCookie.setSecure(true);
-        accessCookie.setMaxAge(Constant.ACCESS_TOKEN_VALIDITY_INT);
+        accessCookie.setMaxAge((int)Constant.ACCESS_TOKEN_VALIDITY);
         accessCookie.setPath("/");     
         result.put("accessToken", accessCookie);	//컨트롤러에서 response에 추가해야함
         
@@ -123,13 +123,14 @@ public class UserService {
         Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
         refreshCookie.setHttpOnly(true);  // JavaScript에서 쿠키에 접근 불가
         refreshCookie.setSecure(true);    // HTTPS에서만 전송
-        refreshCookie.setMaxAge(Constant.REFRESH_TOKEN_VALIDITY_INT);
+        refreshCookie.setMaxAge((int)Constant.REFRESH_TOKEN_VALIDITY);
         refreshCookie.setPath("/");       // 전체 경로에 대해 유효 
         result.put("refreshToken", refreshCookie);	//컨트롤러에서 response에 추가해야함
         
         // refreshToken을 DB에 저장
         authService.saveRefreshToken(
     	    user.getUserId(),
+    	    user.getUserSeq(),
     	    refreshToken,                     // JWT 문자열
     	    Constant.REFRESH_TOKEN_VALIDITY,  
     	    (String) inData.get("remoteAddr") // 사용자 기기 정보

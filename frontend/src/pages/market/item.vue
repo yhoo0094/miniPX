@@ -1,6 +1,5 @@
   <template>
     <div class="logout-container">
-      <div>admin-home</div>
       <BaseButton 
         @click="logout" 
         class="button"
@@ -8,27 +7,35 @@
         <BaseButton 
         @click="isLoggedIn" 
         class="button"
-        type="button">isLoggedIn</BaseButton>        
+        type="button">isLoggedIn</BaseButton>  
+        <BaseButton 
+        @click="adminHome" 
+        class="button"
+        type="button">AdminHome</BaseButton>         
+        <BaseButton 
+        @click="getUserList" 
+        class="button"
+        type="button">getUserList</BaseButton>            
     </div>
   </template>
   
   <script setup>
+  import { ref } from 'vue'
   import { useRouter } from 'vue-router'  
   import { useUserStore } from '@/stores/userStore';
   import BaseButton from '@/components/common/BaseButton.vue'
-  import Cookies from 'js-cookie'
+  import api from '@/plugins/axios'
 
   const router = useRouter();  
   const userStore = useUserStore();
+  const users = ref([]);
   
   //로그아웃
   const logout = () => {
-    Cookies.remove('accessToken');
-    Cookies.remove('refreshToken');
-    router.push('/login')
+    userStore.logout();
   }
 
-  //로그인
+  //로그인 여부 확인
   const isLoggedIn = () => {
     if (userStore.isLoggedIn) {
       console.log('로그인 여부:', userStore.isLoggedIn);
@@ -36,7 +43,16 @@
     }
   }
 
-  
+  //관리자 홈 이동
+  const adminHome = () => {
+    router.push('/admin/admin-home');
+  }
+
+  //getUserList
+  const getUserList = async () => {
+    const response = await api.get('/api/user/getUserList');
+    users.value = response.data
+  }  
   </script>
   
   <style scoped>

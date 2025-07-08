@@ -35,7 +35,7 @@
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref, computed } from 'vue';
 import home from '@/assets/img/home.png';
 import router from '@/router';
@@ -100,7 +100,6 @@ const getChildren = (parent) => {
 .nav-link {
   color: white;
   text-decoration: none;
-  font-size: 14px;
   padding: 10px;
 }
 
@@ -125,7 +124,6 @@ const getChildren = (parent) => {
   padding: 8px 15px;
   color: white;
   text-decoration: none;
-  font-size: 13px;
 }
 
 .dropdown-link:hover {

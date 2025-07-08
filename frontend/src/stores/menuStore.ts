@@ -1,12 +1,14 @@
 import { defineStore } from 'pinia';
 import router from '@/router';
+import type { MenuType } from '@/types/menuType';
+import type { PersistenceOptions } from 'pinia-plugin-persistedstate';
 
 export const useMenuStore = defineStore('menu', {
   state: () => ({
-    menuList: []
+    menuList: [] as MenuType[]
   }),
   actions: {
-    setMenuList(list) {
+    setMenuList(list: MenuType[]) {
       this.menuList = list;
     },
     clearMenuList() {
@@ -14,10 +16,10 @@ export const useMenuStore = defineStore('menu', {
     },
     restoreRoutes() {
       this.menuList.forEach((menu) => {
-        // 라우터에 동일 경로 중복 추가 방지
         const alreadyExists = router
           .getRoutes()
           .some((r) => r.path === menu.url);
+
         if (!alreadyExists) {
           router.addRoute('DefaultLayout', {
             path: menu.url,
@@ -35,12 +37,11 @@ export const useMenuStore = defineStore('menu', {
     },
   },
   persist: {
-    enabled: true,
     strategies: [
       {
         storage: localStorage,
         paths: ['menuList']
       }
     ]
-  }
+  } as PersistenceOptions,
 });

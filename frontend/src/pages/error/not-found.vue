@@ -2,7 +2,7 @@
     <div>페이지를 찾을 수 없습니다.</div>
   </template>
   
-  <script setup>
+  <script setup lang="ts">
   import { onMounted} from 'vue'
   import { useRouter } from 'vue-router'  
   const router = useRouter();  

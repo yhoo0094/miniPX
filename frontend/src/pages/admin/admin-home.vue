@@ -12,7 +12,7 @@
     </div>
   </template>
   
-  <script setup>
+  <script setup lang="ts">
   import { useRouter } from 'vue-router'  
   import { useUserStore } from '@/stores/userStore';
   import BaseButton from '@/components/common/BaseButton.vue'

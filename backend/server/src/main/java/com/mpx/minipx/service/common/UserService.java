@@ -1,4 +1,4 @@
-package com.mpx.minipx.service;
+package com.mpx.minipx.service.common;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,10 +17,10 @@ import com.mpx.minipx.controller.common.BaseController;
 import com.mpx.minipx.entity.TbUser;
 import com.mpx.minipx.framework.util.Constant;
 import com.mpx.minipx.framework.util.JwtUtil;
+import com.mpx.minipx.repository.RedisPermissionRepository;
 import com.mpx.minipx.repository.TbTokenRepository;
 //import com.mpx.minipx.framework.aop.ControllerAdvice;
 import com.mpx.minipx.repository.TbUserRepository;
-import com.mpx.minipx.service.common.AuthService;
 
 import jakarta.servlet.http.Cookie;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +45,9 @@ public class UserService {
     
     @Autowired
     private BCryptPasswordEncoder passwordEncoder;   
+    
+    @Autowired
+    private RedisPermissionRepository redisPermissionRepository;      
     
     @Value("${jwt.secret}")
     private String jwtSecret;  // JWT 비밀 키 (application.properties에서 가져오기)    
@@ -137,9 +140,19 @@ public class UserService {
     	);
         
         // 메뉴 목록 
-        inData.put("roleSeq", user.getUserSeq());
-        List<Map<String, Object>> mnuList = sqlSession.selectList("com.mpx.minipx.mapper.UserMapper.getMnuList", inData);
+        inData.put("roleSeq", user.getRoleSeq());
+        List<Map<String, Object>> mnuList = sqlSession.selectList("com.mpx.minipx.mapper.UserMapper.getUserMnuList", inData);
         result.put("mnuList", mnuList);
+        
+        // Redis에 권한 저장
+        for (Map<String, Object> menu : mnuList) {
+            String url = String.valueOf(menu.get("url"));          // URL 컬럼
+            Integer authGrade = Integer.parseInt(String.valueOf(menu.get("authGrade"))); // 권한 (0: 없음, 1: 읽기, 2: 쓰기)
+
+            if (url != null && authGrade != null) {
+                redisPermissionRepository.savePermission(userId, url, authGrade);
+            }
+        }
     	
         result.put("success", true);
         result.put("message", "로그인 성공");

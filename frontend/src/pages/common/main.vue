@@ -8,15 +8,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useUserStore } from '@/stores/userStore';
 import BaseButton from '@/components/common/BaseButton.vue';
-import api from '@/plugins/axios';
-import type { UserType } from '@/types/userType';
-
-// ✅ 사용자 목록 타입 선언
-const users = ref<UserType[]>([]);
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -44,16 +38,6 @@ const adminHome = () => {
 // 마켓 이동
 const market = () => {
   router.push('/market/item');
-};
-
-// 사용자 리스트 가져오기
-const getUserList = async () => {
-  try {
-    const response = await api.get<UserType[]>('/api/user/getUserList');
-    users.value = response.data;
-  } catch (error) {
-    console.error('사용자 목록 조회 실패:', error);
-  }
 };
 </script>
 

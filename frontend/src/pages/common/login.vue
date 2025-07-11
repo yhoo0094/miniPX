@@ -9,7 +9,7 @@
         <input id="rememberId" type="checkbox" v-model="rememberId"/>
         <label>아이디 저장</label>
       </label>      
-      <BaseButton type="button" class="button" @click="login">로그인</BaseButton>
+      <BaseButton type="button" class="button" @click="login" width="100%">로그인</BaseButton>
     </div>
     <div class="login-banner-container">
       <img :src="delivery_man" alt="no img"/>

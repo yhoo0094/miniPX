@@ -13,7 +13,7 @@
         @mouseleave="activeMenu = null"
       >
         <router-link :to="menu.path" class="nav-link">
-          {{ menu.meta.title }}
+          {{ menu.title }}
         </router-link>
 
         <!-- 2depth 드롭다운 -->
@@ -32,38 +32,58 @@
         </div>
       </div>
     </nav>
+
+    <div class="header-button-box">
+      <BaseButton 
+        width="5rem" 
+        height="2rem"
+        @click="logout" 
+        class="button"
+        type="button">로그아웃</BaseButton>
+    </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import home from '@/assets/img/home.png';
-import router from '@/router';
+  import { ref } from 'vue';
+  import { useUserStore } from '@/stores/userStore';  
+  import home from '@/assets/img/home.png';
+  import router from '@/router';
+  import BaseButton from '@/components/common/BaseButton.vue'
+  const userStore = useUserStore();
 
-const main = () => {
-  router.push('/main');
-};
+  //메인으로 이동
+  const main = () => {
+    router.push('/main');
+  };
 
-const activeMenu = ref(null);
+  //로그아웃
+  const logout = () => {
+    userStore.logout();
+  }
 
-// 모든 실제 등록된 라우트를 가져옴 (동적 포함)
-const allRoutes = router.getRoutes();
+  const activeMenu = ref(null);
 
-// DefaultLayout 하위에만 메뉴 있는 경우 필터링
-const topLevelMenus = computed(() =>
-  allRoutes.filter(
-    (r) =>
-      r.meta?.title &&
-      r.meta.mnuLv === 1 // 1depth 메뉴
-  )
-);
+  // 모든 실제 등록된 라우트를 가져옴 (동적 포함)
+  const allRoutes = router.getRoutes();
 
-// 하위 메뉴(2depth) 가져오기
-const getChildren = (parent) => {
-  return allRoutes.filter(
-    (r) => r.meta?.mnuLv === 2 && parent.meta.compntPath === r.meta.compntPath
-  );
-};
+  // 상위 메뉴 가져오기
+  const topLevelMenus = ref<any[]>([]);
+  allRoutes.forEach((route) => {
+    const exists = topLevelMenus.value.some(menu => menu.mnuSeq === route.meta.upperMnuSeq);
+    if (!exists) {
+      topLevelMenus.value.push({mnuSeq: route.meta.upperMnuSeq,
+                                title: route.meta.upperMnuNm, 
+                                path: route.path});
+    }  
+  });
+
+  // 하위 메뉴(2depth) 가져오기
+  const getChildren = (parent) => {
+    return allRoutes.filter(
+      (r) => r.meta?.upperMnuSeq === parent.mnuSeq
+    );
+  };
 </script>
 
 <style scoped>

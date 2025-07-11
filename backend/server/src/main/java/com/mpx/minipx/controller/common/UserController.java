@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.mpx.minipx.entity.TbUser;
 import com.mpx.minipx.framework.util.JwtUtil;
-import com.mpx.minipx.service.UserService;
+import com.mpx.minipx.service.common.UserService;
 
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.Cookie;

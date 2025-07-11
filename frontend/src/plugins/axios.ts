@@ -10,7 +10,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 // ✅ axios 인스턴스 생성
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: Number(import.meta.env.VITE_API_TIMEOUT || 5000),
+  // timeout: Number(import.meta.env.VITE_API_TIMEOUT || 5000),
   withCredentials: true,
 });
 

@@ -4,6 +4,7 @@ import com.mpx.minipx.entity.TbUser;
 import com.mpx.minipx.entity.TbToken;
 import com.mpx.minipx.framework.util.Constant;
 import com.mpx.minipx.framework.util.JwtUtil;
+import com.mpx.minipx.repository.RedisPermissionRepository;
 import com.mpx.minipx.repository.TbTokenRepository;
 import com.mpx.minipx.repository.TbUserRepository;
 import com.mpx.minipx.service.common.AuthService;
@@ -35,12 +36,15 @@ public class AuthController {
     
     @Autowired
     private TbTokenRepository tbTokenRepository;    
+    
+    @Autowired
+    private RedisPermissionRepository redisPermissionRepository;      
 
     @Value("${jwt.secret}")
     private String jwtSecret;
 
-    @GetMapping("/check")
-    public Map<String, Object> checkAuth(HttpServletRequest request) {
+    @PostMapping("/check")
+    public Map<String, Object> checkAuth(@RequestBody Map<String, Object> inData, HttpServletRequest request) {
     	Map<String, Object> result = new HashMap<>();
         String token = null;
 
@@ -54,25 +58,41 @@ public class AuthController {
             }
         }
         
-        if (token == null) {	// 쿠키에 token이 없을 때
+        if (token == null) {	// 쿠키에 token이 없을 때	
         	result.put("authenticated", false);
+        	return result;  
         } else {
         	Claims claims = JwtUtil.validateToken(token, jwtSecret);
         	if (claims == null) {
         		result.put("authenticated", false);
+        		return result;  
         	} else {
         		result.put("authenticated", true);
         	}
         }
 
+        //권한 체크
         try {
-            if (token != null && JwtUtil.validateToken(token, jwtSecret) != null) {
-                result.put("authenticated", true);
+        	Claims claims = JwtUtil.validateToken(token, jwtSecret);
+        	String path = (String) inData.get("path");
+        	if("/main".equals(path)) { //main 접속은 권한 체크 X
+        		result.put("authenticated", true);	
+        	} else if (token != null && claims != null) {
+            	String userId = claims.getSubject();
+            	Optional<Integer> authGrade = redisPermissionRepository.getPermission(userId, path);
+            	if (authGrade.isPresent() && authGrade.get() > 0) {
+            		result.put("authenticated", true);
+            	} else {
+            		result.put("authenticated", false);
+            		return result;  
+            	}
             } else {
                 result.put("authenticated", false);
+                return result;  
             }
         } catch (Exception e) {
             result.put("authenticated", false);
+            return result;  
         }
         
         return result;        

@@ -117,7 +117,7 @@ public class UserService {
         Cookie accessCookie = new Cookie("accessToken", accessToken);
         accessCookie.setHttpOnly(true);
         accessCookie.setSecure(true);
-        accessCookie.setMaxAge((int)Constant.ACCESS_TOKEN_VALIDITY);
+        accessCookie.setMaxAge((int)Constant.REFRESH_TOKEN_VALIDITY);
         accessCookie.setPath("/");     
         result.put("accessToken", accessCookie);	//컨트롤러에서 response에 추가해야함
         

@@ -6,6 +6,7 @@ import type { UserType } from '@/types/userType';
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null as UserType | null,
+    authMap: {} as Record<string, number>,
   }),
 
   actions: {
@@ -23,6 +24,7 @@ export const useUserStore = defineStore('user', {
       if (!confirm('로그아웃 하시겠습니까?')) return;
 
       this.user = null;
+      this.authMap = {}; 
 
       try {
         const res = await api.post('/api/user/logout.do', {});
@@ -33,6 +35,16 @@ export const useUserStore = defineStore('user', {
         console.error('서버 로그아웃 실패', e);
       }
     },
+
+    // 경로에 대한 권한 설정
+    setAuth(path: string, grade: number) {
+      this.authMap[path] = grade;
+    },
+
+    // 경로에 대한 권한 조회
+    getAuth(path: string): number | undefined {
+      return this.authMap[path];
+    },    
   },
 
   getters: {

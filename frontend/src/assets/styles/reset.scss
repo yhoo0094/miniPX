@@ -12,3 +12,11 @@ body {
   color: $text-color;
   background-color: $secondary-color;
 }
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}

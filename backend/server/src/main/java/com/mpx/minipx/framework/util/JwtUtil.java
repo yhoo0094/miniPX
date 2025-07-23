@@ -55,7 +55,7 @@ public class JwtUtil {
                 .claim("userNm", tbUser.getUserNm())
                 .claim("roleSeq", tbUser.getRoleSeq())
                 .setIssuedAt(new Date())  // 발급 시간
-                .setExpiration(new Date(System.currentTimeMillis() + validity))  // 30일
+                .setExpiration(new Date(System.currentTimeMillis() + validity))
                 .signWith(key, SignatureAlgorithm.HS512)  // 서명 알고리즘 설정
                 .compact();        
     }

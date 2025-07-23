@@ -41,6 +41,7 @@
 <style scoped>
 .base-button {
   background-color: white;
+  color: black;
   border: 2px solid #0c254d;
   cursor: pointer;
 }

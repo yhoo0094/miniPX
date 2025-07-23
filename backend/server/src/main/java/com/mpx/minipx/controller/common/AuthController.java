@@ -29,7 +29,8 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/auth")
 public class AuthController {
 	
-	private final AuthService authService;	
+	@Autowired
+	private AuthService authService;	
 	
     @Autowired
     private TbUserRepository tbUserRepository;	
@@ -43,58 +44,47 @@ public class AuthController {
     @Value("${jwt.secret}")
     private String jwtSecret;
 
+    /**
+     * @메소드명: checkAuth
+     * @작성자: KimSangMin
+     * @생성일: 2025. 7. 14.
+     * @설명: 페이지 이동에 대한 권한 체크
+     */
     @PostMapping("/check")
-    public Map<String, Object> checkAuth(@RequestBody Map<String, Object> inData, HttpServletRequest request) {
+    public Map<String, Object> checkAuth(@RequestBody Map<String, Object> inData, HttpServletRequest request, HttpServletResponse response) {
     	Map<String, Object> result = new HashMap<>();
-        String token = null;
 
-        // 쿠키에서 token 추출
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("accessToken".equals(cookie.getName())) {
-                    token = cookie.getValue();
-                }
-            }
-        }
-        
-        if (token == null) {	// 쿠키에 token이 없을 때	
+    	String token = JwtUtil.extractTokenFromCookies(request, "accessToken");    	
+    	
+    	// 쿠키에 token이 없을 때
+        if (token == null) {		
         	result.put("authenticated", false);
         	return result;  
-        } else {
-        	Claims claims = JwtUtil.validateToken(token, jwtSecret);
-        	if (claims == null) {
-        		result.put("authenticated", false);
-        		return result;  
-        	} else {
-        		result.put("authenticated", true);
-        	}
+        }
+        
+        //토큰 유효성 체크
+        Claims claims = JwtUtil.validateToken(token, jwtSecret);
+        if (claims == null) {
+        	result.put("authenticated", false);
+        	return result;  
         }
 
         //권한 체크
-        try {
-        	Claims claims = JwtUtil.validateToken(token, jwtSecret);
-        	String path = (String) inData.get("path");
-        	if("/main".equals(path)) { //main 접속은 권한 체크 X
-        		result.put("authenticated", true);	
-        	} else if (token != null && claims != null) {
-            	String userId = claims.getSubject();
-            	Optional<Integer> authGrade = redisPermissionRepository.getPermission(userId, path);
-            	if (authGrade.isPresent() && authGrade.get() > 0) {
-            		result.put("authenticated", true);
-            	} else {
-            		result.put("authenticated", false);
-            		return result;  
-            	}
-            } else {
-                result.put("authenticated", false);
-                return result;  
-            }
-        } catch (Exception e) {
-            result.put("authenticated", false);
-            return result;  
+        String path = (String) inData.get("path");
+        if("/main".equals(path)) {	//main 접속은 권한 체크 X
+        	result.put("authGrade", 1);
+        } else {
+        	String userId = claims.getSubject();
+        	Optional<Integer> authGrade = redisPermissionRepository.getPermission(userId, path);
+        	if (!authGrade.isPresent()) {	//해당 경로에 대한 권한 정보가 없음
+        		result.put("authenticated", false);
+        		return result; 
+        	} else {
+        		result.put("authGrade", authGrade.get());
+        	}
         }
         
+        result.put("authenticated", true);
         return result;        
     }
     
@@ -138,10 +128,9 @@ public class AuthController {
         Cookie accessCookie = new Cookie("accessToken", newAccessToken);
         accessCookie.setHttpOnly(true);
         accessCookie.setSecure(true);
-        accessCookie.setMaxAge((int)Constant.ACCESS_TOKEN_VALIDITY);
+        accessCookie.setMaxAge((int)Constant.REFRESH_TOKEN_VALIDITY);
         accessCookie.setPath("/");     
         response.addCookie(accessCookie);
-        
         
         // refreshToken 생성
         String newRefreshToken = JwtUtil.generateToken(user, jwtSecret, Constant.REFRESH_TOKEN_VALIDITY);

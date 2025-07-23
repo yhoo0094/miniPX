@@ -4,11 +4,16 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.MessageSource;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.mpx.minipx.framework.util.JwtUtil;
+import com.mpx.minipx.repository.TbTokenRepository;
+import com.mpx.minipx.repository.TbUserRepository;
+import com.mpx.minipx.service.common.AuthService;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -18,12 +23,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+@Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 	
     private final String jwtSecret;
 
-    // 생성자 추가
-    public JwtAuthFilter(@Value("${jwt.secret}") String jwtSecret) {
+    public JwtAuthFilter(
+        @Value("${jwt.secret}") String jwtSecret
+    ) {
         this.jwtSecret = jwtSecret;
     }
     
@@ -31,8 +38,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.equals("/api/auth/reissue") 
-        	|| path.equals("/api/user/login.do");
+        return path.equals("/api/auth/reissue")
+        	|| path.equals("/api/user/login.do")
+        	;
     }    
 
     @Override

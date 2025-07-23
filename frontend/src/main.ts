@@ -5,9 +5,12 @@ import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'; // 상태 �
 
 import { useMenuStore } from '@/stores/menuStore'
 import router from './router';   // Vue Router
+import clickOutside from '@/directives/v-click-outside';    //clickOutside 커스텀 디렉티브
 import './assets/styles/index.scss';    //css
 
 const app = createApp(App);      // 앱 인스턴스 생성
+app.directive('click-outside', clickOutside);
+
 const pinia = createPinia();     // Pinia 인스턴스 생성
 pinia.use(piniaPluginPersistedstate); // 플러그인 적용
 

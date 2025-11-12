@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mpx.minipx.mapper.ItemMapper">
+
+	<!-- 상품 목록 조회-->
+	<select id="getItemList" parameterType="map" resultType="camelCaseMap">
+		SELECT T1.ITEM_SEQ                  /*상품일련번호*/
+			 , T1.ITEM_NM                   /*상품명*/
+			 , T1.PRICE                     /*가격*/
+			 , T1.UNIT                      /*판매단위*/
+			 , T1.RMRK                      /*비고*/
+			 , T1.IMG                       /*이미지*/
+			 , T1.ITEM_TYPE_CODE            /*상품 분류코드*/
+			 , T1.ITEM_DTL_TYPE_CODE        /*상품 상세 분류코드*/
+			 , T1.SOLD_OUT_YN               /*품절여부*/
+			 , T1.USE_YN                    /*사용여부*/
+			 , T1.FST_REG_SEQ               /*최초등록자일련번호*/
+			 , T1.FST_REG_DTTI              /*최초등록일시*/
+			 , T1.LST_UPD_SEQ               /*최종수정자일련번호*/
+			 , T1.LST_UPD_DTTI              /*최종수정일시*/
+		  FROM TB_ITEM T1					/*테이블_상품 정보 관리*/
+		 WHERE T1.USE_YN = 'Y'
+		 <if test='itemTypeCode != null and itemTypeCode != ""'>
+		   AND T1.ITEM_TYPE_CODE = #{itemTypeCode}
+		 </if>
+		 <if test='itemDtlTypeCode != null and itemDtlTypeCode != ""'>
+		   AND T1.ITEM_DTL_TYPE_CODE = #{itemDtlTypeCode}
+		 </if>  
+		 ORDER BY ITEM_SEQ ASC	
+	</select>	
+</mapper>

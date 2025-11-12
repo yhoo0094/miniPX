@@ -60,7 +60,7 @@ const login = async () => {
   }
 
   try {
-    const response = await api.post<ApiResponse<LoginPayload>>('/api/user/login.do', {
+    const response = await api.post<ApiResponse<LoginPayload>>('/api/user/login', {
       userId: userId.value,
       userPw: userPw.value,
     });

@@ -31,7 +31,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-            	.requestMatchers( "/api/user/login.do"
+            	.requestMatchers( "/api/user/login"
 //            					, "/api/auth/check"
             					, "/api/auth/reissue"
             					, "/css/**", "/js/**").permitAll()  // 로그인 등은 허용

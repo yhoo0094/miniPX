@@ -54,7 +54,7 @@ public class UserController {
      * @생성일: 2025. 6. 19.
      * @설명: 로그인
      */
-    @PostMapping("/login.do")
+    @PostMapping("/login")
     public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, Object> inData, HttpServletRequest request, HttpServletResponse response) throws Exception {
     	Map<String, Object> result = new HashMap<>();
     	
@@ -78,7 +78,7 @@ public class UserController {
      * @생성일: 2025. 7. 3.
      * @설명: 로그아웃
      */
-    @PostMapping("/logout.do")
+    @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
         String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
         // 사용자 ID 추출

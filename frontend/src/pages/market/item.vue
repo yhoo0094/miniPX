@@ -14,7 +14,7 @@
           :options="subCategoryOptions"
         />
         <input type="text" class="search-input" placeholder="검색어 입력" />
-        <button class="search-btn">검색</button>
+        <button class="search-btn" @click="getItemList">검색</button>
       </div>
 
       <!-- 상품 목록 표시 -->
@@ -58,27 +58,22 @@
   const subCategoryOptionsAll = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
 
   // 상품 목록
-  const itemList = ref<Array<{
-    itemSeq: number;
-    itemNm: string;
-    price: number;
-    img: string;
-    starRating: string; // 별점 예: "★★★★★"
-  }>>([
-    // 테스트용 데이터
-    {
-      itemSeq: 1,
-      itemNm: '핫식스 더 킹 포스, 355ml, 48개',
-      price: 40460,
-      img: '',
-      starRating: '★★★★★',
-    },
-    // ... 총 20개 임시 생성
+  const itemList = ref<Array<ItemType>>([
+    // // 테스트용 데이터
+    // {
+    //   itemSeq: 1,
+    //   itemNm: '핫식스 더 킹 포스, 355ml, 48개',
+    //   price: 40460,
+    //   img: '',
+    //   starRating: '★★★★★',
+    // },
+    // // ... 총 20개 임시 생성
   ]);  
 
   // ✅ 페이지 로드시 실행
   onMounted(() => {
     getCategoryOptionList();
+    getItemList();
   });
 
   // ✅ 서버에서 분류 목록 조회
@@ -97,8 +92,28 @@
   };
 
   // 상품 목록 조회
-  const getItemList = async (option: {ItemType}) => {
-    const response = await api.post<ApiResponse<ItemType>>('/api/item/getItemList.do', {option});
+  const getItemList = async () => {
+    // const response = await api.post<ApiResponse<ItemType>>('/api/item/getItemList', {category, subCategory});
+
+    try {
+      const payload = {
+        itemTypeCode: selectedCategory.value,
+        itemDtlTypeCode: selectedSubCategory.value,
+      };
+
+      const response = await api.post<ApiResponse<ItemType[]>>('/api/item/getItemList', payload);
+      debugger;
+
+      // 실제 응답 형식에 맞게 추출
+      itemList.value = (response.data?.data || []).map(item => ({
+        ...item,
+        starRating: '★★★★★', // 서버에서 별점이 없으면 기본값 설정
+      }));
+
+    } catch (error) {
+      console.error('상품 목록 조회 실패:', error);
+      itemList.value = []; // 실패 시 목록 초기화
+    }    
   }; 
 
   </script>

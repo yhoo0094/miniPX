@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mpx.minipx.framework.util.Constant;
 import com.mpx.minipx.service.market.ItemService;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -36,10 +37,8 @@ public class ItemController {
     @PostMapping("/getItemList")
     public Map<String, Object> getItemList(@RequestBody Map<String, Object> inData, HttpServletRequest request, HttpServletResponse response) throws Exception {
     	Map<String, Object> result = new HashMap<>();
-    	
     	Map<String, Object> itemList = itemService.getItemList(inData);
-    	result.put("itemList ", itemList );
     	
-        return result;
+        return itemList;
     }
 }

@@ -37,7 +37,7 @@ public class ItemService {
      */
     public Map<String, Object> getItemList(Map<String, Object> inData) {
     	Map<String, Object> result = new HashMap<String, Object>(); 
-    	List<Map<String, Object>> list = sqlSession.selectList("com.mpx.minipx.mapper.UserMapper.getUserList");
+    	List<Map<String, Object>> list = sqlSession.selectList("com.mpx.minipx.mapper.ItemMapper.getItemList");
     	result.put(Constant.OUT_DATA, list);
     	result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
     	return result;

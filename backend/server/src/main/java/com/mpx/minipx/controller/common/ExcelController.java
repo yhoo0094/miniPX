@@ -49,7 +49,7 @@ public class ExcelController {
 	 * @생성일: 2023. 1. 13. 오후 1:40:53
 	 * @설명: 엑셀 다운로드
 	 */
-	@RequestMapping("/downloadData.do")
+	@RequestMapping("/downloadData")
 	public void downloadData(HttpServletRequest request, HttpServletResponse response) throws Exception {
 		Map<String, Object> inData = RequestUtil.getParameterMap(request);
 		XSSFWorkbook workbook = createExcel(inData);
@@ -137,7 +137,7 @@ public class ExcelController {
 	* @설명: 엑셀 업로드
 	 */
 	@SuppressWarnings("unchecked")
-	@RequestMapping("/upload.do")
+	@RequestMapping("/upload")
 	public void upload(MultipartHttpServletRequest request, HttpServletResponse response) throws Exception {	
 		Map<String, Object> inData = RequestUtil.getParameterMap(request);
 		Map<String, Object> outData = new HashMap<String, Object>();

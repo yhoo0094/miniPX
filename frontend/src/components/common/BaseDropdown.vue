@@ -1,10 +1,24 @@
 <template>
   <div class="dropdown-container" v-click-outside="close">
-    <button class="dropdown-button" @click="toggle">
-      ▼ {{ selectedLabel || label }}
+    <button class="dropdown-button" 
+            :class="{ disabled: disabled }"
+            @click="toggle" 
+            type="button"
+            :disabled="disabled">
+      <span class="dropdown-label">
+        {{ selectedLabel || label }}
+      </span>
+      <span class="dropdown-caret" :class="{ open: isOpen }">▼</span>
     </button>
+
     <ul v-if="isOpen" class="dropdown-menu">
-      <li v-for="option in options" :key="option.codeDetail" @click="select(option)" >
+      <li
+        v-for="option in displayOptions"
+        :key="option.codeDetail"
+        class="dropdown-item"
+        :class="{ selected: option.codeDetail === props.modelValue }"
+        @click="select(option)"
+      >
         {{ option.codeDetailNm }}
       </li>
     </ul>
@@ -12,7 +26,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed, watch} from 'vue';
 
 interface Option {
   codeDetailNm: string;
@@ -23,17 +37,56 @@ interface Props {
   label: string;
   modelValue: string | number;
   options: Option[];
+  showPlaceholder?: boolean;      // 선택 옵션 표시 여부
+  placeholderLabel?: string;      // 선택 옵션 텍스트 (기본: '선택')  
+  disabled?: boolean;
 }
 
-const props = defineProps<Props>();
-const emit = defineEmits([ 'update:modelValue'
-                         , 'change'  
-                        ]);
+const props = withDefaults(defineProps<Props>(), {
+  showPlaceholder: false,
+  placeholderLabel: '선택',
+  disabled: false,
+});
+const emit = defineEmits(['update:modelValue', 'change']);
 
 const isOpen = ref(false);
 const selectedLabel = ref('');
 
+// 옵션 목록 + '선택' 옵션을 합친 목록
+const displayOptions = computed<Option[]>(() => {
+  if (!props.showPlaceholder) {
+    return props.options;
+  }
+
+  const placeholderOption: Option = {
+    codeDetailNm: props.placeholderLabel,
+    codeDetail: '' as string, // placeholder 선택 시 modelValue를 ''로 사용
+  };
+
+  return [placeholderOption, ...props.options];
+});
+
+// 외부에서 modelValue가 바뀌었을 때 label 동기화
+watch(
+  () => props.modelValue,
+  (newVal) => {
+    // 🔹 아무것도 선택 안 된 상태는 selectedLabel을 비워둔다
+    if (newVal === '' || newVal === null || newVal === undefined) {
+      selectedLabel.value = '';
+      return;
+    }
+
+    const found = displayOptions.value.find(
+      (opt) => opt.codeDetail === newVal
+    );
+
+    selectedLabel.value = found?.codeDetailNm || '';
+  },
+  { immediate: true }
+);
+
 const toggle = () => {
+  if (props.disabled) return;
   isOpen.value = !isOpen.value;
 };
 
@@ -52,35 +105,121 @@ const select = (option: Option) => {
 <style scoped>
 .dropdown-container {
   position: relative;
+  display: inline-block;
+  font-size: 0.9rem;
 }
+
+/* 버튼 */
 .dropdown-button {
-  border: 2px solid #1c2a40;
-  padding: 5px 10px;
-  background: white;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 7rem;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
   cursor: pointer;
-  width: 7rem;
   text-align: left;
-  overflow: hidden;
-  white-space: nowrap;
+  outline: none;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease,
+    transform 0.08s ease;
 }
+
+.dropdown-button:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.15);
+  background-color: #f8fafc;
+}
+
+.dropdown-button:active {
+  transform: translateY(1px);
+  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.08);
+}
+
+/* 비활성화 상태 스타일 */
+.dropdown-button.disabled,
+.dropdown-button:disabled {
+  background-color: #f3f4f6;
+  border-color: #e5e7eb;
+  color: #9ca3af;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* 버튼 안 텍스트 */
+.dropdown-label {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #0f172a;
+}
+
+/* 버튼의 화살표 아이콘 */
+.dropdown-caret {
+  font-size: 0.7rem;
+  color: #64748b;
+  transition: transform 0.15s ease;
+}
+
+.dropdown-caret.open {
+  transform: rotate(180deg);
+}
+
+/* 메뉴 */
 .dropdown-menu {
   position: absolute;
-  top: 100%;
+  top: calc(100% + 4px);
   left: 0;
-  border: 1px solid #ccc;
-  background: white;
   z-index: 1000;
-  width: auto;
-  min-width: 100%;
-}
-.dropdown-menu li {
-  padding: 8px;
-  cursor: pointer;
+  margin: 0;
+  padding: 4px 0;
   list-style: none;
-  width: max-content;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
   min-width: 100%;
+  max-height: 260px;
+  overflow-y: auto;
+  box-sizing: border-box;
 }
-.dropdown-menu li:hover {
-  background-color: #f0f0f0;
+
+/* 메뉴 항목 */
+.dropdown-item {
+  padding: 8px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  color: #0f172a;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #eff6ff;
+}
+
+/* 선택된 항목 표시 */
+.dropdown-item.selected {
+  background-color: #dbeafe;
+  color: #1d4ed8;
+  font-weight: 600;
+}
+
+/* 스크롤바 약간 정리 (웹킷 기준) */
+.dropdown-menu::-webkit-scrollbar {
+  width: 6px;
+}
+
+.dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.7);
+  border-radius: 999px;
 }
 </style>

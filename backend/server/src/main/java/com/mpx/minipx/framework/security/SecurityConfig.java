@@ -32,7 +32,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
             	.requestMatchers( "/api/user/login"
-//            					, "/api/auth/check"
+            					, "/api/auth/check"
             					, "/api/auth/reissue"
             					, "/css/**", "/js/**").permitAll()  // 로그인 등은 허용
                 .anyRequest().authenticated()
@@ -50,14 +50,41 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(List.of("http://localhost:5173"));
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+
+        // ✅ 패턴 기반 허용 (쿠키 사용 가능)
+        config.setAllowedOriginPatterns(List.of(
+            "http://localhost:5173",
+            "http://127.0.0.1:5173",
+            "http://192.168.241.136:5173",
+            "https://*.ngrok-free.dev",
+            "https://*.ngrok-free.app"            
+        ));
+
+        // ✅ 모든 메서드 허용 (OPTIONS 포함)
+        config.setAllowedMethods(List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS"
+        ));
+
+        // ✅ 모든 헤더 허용
         config.setAllowedHeaders(List.of("*"));
+
+        // ✅ 응답에서 노출할 헤더
+        config.setExposedHeaders(List.of(
+            "Authorization",
+            "Set-Cookie"
+        ));
+
+        // ✅ 쿠키(JWT refreshToken) 사용 중이므로 반드시 true
         config.setAllowCredentials(true);
+
+        // ✅ 캐시 시간
+        config.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
+
         return source;
-    }    
+    }
+
 }
 	

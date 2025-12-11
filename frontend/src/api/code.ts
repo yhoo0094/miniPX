@@ -6,6 +6,6 @@ export const getCodeList = async (codeGroup: string) => {
                                     codeGroup: string;
                                     detailOrder: string;
                                     modifyYn: string;
-                                }[]>('/api/common/getCodeList', {codeGroup: codeGroup});
+                                }[]>('/common/getCodeList', {codeGroup: codeGroup});
   return response.data;
 };

@@ -5,7 +5,7 @@
 
 <mapper namespace="com.mpx.minipx.mapper.ItemMapper">
 
-	<!-- 상품 목록 조회-->
+	<!-- 상품 목록 조회 -->
 	<select id="getItemList" parameterType="map" resultType="camelCaseMap">
 		SELECT T1.ITEM_SEQ                  /*상품일련번호*/
 			 , T1.ITEM_NM                   /*상품명*/
@@ -23,6 +23,9 @@
 			 , T1.LST_UPD_DTTI              /*최종수정일시*/
 		  FROM TB_ITEM T1					/*테이블_상품 정보 관리*/
 		 WHERE T1.USE_YN = 'Y'
+		 <if test='itemNm != null and itemNm != ""'>
+		   AND T1.ITEM_NM LIKE CONCAT('%', #{itemNm}, '%')
+		 </if>		 
 		 <if test='itemTypeCode != null and itemTypeCode != ""'>
 		   AND T1.ITEM_TYPE_CODE = #{itemTypeCode}
 		 </if>
@@ -30,5 +33,12 @@
 		   AND T1.ITEM_DTL_TYPE_CODE = #{itemDtlTypeCode}
 		 </if>  
 		 ORDER BY ITEM_SEQ ASC	
+	</select>	
+	
+	<!-- 상품 이미지 조회 -->
+	<select id="getItemImage" parameterType="long" resultType="string">
+		SELECT T1.IMG                       /*이미지*/
+		  FROM TB_ITEM T1					/*테이블_상품 정보 관리*/
+		 WHERE T1.ITEM_SEQ =  #{itemSeq}	/*상품일련번호*/
 	</select>	
 </mapper>

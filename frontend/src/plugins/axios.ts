@@ -9,8 +9,7 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
 
 // ✅ axios 인스턴스 생성
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  // timeout: Number(import.meta.env.VITE_API_TIMEOUT || 5000),
+  baseURL: '/api',          // ✅ 프록시 경유
   withCredentials: true,
 });
 
@@ -24,13 +23,13 @@ api.interceptors.response.use(
       error.response &&
       error.response.status === 401 &&
       !originalRequest._retry &&
-      originalRequest.url !== '/api/auth/reissue'
+      originalRequest.url !== '/auth/reissue'
     ) {
       originalRequest._retry = true;
 
       try {
         console.log('토큰 재발급');
-        const res = await api.post('/api/auth/reissue', {});
+        const res = await api.post('/auth/reissue', {});
         if (res.status === 200) {
           return api(originalRequest);
         }

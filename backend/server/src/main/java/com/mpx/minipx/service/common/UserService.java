@@ -116,16 +116,18 @@ public class UserService {
         String accessToken = JwtUtil.generateToken(user, jwtSecret, Constant.ACCESS_TOKEN_VALIDITY);
         Cookie accessCookie = new Cookie("accessToken", accessToken);
         accessCookie.setHttpOnly(true);
-        accessCookie.setSecure(true);
+//        accessCookie.setSecure(true);		//HTTPS에서만 전송(주석 풀어야함)
+        accessCookie.setSecure(false);		//개발용도
         accessCookie.setMaxAge((int)Constant.REFRESH_TOKEN_VALIDITY);
-        accessCookie.setPath("/");     
+        accessCookie.setPath("/");   
         result.put("accessToken", accessCookie);	//컨트롤러에서 response에 추가해야함
         
         // refreshToken 생성
         String refreshToken = JwtUtil.generateToken(user, jwtSecret, Constant.REFRESH_TOKEN_VALIDITY);
         Cookie refreshCookie = new Cookie("refreshToken", refreshToken);
         refreshCookie.setHttpOnly(true);  // JavaScript에서 쿠키에 접근 불가
-        refreshCookie.setSecure(true);    // HTTPS에서만 전송
+//        refreshCookie.setSecure(true);    //HTTPS에서만 전송(주석 풀어야함)     
+        refreshCookie.setSecure(false);      //개발용도                     
         refreshCookie.setMaxAge((int)Constant.REFRESH_TOKEN_VALIDITY);
         refreshCookie.setPath("/");       // 전체 경로에 대해 유효 
         result.put("refreshToken", refreshCookie);	//컨트롤러에서 response에 추가해야함

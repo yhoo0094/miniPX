@@ -27,7 +27,7 @@ export const useUserStore = defineStore('user', {
       this.authMap = {}; 
 
       try {
-        const res = await api.post('/api/user/logout', {});
+        const res = await api.post('/user/logout', {});
         if (res.status === 200) {
           router.push('/login');
         }

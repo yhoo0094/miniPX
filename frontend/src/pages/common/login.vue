@@ -1,20 +1,20 @@
 <template>
-  <div class="login-container">
-    <div class="login-info-box">
-      <BaseInput v-model="userId" class="input" label="아이디" placeholder="아이디를 입력하세요"
-        @keydown.enter.prevent="login"/>
-      <BaseInput v-model="userPw" type="password" class="input" label="비밀번호" placeholder="비밀번호를 입력하세요"
-        @keydown.enter.prevent="login"/>
-      <label class="remember-checkbox">
-        <input id="rememberId" type="checkbox" v-model="rememberId"/>
-        <label>아이디 저장</label>
-      </label>      
-      <BaseButton type="button" class="button" @click="login" width="100%">로그인</BaseButton>
+  <div class="login-wrapper">
+    <div class="login-container">
+      <div class="login-info-box">
+        <BaseInput height="2.2rem" v-model="userId" class="input" label="아이디" placeholder="아이디를 입력하세요"
+          @keydown.enter.prevent="login"/>
+        <BaseInput height="2.2rem" v-model="userPw" type="password" class="input" label="비밀번호" placeholder="비밀번호를 입력하세요"
+          @keydown.enter.prevent="login"/>
+        <BaseCheckbox class="chkBox" v-model="rememberId" label="아이디 저장" />
+        <BaseButton height="3rem" type="button" class="button" @click="login" width="100%">로그인</BaseButton>
+      </div>
+      <div class="login-banner-container">
+        <img :src="delivery_man" alt="no img"/>
+      </div>
+      <!-- <div class="login-banner-underLine"></div> -->
     </div>
-    <div class="login-banner-container">
-      <img :src="delivery_man" alt="no img"/>
-    </div>    
-  </div>
+  </div>  
 </template>
 
 <script setup lang="ts">
@@ -24,6 +24,7 @@ import { useMenuStore } from '@/stores/menuStore';
 import Cookies from 'js-cookie';
 import BaseInput from '@/components/common/BaseInput.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
+import BaseCheckbox from '@/components/common/BaseCheckbox.vue';
 import router from '@/router';
 import api from '@/plugins/axios';
 import delivery_man from '@/assets/img/delivery_man.webp';
@@ -60,7 +61,7 @@ const login = async () => {
   }
 
   try {
-    const response = await api.post<ApiResponse<LoginPayload>>('/api/user/login', {
+    const response = await api.post<ApiResponse<LoginPayload>>('/user/login', {
       userId: userId.value,
       userPw: userPw.value,
     });
@@ -86,7 +87,7 @@ const login = async () => {
       menuStore.setMenuList(mnuList);
       menuStore.restoreRoutes();
 
-      router.push('/main');
+      router.push('/market/itemList');
     } else {
       alert(response.data.message);
     }
@@ -99,18 +100,25 @@ const login = async () => {
 <style scoped>
 .login-banner-container {
   display: flex;
-  height: 330px;
+  height: 20.625rem;
+}
+
+.login-banner-underLine {
+  display: flex;
+  height: 0.6rem;
+  background-color: #0c254d;
+  width: 100%;
 }
 
 .login-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  max-width: 400px;
-  margin: 100px auto;
-  padding: 30px;
+  max-width: 25rem;
+  margin: auto;
+  padding: 1rem;
   border: 1px solid #ccc;
-  border-radius: 8px;
+  border-radius: 0.5rem;
   background: #fff;
 }
 
@@ -120,17 +128,23 @@ const login = async () => {
 }
 
 .input {
-  margin-bottom: 15px;
+  margin-bottom: 1rem;
   width: 100%;
+}
+
+.chkBox{
+  margin-bottom: 0.5rem;
 }
 
 .button {
   width: 100%;
 }
 
-.remember-checkbox {
+.login-wrapper {
   display: flex;
-  align-items: center;
-  margin-bottom: 10px;
+  justify-content: center; /* 가로 중앙 */
+  align-items: center;     /* 세로 중앙 */
+  min-height: 100vh;       /* 화면 전체 높이 */
+  background: #f5f5f5;     /* 선택 사항: 배경색 */
 }
 </style>

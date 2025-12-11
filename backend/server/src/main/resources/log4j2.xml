@@ -25,94 +25,71 @@
 -->
  
     <appenders>
-    	<!-- 콘솔 -->
-        <console name="console" target="SYSTEM_OUT"><!-- 콘솔에 출력하는 방식 설정 -->
-            <patternLayout pattern="%5p %d{yyyy-MM-dd hh:mm:ss,SSS} [%C{3}.%M] %m%n"/>
+        <!-- 일반 콘솔 로그 -->
+        <console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%5p %d{yyyy-MM-dd HH:mm:ss,SSS} [%C{2}.%M] %m%n"/>
         </console>
         
-        <console name="sql" target="SYSTEM_OUT"><!-- 콘솔에 출력하는 방식 설정 -->
-            <patternLayout pattern="%5p %d{yyyy-MM-dd hh:mm:ss,SSS} [%C{3}.%M] %n%n %m %n%n"/>
+		<!-- log4jdbc 전용 콘솔 (Connection.prepareStatement(...)만 출력) -->
+		<Console name="SpyConsole" target="SYSTEM_OUT">
+		    <PatternLayout pattern="%5p %d{yyyy-MM-dd HH:mm:ss,SSS} [%C{2}.%M] %m%n"/>
+		
+		    <!-- 여기서 필터링: Connection.prepareStatement( 가 있는 로그만 ACCEPT -->
+<!--		    <RegexFilter regex=".*Connection\.prepareStatement\(" -->
+<!--		                 onMatch="ACCEPT" -->
+<!--		                 onMismatch="DENY"/>-->
+		</Console>        
+
+        <!-- SQL 전용 콘솔 로그 (SQL만 깔끔하게 보고 싶을 때) -->
+        <console name="SqlConsole" target="SYSTEM_OUT">
+            <!-- 위/아래 빈 줄 + 메시지(=SQL)만 출력 -->
+            <PatternLayout pattern="%n%n%m%n%n"/>
         </console>
-        
-        <!-- 파일  -->
-        <RollingFile name ="RollingFile">
-        	<!-- 개발환경 로그 경로 -->
+
+        <!-- 일반 파일 로그 -->
+        <RollingFile name="File">
             <FileName>C:/log/MPX/MPX.log</FileName>
-            <FilePattern>C:/log/MPX/MPX_%d{yyyy-MM-dd-hh-mm}.log</FilePattern>
+            <FilePattern>C:/log/MPX/MPX_%d{yyyy-MM-dd-HH-mm}.log</FilePattern>
             <PatternLayout>
-                <Pattern>%5p %d{yyyy-MM-dd hh:mm:ss,SSS} [%C{3}.%M] %m%n</Pattern>
+                <Pattern>%5p %d{yyyy-MM-dd HH:mm:ss,SSS} [%C{2}.%M] %m%n</Pattern>
             </PatternLayout>
             <Policies>
-<!--                 <TimeBasedTriggeringPolicy interval = "1" modulate = "true"/> -->
-                <!-- <SizeBasedTriggeringPolicy size="100MB"/> -->
-                <!-- <CronTriggeringPolicy schedule="0 0/2 * 1/1 * ? *" /> -->
+                 <SizeBasedTriggeringPolicy size="100MB"/> 
             </Policies>
-            <DefaultRolloverStrategy max="5" />
+            <DefaultRolloverStrategy max="5"/>
         </RollingFile>
-        
-        <RollingFile name ="RollingFileError">
+
+        <!-- 에러 전용 파일 (원하면 유지, 아니면 삭제) -->
+        <RollingFile name="ErrorFile">
             <FileName>C:/log/mylog_error.txt</FileName>
-            <FilePattern>C:/log/%d{yyyy-MM-dd-hh-mm}/mylog_error.zip</FilePattern>
+            <FilePattern>C:/log/%d{yyyy-MM-dd-HH-mm}/mylog_error.zip</FilePattern>
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss} %5p [%c] %m%n</Pattern>
             </PatternLayout>
             <Policies>
-<!--                 <TimeBasedTriggeringPolicy interval = "1" modulate = "true"/> -->
+                 <SizeBasedTriggeringPolicy size="100MB"/> 
             </Policies>
-        </RollingFile>        
-        
+        </RollingFile>
     </appenders>
-    
-    
     
 	 <!-- SQL Logger -->
 	<loggers>	 
-		<!--  SQL문과 해당 SQL을 실행시키는데 수행된 시간 정보(milliseconds) -->
-		<logger name="jdbc.sqltiming" level="INFO" additivity="false">
-		    <appender-ref ref="console"/> 
-		    <AppenderRef ref="RollingFile"/>
-		</logger>
-		
-		<!--  SQL 쿼리 문장 -->
-		<logger name="jdbc.sqlonly" level="INFO" additivity="false"> 
-		    <appender-ref ref="sql"/> 
-		    <AppenderRef ref="RollingFile"/>
-		</logger>
-		 
-		<!--  ResultSet을 제외한 모든 JDBC 호출 정보 -->
-		<logger name="jdbc.audit" level="OFF" additivity="false"> 
-		    <appender-ref ref="console"/> 
-		</logger>
-		 
-		<!--  ResultSet을 포함한 모든 JDBC 호출 정보 -->
-		<logger name="jdbc.resultset" level="OFF" additivity="false">
-		    <appender-ref ref="console"/> 
-		</logger>
-		
-		<!-- SQL 결과 조회된 데이터의 table을 로그 -->
-		<logger name="jdbc.resultsettable" level="OFF" additivity="false"> 
-		    <appender-ref ref="console"/> 
-		</logger>
-		
-		<!-- Spring 로그 -->
-		<logger name="org.springframework" level="DEBUG" additivity="false">
-		    <appender-ref ref="console"/>
-		</logger>
-		
-		<!-- Hibernate 로그 -->
-		<logger name="org.hibernate" level="OFF" additivity="false">
-		    <appender-ref ref="console"/>
-		</logger>
-		
-		<!--rmi.runtime-->
-		<logger name="rmi.runtime" level="OFF" additivity="false">
-		  <appender-ref ref="console"/>
-		</logger>
-		
-		<!--com.zaxxer.hikari-->
-		<logger name="com.zaxxer.hikari" level="OFF" additivity="false">
-		  <appender-ref ref="console"/>
-		</logger>		
+		<!-- log4jdbc: SpyConsole로만 출력, 나머지 상위(root)로는 안 올림 -->
+		<Logger name="log4jdbc" level="INFO" additivity="false">
+		    <AppenderRef ref="SpyConsole"/>
+		</Logger>
+
+        <!-- SQL + 실행 시간(ms) 로그 -->
+        <logger name="jdbc.sqltiming" level="OFF" additivity="false">
+            <AppenderRef ref="SqlConsole"/>
+            <!-- <AppenderRef ref="File"/> -->
+        </logger>
+
+        <!-- 순수 SQL 문장 로그 -->
+        <logger name="jdbc.sqlonly" level="OFF" additivity="false">
+            <AppenderRef ref="SqlConsole"/>
+            <!-- <AppenderRef ref="File"/> -->
+        </logger>
 		
         <root level="INFO">
            	<appenderRef ref="console"/>

@@ -1,1 +1,24 @@
 // body, html 등 base 스타일
+
+/* ===== 전역 스크롤바 스타일 ===== */
+::-webkit-scrollbar {
+  width: 10px;          /* 스크롤바 너비 */
+  height: 10px;         /* 가로 스크롤바 높이 */
+}
+
+::-webkit-scrollbar-track {
+  background: transparent; 
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(120, 140, 160, 0.6); /* 반투명 블루그레이 */
+  border-radius: 10px;
+  border: 2px solid transparent;       /* Glass 느낌 */
+  background-clip: padding-box;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(120, 140, 160, 0.9); /* hover 시 더 진하게 */
+}
+/* ===== 전역 스크롤바 스타일 ===== */

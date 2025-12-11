@@ -80,15 +80,16 @@ public class UserController {
      */
     @PostMapping("/logout")
     public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response) {
+    	
+    	// 사용자 ID 추출
         String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
-        // 사용자 ID 추출
         Claims claims;
         try {
             claims = JwtUtil.validateToken(refreshToken, jwtSecret);
         } catch (Exception e) {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }        
-        String userId = claims.getSubject();        
+        String userId = (String) claims.get("userId");    
         
         // DB에서 refreshToken 제거
         userService.logout(userId);

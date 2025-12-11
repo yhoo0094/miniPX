@@ -7,7 +7,8 @@ import { useUserStore } from '@/stores/userStore';
 const routes: RouteRecordRaw[] = [
   { path: '/', 
     // redirect: '/main', 
-    component: () => import('@/pages/common/main.vue'),
+    // component: () => import('@/pages/common/main.vue'),
+    component: () => import('@/pages/market/itemList.vue'),
   },
   {
     path: '/login',
@@ -20,7 +21,8 @@ const routes: RouteRecordRaw[] = [
     children: [
       {
         path: '/main',
-        component: () => import('@/pages/common/main.vue'),
+        // component: () => import('@/pages/common/main.vue'),
+        component: () => import('@/pages/market/itemList.vue'),
         meta: { requiresAuth: true },
       },
     ],

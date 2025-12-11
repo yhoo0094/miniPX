@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mpx.minipx.mapper.ItemNewMapper">
+
+	<!-- 신규상품주문 등록 -->
+	<insert id="insertNewOrder" parameterType="map">
+	    INSERT INTO TB_NEW_ORDER                   
+	    	 ( USER_SEQ                            /*사용자일련번호*/             
+			 , ITEM_NM                             /*상품명*/                 
+			 , IMG                                 /*이미지*/                 
+			 , PRICE                               /*가격*/                  
+			 , CNT                                 /*개수*/                  
+			 , NEW_ORDER_DTL                       /*신규상품주문상세*/            
+			 , ORDER_STATUS_CODE                   /*주문상태코드*/              
+			 , ORDER_DTTI                          /*주문일시*/                
+			 , ORDER_STATUS_DTL                    /*주문상태상세*/              
+			 , FST_REG_SEQ                         /*최초등록자일련번호*/           
+			 , FST_REG_DTTI                        /*최초등록일시*/              
+			 , LST_UPD_SEQ                         /*최종수정자일련번호*/           
+			 , LST_UPD_DTTI                        /*최종수정일시*/              
+			 ) 
+		VALUES	  
+			 ( #{userSeq}                          /*사용자일련번호*/                     
+			 , #{itemNm}                           /*상품명*/                         
+			 , #{img}                              /*이미지*/                         
+			 , 0                            	   /*가격*/                          
+			 , #{cnt}                              /*개수*/                          
+			 , #{newOrderDtl}                      /*신규상품주문상세*/                    
+			 , '01'                  			   /*주문상태코드*/                      
+			 , NOW()                        	   /*주문일시*/                        
+			 , #{orderStatusDtl}                   /*주문상태상세*/                      
+			 , #{userSeq}                          /*최초등록자일련번호*/                    
+			 , NOW()                               /*최초등록일시*/                       
+			 , #{userSeq}                          /*최종수정자일련번호*/                    
+			 , NOW()                               /*최종수정일시*/                    
+			 )
+	</insert>		
+</mapper>

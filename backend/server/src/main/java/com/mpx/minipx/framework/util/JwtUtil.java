@@ -4,6 +4,9 @@ import java.util.Date;
 
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+
 import com.mpx.minipx.entity.TbUser;
 
 import io.jsonwebtoken.Claims;
@@ -17,25 +20,24 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
 public class JwtUtil {
-	
 	/**
 	 * @메소드명: generateToken
 	 * @작성자: KimSangMin
 	 * @생성일: 2025. 6. 23.
-	 * @설명: JWT 토큰 생성
+	 * @설명: JWT 토큰 생성(String 매개변수)
 	 */
-	public static String generateToken(String str, String base64Secret) {
-        // Base64 디코딩 후 SecretKey 객체로 변환 (HS512 기준, 512bit 이상 필수)
-        byte[] keyBytes = Decoders.BASE64.decode(base64Secret);		// Base64 인코딩된 문자열을 바이트 배열로 디코딩
-        SecretKey key = Keys.hmacShaKeyFor(keyBytes);				// 디코딩된 바이트로 HMAC SHA512 키 생성	
-        
-        return Jwts.builder()
-                .setSubject(str)  // 사용자 ID
-                .setIssuedAt(new Date())  // 발급 시간
-                .setExpiration(new Date(System.currentTimeMillis() + 60 * 60 * 1000))  // 1시간 만료
-                .signWith(key, SignatureAlgorithm.HS512)  // 서명 알고리즘 설정
-                .compact();        
-    } 	
+//	public static String generateToken(String str, String base64Secret) {
+//        // Base64 디코딩 후 SecretKey 객체로 변환 (HS512 기준, 512bit 이상 필수)
+//        byte[] keyBytes = Decoders.BASE64.decode(base64Secret);		// Base64 인코딩된 문자열을 바이트 배열로 디코딩
+//        SecretKey key = Keys.hmacShaKeyFor(keyBytes);				// 디코딩된 바이트로 HMAC SHA512 키 생성	
+//        
+//        return Jwts.builder()
+//                .setSubject(str)  // 사용자 ID
+//                .setIssuedAt(new Date())  // 발급 시간
+//                .setExpiration(new Date(System.currentTimeMillis() + 60 * 60 * 1000))  // 1시간 만료
+//                .signWith(key, SignatureAlgorithm.HS512)  // 서명 알고리즘 설정
+//                .compact();        
+//    } 	
 	
 	/**
 	 * @메소드명: generateToken

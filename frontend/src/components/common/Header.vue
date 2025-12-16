@@ -5,13 +5,12 @@
     </div>
 
     <nav class="nav">
-      <div class="nav-item" v-for="menu in topLevelMenus" :key="menu.path" @mouseenter="activeMenu = menu.path"
-        @mouseleave="activeMenu = null">
-        <!-- <router-link :to="menu.path" class="nav-link"> -->
+      <div class="nav-item" v-for="menu in topLevelMenus" :key="menu.path" 
+      @click="activeMenu = (activeMenu == null) ? menu.path : null" 
+        >
           <div class="nav-link">
           {{ menu.title }}
           </div>
-        <!-- </router-link> -->
 
         <!-- 2depth 드롭다운 -->
         <div class="dropdown" v-if="getChildren(menu).length > 0 && activeMenu === menu.path">
@@ -55,7 +54,7 @@ const allRoutes = router.getRoutes();
 const topLevelMenus = ref<any[]>([]);
 allRoutes.forEach((route) => {
   const exists = topLevelMenus.value.some(menu => menu.mnuSeq === route.meta.upperMnuSeq);
-  if (!exists) {
+  if (!exists && route.meta.upperMnuSeq) {
     topLevelMenus.value.push({
       mnuSeq: route.meta.upperMnuSeq,
       title: route.meta.upperMnuNm,
@@ -106,6 +105,7 @@ const getChildren = (parent) => {
 
 .nav-item {
   position: relative;
+  cursor: pointer;
 }
 
 .nav-link {

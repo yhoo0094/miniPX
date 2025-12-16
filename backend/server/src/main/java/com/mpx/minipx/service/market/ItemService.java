@@ -37,6 +37,9 @@ public class ItemService {
 	
     @Value("${jwt.secret}")
     private String jwtSecret;  // JWT 비밀 키 (application.properties에서 가져오기)    
+    
+    @Value("${item.image-path}")
+    private String imageBasePath;    
 
     /**
      * @메소드명: getItemList
@@ -59,15 +62,13 @@ public class ItemService {
      * @설명: 상품 이미지 조회
      */
     public ItemImage getItemImage(Long itemSeq) throws Exception {
-    	String imagePath = sqlSession.selectOne("com.mpx.minipx.mapper.ItemMapper.getItemImage", itemSeq);
+    	String imageName = sqlSession.selectOne("com.mpx.minipx.mapper.ItemMapper.getItemImage", itemSeq);
 
-        if (imagePath == null || imagePath.isBlank()) {
+        if (imageName == null || imageName.isBlank()) {
             throw new IllegalStateException("이미지 경로 없음");
         }
         
-        imagePath = "C:\\Users\\KimSangMin\\git\\pxtemp\\images\\" + imagePath;
-
-        Path filePath = Paths.get(imagePath);
+        Path filePath = Paths.get(imageBasePath + imageName);
         if (!Files.exists(filePath)) {
             throw new IllegalStateException("이미지 파일 없음: " + filePath);
         }

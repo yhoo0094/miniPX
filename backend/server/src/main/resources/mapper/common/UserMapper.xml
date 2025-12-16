@@ -20,7 +20,7 @@
 			 , T1.COMPNT_NM					/*컴퍼넌트명*/
 			 , T1.UPPER_MNU_SEQ				/*상위메뉴일련번호*/
 			 , (SELECT MNU_NM
-			 	  FROM TB_MNU
+			 	  FROM tb_mnu
 			 	 WHERE MNU_SEQ = T1.UPPER_MNU_SEQ) AS UPPER_MNU_NM	/*상위메뉴명*/
 			 , T1.MNU_LV					/*메뉴레벨*/
 			 , T1.MNU_ORDER					/*메뉴표시순서*/
@@ -31,11 +31,11 @@
 			 , IF(T1.MNU_LV = 1
 			 		, T1.MNU_ORDER * 1000
 			 		, (SELECT MNU_ORDER * 1000 + T1.MNU_ORDER 
-			 			 FROM TB_MNU
+			 			 FROM tb_mnu
 			 			WHERE MNU_SEQ = T1.UPPER_MNU_SEQ)
 			 	 ) AS ORDER_VAL				/*메뉴순서 값(lv1 order * 1000 + lv2 order)*/
-		  FROM TB_MNU T1					/*테이블_메뉴*/
-		  	 , TB_AUTH T2					/*테이블_권한*/
+		  FROM tb_mnu T1					/*테이블_메뉴*/
+		  	 , tb_auth T2					/*테이블_권한*/
 		 WHERE T1.MNU_SEQ = T2.MNU_SEQ
 		   AND T2.ROLE_SEQ = #{roleSeq}	  
 		   AND T2.AUTH_GRADE > 0

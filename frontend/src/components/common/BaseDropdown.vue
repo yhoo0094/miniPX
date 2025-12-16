@@ -8,7 +8,12 @@
       <span class="dropdown-label">
         {{ selectedLabel || label }}
       </span>
-      <span class="dropdown-caret" :class="{ open: isOpen }">▼</span>
+      <span
+        class="dropdown-caret"
+        :class="[{ open: isOpen }, { 'is-sort': props.caretText === '⇅' }]"
+      >
+        {{ props.caretText }}
+      </span>
     </button>
 
     <ul v-if="isOpen" class="dropdown-menu">
@@ -40,12 +45,14 @@ interface Props {
   showPlaceholder?: boolean;      // 선택 옵션 표시 여부
   placeholderLabel?: string;      // 선택 옵션 텍스트 (기본: '선택')  
   disabled?: boolean;
+  caretText?: string; // 기본 '▼', 정렬용은 '⇅'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   showPlaceholder: false,
   placeholderLabel: '선택',
   disabled: false,
+  caretText: '▼',
 });
 const emit = defineEmits(['update:modelValue', 'change']);
 
@@ -167,6 +174,32 @@ const select = (option: Option) => {
 
 .dropdown-caret.open {
   transform: rotate(180deg);
+}
+
+/* 정렬 아이콘(⇅)은 아이콘처럼 + 회전 금지 */
+.dropdown-caret.is-sort {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  /* 아이콘처럼 보이게 */
+  font-size: 0.85rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.05em;
+
+  color: #334155;
+
+  /* 회전 애니메이션 자체를 꺼버림 */
+  transition: none;
+}
+
+/* 혹시 open 클래스가 같이 붙어도 회전 안 되게 강제 */
+.dropdown-caret.is-sort.open {
+  transform: none;
 }
 
 /* 메뉴 */

@@ -5,12 +5,18 @@
     <div class="filters">
       <div>
         <BaseDropdown label="분류" v-model="selectedCategory" :options="categoryOptions" :showPlaceholder="true"
-          placeholderLabel="선택" @change="handleCategoryChange" />
+          placeholderLabel="선택" @change="handleCategoryChange" 
+          />
       </div>
       <div>
         <BaseDropdown label="상세분류" v-model="selectedSubCategory" :options="subCategoryOptions" :showPlaceholder="true"
-          placeholderLabel="선택" :disabled="!selectedCategory" />
+          placeholderLabel="선택" @change="getItemList" :disabled="!selectedCategory" />
       </div>
+      <div>
+        <BaseDropdown label="정렬기준" v-model="selectedSort" :options="sortOptions" :showPlaceholder="false"
+          placeholderLabel="선택" @change="getItemList" caretText="⇅"
+          />
+      </div>      
       <div class="filter-search">
         <BaseInput height="2.125rem" v-model="searchItemNm" class="input" placeholder="상품명 입력" @keydown.enter.prevent="getItemList" />
       </div>
@@ -26,8 +32,12 @@
         </div>
 
         <div class="info-main">
-          <div class="item-name" :title="item.itemNm">{{ item.itemNm }}</div>
-          <div class="item-price">{{ item.price.toLocaleString() }}원</div>
+          <div class="item-name" :title="item.itemNm">
+              {{ item.itemNm }} <span v-if="item.unit > 1">{{ item.unit }}개</span>
+          </div>
+          <div class="item-price">
+            {{ item.unitPrice.toLocaleString()}}원<span v-if="item.unit > 1">(개당 {{ item.price.toLocaleString() }}원)</span>
+          </div>
         </div>
 
         <div class="info-row">
@@ -72,12 +82,14 @@ const uiStore = useUiStore();
 // 검색 조건
 const selectedCategory = ref('');
 const selectedSubCategory = ref('');
+const selectedSort = ref('');
 const searchItemNm = ref('');
 
 // 상태 선언
 const categoryOptions = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
 const subCategoryOptions = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
 const subCategoryOptionsAll = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
+const sortOptions = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
 
 // 상품 목록
 const itemList = ref<Array<ItemType>>([]);
@@ -96,6 +108,7 @@ const getCategoryOptionList = async () => {
   try {
     categoryOptions.value = await getCodeList('ITEM_TYPE_CODE');
     subCategoryOptionsAll.value = await getCodeList('ITEM_DTL_TYPE_CODE');
+    sortOptions.value = await getCodeList('ITEM_SORT_CODE');
   } catch (error) {
     console.error('분류 조회 실패:', error);
   }
@@ -117,15 +130,11 @@ const handleCategoryChange = (option: { codeDetailNm: string; codeDetail: string
 
   // 상위 분류 바뀌면 하위 선택도 초기화
   selectedSubCategory.value = '';
+
+  getItemList();
 };
 
 // 상품 목록 조회
-interface GetItemListPayload {
-  itemTypeCode: string;
-  itemDtlTypeCode: string;
-  itemNm: string;
-}
-
 const getItemList = async () => {
     uiStore.showLoading('상품 목록을 조회 중입니다...');
 
@@ -133,6 +142,7 @@ const getItemList = async () => {
     const payload = {
       itemTypeCode: selectedCategory.value,
       itemDtlTypeCode: selectedSubCategory.value,
+      itemSortCode: selectedSort.value,
       itemNm: searchItemNm.value,
     };
 

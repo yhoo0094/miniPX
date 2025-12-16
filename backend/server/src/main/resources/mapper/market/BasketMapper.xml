@@ -16,8 +16,8 @@
 			 , T1.FST_REG_DTTI              /*최초등록일시*/
 			 , T1.LST_UPD_SEQ               /*최종수정자일련번호*/
 			 , T1.LST_UPD_DTTI              /*최종수정일시*/
-		  FROM TB_BASKET T1					/*테이블_장바구니*/
-		  JOIN TB_ITEM T2					/*테이블_상품*/
+		  FROM tb_basket T1					/*테이블_장바구니*/
+		  JOIN tb_item T2					/*테이블_상품*/
 		    ON T1.ITEM_SEQ = T2.ITEM_SEQ
 		 WHERE T1.USER_SEQ = #{userSeq}
 		 ORDER BY FST_REG_DTTI DESC
@@ -25,7 +25,7 @@
 	
 	<!-- 장바구니 등록 -->
 	<insert id="insertBasket" parameterType="map">
-		INSERT INTO TB_BASKET              /*테이블_상품*/ 
+		INSERT INTO tb_basket              /*테이블_상품*/ 
 		     ( USER_SEQ                    /*사용자일련번호*/ 
 		     , ITEM_SEQ                    /*상품일련번호*/  
 		     , CNT                         /*개수*/ 
@@ -51,7 +51,7 @@
 	
 	<!-- 장바구니 추가 -->
 	<update id="updateBasketCnt" parameterType="map">
-	    UPDATE TB_BASKET
+	    UPDATE tb_basket
 	       SET CNT         		= #{cnt}
 	         , LST_UPD_SEQ 		= #{userSeq}
 	         , LST_UPD_DTTI 	= NOW()
@@ -61,14 +61,14 @@
 	
 	<!-- 장바구니 삭제 -->
 	<delete id="deleteBasket" parameterType="map">
-		DELETE FROM TB_BASKET
+		DELETE FROM tb_basket
 	     WHERE USER_SEQ   		= #{userSeq}
 	       AND ITEM_SEQ			= #{itemSeq}
 	</delete>	
 	
 	<!-- 주문 등록 -->
 	<insert id="insertOrderList" parameterType="map">
-		INSERT INTO TB_ORDER				/*테이블_주문*/ 
+		INSERT INTO tb_order				/*테이블_주문*/ 
 		     ( USER_SEQ                     /*사용자일련번호*/
 			 , ITEM_SEQ                     /*상품일련번호*/
 			 , PRICE                        /*가격*/
@@ -84,8 +84,8 @@
 		<foreach collection="itemSeqList" item="itemSeq" separator=",">
 		 	 ( #{userSeq}                   /*사용자일련번호*/                      
 			 , #{itemSeq}                   /*상품일련번호*/                       
-			 , (SELECT PRICE FROM TB_ITEM WHERE ITEM_SEQ = #{itemSeq})                     				/*가격*/                           
-			 , (SELECT CNT FROM TB_BASKET WHERE ITEM_SEQ = #{itemSeq} AND USER_SEQ = #{userSeq})        /*개수*/                           
+			 , (SELECT PRICE FROM tb_item WHERE ITEM_SEQ = #{itemSeq})                     				/*가격*/                           
+			 , (SELECT CNT FROM tb_basket WHERE ITEM_SEQ = #{itemSeq} AND USER_SEQ = #{userSeq})        /*개수*/                           
 			 , '01'                         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 11:구매완료, 12:품절, 91:취소)*/    
 			 , NOW()						/*주문일시*/
 			 , #{userSeq}                   /*최초등록자일련번호*/                    
@@ -98,7 +98,7 @@
 	
 	<!-- 장바구니 여러 건 삭제 -->
 	<delete id="deleteBasketList" parameterType="map">
-		DELETE FROM TB_BASKET
+		DELETE FROM tb_basket
 	     WHERE USER_SEQ   		= #{userSeq}
 	       AND ITEM_SEQ	IN
         	<foreach collection="itemSeqList" item="itemSeq" open="(" close=")" separator=",">

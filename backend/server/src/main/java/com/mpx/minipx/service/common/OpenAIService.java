@@ -2,10 +2,10 @@ package com.mpx.minipx.service.common;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import com.mpx.minipx.dto.common.RunProductsQueryArgs;
 import com.openai.client.OpenAIClient;
 import com.openai.models.ChatModel;
 import com.openai.models.responses.Response;
@@ -14,6 +14,11 @@ import com.openai.models.responses.ResponseFunctionToolCall;
 import com.openai.models.responses.ResponseInputItem;
 import com.openai.models.responses.ResponseOutputMessage;
 
+/**
+ * LLM이 SQL을 직접 만들지 않고,
+ * 서버가 제공하는 "쿼리 카탈로그(툴/함수 목록)" 중에서 골라 호출하는 구조.
+ * 필요하면 tool call을 여러 번 수행(왕복)할 수 있도록 루프 처리.
+ */
 @Service
 public class OpenAIService {
 
@@ -26,25 +31,9 @@ public class OpenAIService {
         this.productQueryService = productQueryService;
     }
 
-    /**
-     * 그냥 LLM에 질문만 하는 기본 버전
-     */
-    public String ask(String userInput) {
-        ResponseCreateParams params = ResponseCreateParams.builder()
-                .model(ChatModel.GPT_4_1_MINI)
-                .input(userInput)
-                .build();
+    public String getAiAnswer(String userInput) {
 
-        Response response = openAIClient.responses().create(params);
-        return extractText(response);
-    }
-
-    /**
-     * DB 조회가 필요한 질문 (툴 사용)
-     */
-    public String askWithDbTools(String userInput) {
-
-        // 1) 대화 input 리스트 준비 (Responses API 예제 패턴)
+        // 1) 대화 input 리스트 준비
         List<ResponseInputItem> inputs = new ArrayList<>();
         inputs.add(
             ResponseInputItem.ofMessage(
@@ -55,163 +44,232 @@ public class OpenAIService {
             )
         );
 
-        // 2) 기본 파라미터 빌더 (툴 등록까지)
+        // 2) "쿼리 카탈로그 기반" instructions
+        String instructions = """
+        너는 이커머스 쇼핑몰의 AI 상담/데이터 분석 assistant다.
+        사용자는 한국어로 질문한다.
+
+        매우 중요:
+        - 너는 SQL을 작성하지 않는다.
+        - 데이터가 필요하면, 아래 제공된 "쿼리 카탈로그(함수/툴)" 중에서 골라 호출한다.
+        - 툴을 호출하면 서버가 결과(JSON)를 돌려준다.
+        - 필요한 경우 툴을 여러 번 호출해도 된다(여러 번 왕복 가능).
+        - 툴 결과를 바탕으로 사람이 이해하기 쉬운 한국어로 요약/정리해서 답변한다.
+        - 질문이 애매해서 파라미터가 부족하면, 사용자에게 추가 질문을 해도 된다.
+
+        [쿼리 카탈로그(예시)]
+        1) GetItemList
+           - 용도: 상품 목록 조회(필터/정렬/페이징)
+           - 파라미터:
+             * keyword (optional): 상품명 검색어
+             * itemType (optional): "식품" | "화장품" | "기타" 같은 분류명(서버에서 코드로 매핑)
+             * excludeSoldOut (optional, default=true): 품절 제외 여부
+             * onlyActive (optional, default=true): 판매중(USE_YN=Y)만 조회 여부
+             * sort (optional): "PRICE_ASC" | "PRICE_DESC" | "NEWEST" | "NAME_ASC"
+             * limit (optional, default=20, max=50)
+             * offset (optional, default=0)
+           - 리턴: 상품일련번호/상품명/가격/판매단위/품절여부/사용여부
+
+        2) GetItemDetail
+           - 용도: 상품 1건 상세 조회
+           - 파라미터: itemSeq (required)
+           - 리턴: 상품의 모든 주요 정보(설명/이미지/분류코드 등)
+
+        3) GetCheapestItem
+           - 용도: 가장 저렴한 상품 1건
+           - 파라미터:
+             * onlyActive (optional, default=true)
+             * excludeSoldOut (optional, default=true)
+           - 리턴: 1건
+
+        4) GetMostExpensiveItem
+           - 용도: 가장 비싼 상품 1건
+           - 파라미터:
+             * onlyActive (optional, default=true)
+             * excludeSoldOut (optional, default=true)
+           - 리턴: 1건
+
+        5) GetPriceStatsByType
+           - 용도: 상품 분류(대분류)별 가격 통계(예: 최저/최고/평균 등)
+           - 파라미터:
+             * onlyActive (optional, default=true)
+             * excludeSoldOut (optional, default=true)
+           - 리턴: ITEM_TYPE_CODE 별 min/max/avg/count
+        """;
+
+        // 3) 툴 등록 (서버가 제공하는 "함수 목록")
         ResponseCreateParams.Builder builder = ResponseCreateParams.builder()
-                .model(ChatModel.GPT_4_1_MINI)
-                .instructions("""
-                	    너는 이커머스 사이트의 상품 정보를 조회하는 데이터 분석 assistant다.
-                	    사용자는 한국어로 질문하고, 너는 DB 스키마에 맞는 SQL을 만든 뒤
-                	    run_products_query(RunProductsQueryArgs) 함수를 사용해 실제 데이터를 조회해야 한다.
+            // 모델은 환경에 맞게 선택 (예: GPT_5_MINI / GPT_4_1_MINI 등)
+            .model(ChatModel.GPT_4_1_MINI)
+            .instructions(instructions)
+            .addTool(GetItemListArgs.class)
+            .addTool(GetItemDetailArgs.class)
+            .addTool(GetCheapestItemArgs.class)
+            .addTool(GetMostExpensiveItemArgs.class)
+            .addTool(GetPriceStatsByTypeArgs.class)
+            .maxOutputTokens(1024);
 
-                	    [DB 스키마]
+        // 4) 멀티 라운드 루프: tool call이 나오면 실행 후 결과를 inputs에 붙이고 다시 호출
+        final int MAX_ROUNDS = 5;
+        for (int round = 0; round < MAX_ROUNDS; round++) {
 
-                	    테이블명: TB_ITEM  -- 상품 정보 관리 테이블
+            builder.input(ResponseCreateParams.Input.ofResponse(inputs));
+            Response response = openAIClient.responses().create(builder.build());
 
-                	    컬럼:
-                	    - ITEM_SEQ (INT, PK, NOT NULL, AUTO_INCREMENT)
-                	      : 상품일련번호 (기본 키)
+            boolean hadAnyToolCallThisRound = false;
+            List<ResponseFunctionToolCall> functionCalls = new ArrayList<>();
 
-                	    - ITEM_NM (VARCHAR(300), NULL 허용)
-                	      : 상품명
+            // 응답 output을 inputs로 누적 + function call 수집
+            for (var item : response.output()) {
 
-                	    - PRICE (INT, NULL 허용)
-                	      : 상품 1개 판매 가격
-
-                	    - UNIT (INT, NULL 허용)
-                	      : 판매단위 (예: 1, 10, 100 등)
-
-                	    - RMRK (VARCHAR(3000), NULL 허용)
-                	      : 비고 / 상품 설명
-
-                	    - IMG (VARCHAR(100), NULL 허용)
-                	      : 상품 이미지 파일명
-
-                	    - ITEM_TYPE_CODE (VARCHAR(10), NULL 허용)
-                	      : 상품 분류 코드 (대분류)
-
-                	    - ITEM_DTL_TYPE_CODE (VARCHAR(10), NULL 허용)
-                	      : 상품 상세 분류 코드 (소분류)
-
-                	    - SOLD_OUT_YN (VARCHAR(1), NULL 허용, 기본값 'N')
-                	      : 품절 여부. 'Y' = 품절, 'N' = 판매 가능
-
-                	    - USE_YN (VARCHAR(1), NULL 허용, 기본값 'Y')
-                	      : 사용 여부. 'Y' = 사용 중, 'N' = 미사용/삭제 상태
-
-                	    - FST_REG_SEQ (INT, NOT NULL)
-                	      : 최초등록작업일련번호
-
-                	    - FST_REG_DTTI (TIMESTAMP, NOT NULL, 기본값 NOW())
-                	      : 최초 등록일시
-
-                	    - LST_UPD_SEQ (INT, NOT NULL)
-                	      : 최종수정작업일련번호
-
-                	    - LST_UPD_DTTI (TIMESTAMP, NOT NULL, 기본값 NOW())
-                	      : 최종 수정일시
-
-
-                	    [쿼리 작성 규칙]
-
-                	    - 항상 TB_ITEM 테이블만 사용한다.
-                	    - SQL은 반드시 SELECT 문만 작성한다.
-                	      INSERT, UPDATE, DELETE, ALTER, DROP 등은 절대 작성하지 않는다.
-                	    - 컬럼명은 위에 정의된 컬럼만 사용하고, 존재하지 않는 컬럼명을 만들어내지 않는다.
-                	    - 일반적으로 "현재 판매 중인 상품"은 USE_YN = 'Y' 인 행을 의미한다.
-                	    - 품절 상품을 제외하고 싶을 때는 SOLD_OUT_YN = 'N' 조건을 함께 사용한다.
-                	      예: WHERE USE_YN = 'Y' AND SOLD_OUT_YN = 'N'
-                	    - "가장 저렴한 상품"을 찾을 때는 PRICE가 가장 낮은 한 건을
-                	      ORDER BY PRICE ASC LIMIT 1 으로 조회한다.
-                	    - "가장 비싼 상품"은 ORDER BY PRICE DESC LIMIT 1 으로 조회한다.
-                	    - 사용자가 범위를 지정하지 않으면 특별한 기간 조건은 걸지 않는다.
-                	    - SQL을 만든 뒤에는 run_products_query 함수를 호출하여 실제 데이터를 조회하고,
-                	      그 조회 결과를 기반으로 사람이 이해하기 쉬운 한국어 문장으로 요약해서 답변한다.
-                	    """)
-                .addTool(RunProductsQueryArgs.class)
-                .maxOutputTokens(1024)
-                .input(ResponseCreateParams.Input.ofResponse(inputs));
-
-        // 3) 첫 번째 호출 (툴 콜이 나오길 기대)
-        Response firstResponse = openAIClient.responses().create(builder.build());
-
-        boolean hasToolCall = false;
-
-        // 4) output에서 function call이 있는지 확인
-        for (var item : firstResponse.output()) {
-            if (item.isFunctionCall()) {
-                hasToolCall = true;
-
-                ResponseFunctionToolCall functionCall = item.asFunctionCall();
-
-                // 함수 이름은 기본적으로 클래스 이름 (예: "RunProductsQueryArgs")
-                if ("RunProductsQueryArgs".equals(functionCall.name())) {
-
-                    // LLM이 채운 arguments → RunProductsQueryArgs 로 파싱
-                    RunProductsQueryArgs args = functionCall.arguments(RunProductsQueryArgs.class);
-
-                    // 실제 DB 조회 호출
-                    var rows = productQueryService.runReadOnlyQuery(args.sql);
-
-                    // 4-1) 이 function call 자체를 input 리스트에 추가
-                    inputs.add(ResponseInputItem.ofFunctionCall(functionCall));
-
-                    // 4-2) function call 결과를 function_call_output 으로 추가
-                    inputs.add(
-                        ResponseInputItem.ofFunctionCallOutput(
-                            ResponseInputItem.FunctionCallOutput.builder()
-                                .callId(functionCall.callId())
-                                .outputAsJson(rows) // ← List<Map<String,Object>> 를 JSON 으로 전달
-                                .build()
-                        )
-                    );
+                if (item.isFunctionCall()) {
+                    hadAnyToolCallThisRound = true;
+                    functionCalls.add(item.asFunctionCall());
+                    // function call도 inputs에 포함(대화 히스토리로)
+                    inputs.add(ResponseInputItem.ofFunctionCall(item.asFunctionCall()));
+                    continue;
                 }
-            } else {
-                ResponseOutputMessage outMsg = item.message().get();
-                inputs.add(convertOutputMessageToInput(outMsg));
+
+                // 일반 메시지면 inputs에 누적
+                if (item.message().isPresent()) {
+                    ResponseOutputMessage outMsg = item.message().get();
+                    inputs.add(convertOutputMessageToInput(outMsg));
+                }
             }
+
+            // tool call이 없으면 => 이번 응답이 최종 자연어 답변
+            if (!hadAnyToolCallThisRound) {
+                return extractText(response);
+            }
+
+            // tool call 실행 후 결과를 function_call_output으로 inputs에 추가
+            for (ResponseFunctionToolCall fc : functionCalls) {
+                Object toolResult = dispatchToolCall(fc);
+
+                inputs.add(
+                    ResponseInputItem.ofFunctionCallOutput(
+                        ResponseInputItem.FunctionCallOutput.builder()
+                            .callId(fc.callId())
+                            .outputAsJson(toolResult) // 결과(JSON) 주입
+                            .build()
+                    )
+                );
+            }
+
+            // 다음 라운드로 continue: tool 결과를 본 모델이 추가 툴을 부를 수도 있고 최종 답변을 만들 수도 있음
         }
 
-        // 5) 툴 콜이 전혀 없었으면, 첫 답변의 텍스트만 그대로 반환
-        if (!hasToolCall) {
-            return extractText(firstResponse);
-        }
-
-        // 6) 툴 결과까지 포함된 inputs로 두 번째 호출 → 최종 자연어 답변
-        builder.input(ResponseCreateParams.Input.ofResponse(inputs));
-        Response finalResponse = openAIClient.responses().create(builder.build());
-
-        return extractText(finalResponse);
+        return "요청 처리가 복잡하여 여러 번 조회가 필요했지만, 최대 조회 횟수를 초과했습니다. 질문을 조금 더 구체적으로 해주세요.";
     }
-    
+
+    /**
+     * tool name에 따라 서버 쿼리(카탈로그) 실행.
+     * - 여기서는 "SQL 생성"이 아니라, 서버에 미리 정의된 안전한 쿼리/서비스 메서드를 호출.
+     */
+    private Object dispatchToolCall(ResponseFunctionToolCall functionCall) {
+
+        String name = functionCall.name();
+
+        try {
+            switch (name) {
+                case "GetItemListArgs": {
+                    GetItemListArgs args = functionCall.arguments(GetItemListArgs.class);
+                    return productQueryService.getItemList(args);
+                }
+//                case "GetItemDetailArgs": {
+//                    GetItemDetailArgs args = functionCall.arguments(GetItemDetailArgs.class);
+//                    return productQueryService.getItemDetail(args.itemSeq());
+//                }
+//                case "GetCheapestItemArgs": {
+//                    GetCheapestItemArgs args = functionCall.arguments(GetCheapestItemArgs.class);
+//                    return productQueryService.getCheapestItem(args.onlyActive(), args.excludeSoldOut());
+//                }
+//                case "GetMostExpensiveItemArgs": {
+//                    GetMostExpensiveItemArgs args = functionCall.arguments(GetMostExpensiveItemArgs.class);
+//                    return productQueryService.getMostExpensiveItem(args.onlyActive(), args.excludeSoldOut());
+//                }
+//                case "GetPriceStatsByTypeArgs": {
+//                    GetPriceStatsByTypeArgs args = functionCall.arguments(GetPriceStatsByTypeArgs.class);
+//                    return productQueryService.getPriceStatsByType(args.onlyActive(), args.excludeSoldOut());
+//                }
+                default:
+                    // 알 수 없는 툴이면 에러를 툴 결과로 반환해 모델이 스스로 수정하게 함
+                    return Map.of(
+                        "error", "Unknown tool name: " + name,
+                        "hint", "Use one of the registered tools only."
+                    );
+            }
+        } catch (Exception e) {
+            return Map.of(
+                "error", "Tool execution failed",
+                "tool", name,
+                "message", e.getMessage()
+            );
+        }
+    }
+
     // ==========================================================
     //       ResponseOutputMessage → ResponseInputItem.Message 변환
     // ==========================================================
     private ResponseInputItem convertOutputMessageToInput(ResponseOutputMessage outputMsg) {
 
         ResponseInputItem.Message.Builder msgBuilder =
-                ResponseInputItem.Message.builder()
-                        .role(outputMsg._role());
+            ResponseInputItem.Message.builder()
+                .role(outputMsg._role());
 
-        // 텍스트 콘텐츠만 복사 (추가 타입 있으면 필요 시 확장)
         outputMsg.content().forEach(c ->
-                c.outputText().ifPresent(txt ->
-                        msgBuilder.addInputTextContent(txt.text())
-                )
+            c.outputText().ifPresent(txt ->
+                msgBuilder.addInputTextContent(txt.text())
+            )
         );
 
         return ResponseInputItem.ofMessage(msgBuilder.build());
-    }    
+    }
 
     /**
      * 공통: Response에서 첫 번째 text만 뽑는 헬퍼
      */
     private String extractText(Response response) {
         return response.output().stream()
-                .flatMap(item -> item.message().stream())
-                .flatMap(msg -> msg.content().stream())
-                .flatMap(c -> c.outputText().stream())
-                .map(ot -> ot.text())
-                .findFirst()
-                .orElse("(no answer)");
+            .flatMap(item -> item.message().stream())
+            .flatMap(msg -> msg.content().stream())
+            .flatMap(c -> c.outputText().stream())
+            .map(ot -> ot.text())
+            .findFirst()
+            .orElse("(no answer)");
     }
+
+    // ==========================================================
+    //  Tool Args(예시): OpenAI SDK가 함수 스키마로 노출할 클래스들
+    //  ※ 실제로는 별도 파일로 분리 권장
+    // ==========================================================
+
+    public record GetItemListArgs(
+        String keyword,
+        String itemType,
+        Boolean excludeSoldOut,
+        Boolean onlyActive,
+        String sort,
+        Integer limit,
+        Integer offset
+    ) {}
+
+    public record GetItemDetailArgs(
+        Integer itemSeq
+    ) {}
+
+    public record GetCheapestItemArgs(
+        Boolean onlyActive,
+        Boolean excludeSoldOut
+    ) {}
+
+    public record GetMostExpensiveItemArgs(
+        Boolean onlyActive,
+        Boolean excludeSoldOut
+    ) {}
+
+    public record GetPriceStatsByTypeArgs(
+        Boolean onlyActive,
+        Boolean excludeSoldOut
+    ) {}
 }

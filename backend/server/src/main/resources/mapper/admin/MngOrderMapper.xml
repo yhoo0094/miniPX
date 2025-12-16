@@ -3,13 +3,14 @@
   PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
   "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.mpx.minipx.mapper.OrderMapper">
+<mapper namespace="com.mpx.minipx.mapper.MngOrderMapper">
 
 	<!-- 주문 목록 조회 -->
 	<select id="getOrderList" parameterType="map" resultType="camelCaseMap">
 		SELECT '01' AS ORDER_DVCD			/*주문구분코드(01:주문, 02:신규상품주문)*/
 			 , T1.ORDER_SEQ					/*주문일련번호*/
 			 , T1.USER_SEQ                  /*사용자일련번호*/
+			 , (SELECT USER_NM FROM tb_user WHERE USER_SEQ = T1.USER_SEQ) AS USER_NM		/*사용자명*/
 			 , T1.ITEM_SEQ                  /*상품일련번호*/
 			 , T2.ITEM_NM					/*상품명*/
 			 , T1.PRICE                     /*가격*/
@@ -25,7 +26,7 @@
 		  FROM tb_order T1					/*테이블_주문*/
 		  JOIN tb_item T2					/*테이블_상품*/
 		    ON T1.ITEM_SEQ = T2.ITEM_SEQ
-		 WHERE T1.USER_SEQ = #{userSeq}
+		 WHERE 1 = 1
 		<choose>
 		  <when test="orderStatusCode != null and orderStatusCode != ''">
 		   AND T1.ORDER_STATUS_CODE = #{orderStatusCode}
@@ -44,6 +45,7 @@
 		SELECT '02' AS ORDER_DVCD			/*주문구분코드(01:주문, 02:신규상품주문)*/		 
 			 , T1.NEW_ORDER_SEQ				/*신규상품주문일련번호*/
 			 , T1.USER_SEQ                  /*사용자일련번호*/
+			 , (SELECT USER_NM FROM tb_user WHERE USER_SEQ = T1.USER_SEQ) AS USER_NM		/*사용자명*/
 			 , 0                  			/*상품일련번호*/
 			 , T1.ITEM_NM					/*상품명*/
 			 , T1.PRICE                     /*가격*/
@@ -57,7 +59,7 @@
 			 , T1.LST_UPD_SEQ               /*최종수정자일련번호*/
 			 , T1.LST_UPD_DTTI              /*최종수정일시*/
 		  FROM tb_new_order T1				/*테이블_신규상품주문*/
-		 WHERE T1.USER_SEQ = #{userSeq}		
+		 WHERE 1 = 1
 		<choose>
 		  <when test="orderStatusCode != null and orderStatusCode != ''">
 		   AND T1.ORDER_STATUS_CODE = #{orderStatusCode}

@@ -7,7 +7,7 @@
 
 	<!-- 신규상품주문 등록 -->
 	<insert id="insertNewOrder" parameterType="map">
-	    INSERT INTO TB_NEW_ORDER                   
+	    INSERT INTO tb_new_order                   
 	    	 ( USER_SEQ                            /*사용자일련번호*/             
 			 , ITEM_NM                             /*상품명*/                 
 			 , IMG                                 /*이미지*/                 
@@ -38,4 +38,11 @@
 			 , NOW()                               /*최종수정일시*/                    
 			 )
 	</insert>		
+	
+	<!-- 신규상품주문 이미지 조회 -->
+	<select id="getItemNewImage" parameterType="long" resultType="string">
+		SELECT T1.IMG                       	/*이미지*/
+		  FROM tb_new_order T1					/*테이블_신규상품주문*/
+		 WHERE T1.NEW_ORDER_SEQ =  #{orderSeq}	/*신규상품주문일련번호*/
+	</select>		
 </mapper>

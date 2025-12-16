@@ -106,7 +106,7 @@ const clickCounselBtn = async () => {
   scrollToBottom();
 
   try {
-    const response = await api.post('/openai/ask', {
+    const response = await api.post('/openai/getAiAnswer', {
       question: currentQuestion,
     });
     const botText = response.data as string;

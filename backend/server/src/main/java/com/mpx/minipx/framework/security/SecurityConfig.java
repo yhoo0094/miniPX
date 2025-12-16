@@ -31,12 +31,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-            	.requestMatchers( "/api/user/login"
-            					, "/api/auth/check"
-            					, "/api/auth/reissue"
-            					, "/css/**", "/js/**").permitAll()  // 로그인 등은 허용
-                .anyRequest().authenticated()
-//                .anyRequest().permitAll()  // 개발 중 일시적 허용
+//            	.requestMatchers( "/api/user/login"
+//            					, "/api/auth/check"
+//            					, "/api/auth/reissue"
+//            					, "/css/**", "/js/**").permitAll()  // 로그인 등은 허용
+//                .anyRequest().authenticated()
+                .anyRequest().permitAll()  // 개발 중 일시적 허용
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
@@ -55,7 +55,9 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-            "http://192.168.241.136:5173",
+            "http://169.254.32.130:5173",		//로컬 ip
+            "http://43.200.173.163",        	//운영(80포트)
+            "https://43.200.173.163",        	//운영(443포트)
             "https://*.ngrok-free.dev",
             "https://*.ngrok-free.app"            
         ));

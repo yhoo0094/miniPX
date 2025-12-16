@@ -43,7 +43,7 @@
     }
 
     try {
-      const response = await api.post('/openai/ask', {
+      const response = await api.post('/openai/getAiAnswer', {
         question: question.value,
       });
       answer.value = response.data;

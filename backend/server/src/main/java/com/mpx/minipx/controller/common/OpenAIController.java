@@ -12,20 +12,7 @@ public class OpenAIController {
     public OpenAIController(OpenAIService openAIService) {
         this.openAIService = openAIService;
     }
-
-    /**
-     * GET 방식 호출 예:
-     *   GET /api/openai/ask?q=유니콘 이야기 해줘
-     */
-    @GetMapping("/ask")
-    public String askGet(@RequestParam("q") String question) {
-        return openAIService.ask(question);
-    }
-
-    /**
-     * POST 방식 호출 예:
-     *   POST /api/openai/ask
-     */
+    
     public static class AskRequest {
         public String question;
 
@@ -33,14 +20,14 @@ public class OpenAIController {
     }
 
     /**
-     * @메소드명: askPost
+     * @메소드명: getAiAnswer
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 5.
-     * @설명: LLM에 바로 질문하기
+     * @설명: AI에 답변 받기
      */
-    @PostMapping("/ask")
-    public String askPost(@RequestBody AskRequest req) {
+    @PostMapping("/getAiAnswer")
+    public String getAiAnswer(@RequestBody AskRequest req) {
     	
-        return openAIService.askWithDbTools(req.question);
+        return openAIService.getAiAnswer(req.question);
     }
 }	

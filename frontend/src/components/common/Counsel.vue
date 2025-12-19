@@ -3,6 +3,7 @@
     <transition name="chat-fade">  
       <div class="counsel-text-box" v-show="isOpenCounsel">
         <div class="bubble">
+          <button class="close-button" @click="isOpenCounsel = false">&times;</button>
           <div class="chat-content" ref="chatContentRef">
             <template v-for="msg in messages" :key="msg.id">
               <div class="chat-row" :class="msg.role">
@@ -182,19 +183,38 @@ const scrollToBottom = async () => {
   flex-direction: column;  
   height: 30rem;
   width: 50rem;
+  max-width: 100vw;
   min-height: 10rem;
   min-width: 30rem;
   background: #e9f6ff;
   padding: 0.5rem;
-  border-radius: 12px;
+  border-radius: 0.5rem;
   color: #333;
   font-size: 0.9rem;
   line-height: 1.4;
-  position: relative;
+  position: relative; /* 닫기 버튼을 위한 상대 위치 */
   box-shadow: 0px 3px 10px rgba(0,0,0,0.15);
   word-wrap: break-word;
   resize: both;
   overflow: auto;  
+}
+
+/* 닫기 버튼 */
+.close-button {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-button:hover {
+  color: #f00;
 }
 
 /* 공통 행 스타일 */

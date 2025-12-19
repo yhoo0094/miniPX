@@ -39,7 +39,7 @@ interface Option {
 }
 
 interface Props {
-  label: string;
+  label?: string;
   modelValue: string | number;
   options: Option[];
   showPlaceholder?: boolean;      // 선택 옵션 표시 여부

@@ -35,6 +35,7 @@ export const useMenuStore = defineStore('menu', {
             upperMnuSeq: menu.upperMnuSeq,
             upperMnuNm: menu.upperMnuNm,
             title: menu.mnuNm,
+            openYn: menu.openYn,
             mnuLv: menu.mnuLv,
             compntPath: menu.compntPath,
             requiresAuth: true, //권한 체크 여부

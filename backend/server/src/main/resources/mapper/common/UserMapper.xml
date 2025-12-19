@@ -22,6 +22,7 @@
 			 , (SELECT MNU_NM
 			 	  FROM tb_mnu
 			 	 WHERE MNU_SEQ = T1.UPPER_MNU_SEQ) AS UPPER_MNU_NM	/*상위메뉴명*/
+			 , T1.OPEN_YN					/*메뉴노출여부*/	 
 			 , T1.MNU_LV					/*메뉴레벨*/
 			 , T1.MNU_ORDER					/*메뉴표시순서*/
 			 , T1.MNU_INFO					/*메뉴정보*/
@@ -39,7 +40,6 @@
 		 WHERE T1.MNU_SEQ = T2.MNU_SEQ
 		   AND T2.ROLE_SEQ = #{roleSeq}	  
 		   AND T2.AUTH_GRADE > 0
-		   AND T1.OPEN_YN = 'Y'
 		   AND T1.MNU_LV = 2
 		 ORDER BY ORDER_VAL ASC
 	</select>	

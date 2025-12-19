@@ -29,16 +29,6 @@ const checkIsLoggedIn = () => {
     console.log('로그인되어 있지 않음');
   }
 };
-
-// 관리자 홈 이동
-const adminHome = () => {
-  router.push('/admin/admin-home');
-};
-
-// 마켓 이동
-const market = () => {
-  router.push('/market/item');
-};
 </script>
 
 <style scoped>

@@ -3,11 +3,21 @@
 
   <div class="order-page-wrap">
 
-    <div class="order-header">
-      <div class="order-title-main">
-        <span class="order-title-pill">주문관리({{ orders.length }})</span>
-      </div>
+  <div class="order-header">
+    <div class="order-title-main">
+      <span class="order-title-pill">
+        주문관리({{ orders.length }})
+      </span>
     </div>
+
+    <!-- 미결제 금액 -->
+    <div class="order-unpaid">
+      <span class="unpaid-label">미결제 금액</span>
+      <span class="unpaid-amount">
+        {{ unpaidAmount.toLocaleString() }}원
+      </span>
+    </div>
+  </div>
 
     <!-- 검색 조건 영역 -->
     <section class="order-search">
@@ -16,14 +26,11 @@
         <input type="date" v-model="searchForm.startDate" class="search-input date" />
         <span class="search-tilde">~</span>
         <input type="date" v-model="searchForm.endDate" class="search-input date" />
-
         <div>
-          <BaseDropdown label="주문상태" v-model="searchForm.orderStatusCode" :options="orderStatusCodes"
-            :showPlaceholder="true" placeholderLabel="선택" />
+          <BaseDropdown label="주문상태" v-model="searchForm.orderStatusCode" :options="orderStatusCodesSch" @change="searchOrders"
+            :showPlaceholder="true" placeholderLabel="전체" />
         </div>
-
-        <BaseInput height="2.125rem" v-model="searchForm.itemNm" class="search-text" placeholder="상품명 입력" @keydown.enter.prevent="searchOrders" />
-
+        <BaseInput height="2.125rem" v-model="searchForm.itemNm" class="search-text" placeholder="주문자/상품명 입력" @keydown.enter.prevent="searchOrders" />
         <BaseButton width="5rem" height="2.125rem" @click="searchOrders" type="button">검색</BaseButton>
       </div>
     </section>
@@ -51,7 +58,8 @@
           </div>
           <div class="field-row">
             <span class="field-label">개수</span>
-            <span class="field-cont">{{ order.cnt }}</span>
+            <BaseInput v-if="order.orderStatusCode == '01'" type="number" align="right" width="6rem" height="2.125rem" v-model="order.cnt" class="search-text" />
+            <span v-if="order.orderStatusCode != '01'" class="field-cont">{{ order.cnt }}</span>
           </div>
           <div class="field-row">
             <span class="field-label">주문일시</span>
@@ -67,11 +75,24 @@
           </div>          
         </div>
 
-        <!-- 주문 취소 버튼 -->
+        <!-- 버튼 영역(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소) -->
         <div class="order-actions">
-          <button v-if="order.orderStatusCode == '01'" type="button" class="cancel-btn" @click="cancelOrder(order)">
-            주문취소
-          </button>
+          <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
+            @click="updateOrderStatus(order, '02')" variant="primary" type="button">배송중
+          </BaseButton>
+          <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
+            @click="updateOrderStatus(order, '12')" variant="danger" type="button">품절
+          </BaseButton>   
+          <BaseButton v-if="order.orderStatusCode == '02'" class="action-button"
+            @click="updateOrderStatus(order, '03')" type="button">미결제
+          </BaseButton>           
+          <BaseButton v-if="order.orderStatusCode == '02'" class="action-button"
+            @click="updateOrderStatus(order, '01')" variant="danger" type="button">구매요청
+          </BaseButton>     
+          <BaseDropdown v-if="!['01', '02'].includes(order.orderStatusCode)" :showPlaceholder="false"
+            v-model="order.orderStatusCode" :options="orderStatusCodes"
+            @change="updateOrderStatus(order, order.orderStatusCode)"
+            />
         </div>
       </article>
 
@@ -83,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import api from '@/plugins/axios';
 import type { ApiResponse } from '@/types/api/response';
 import Constant from '@/constants/constant';
@@ -133,6 +154,7 @@ const searchForm = ref<OrderSearchForm>({
 });
 
 // 상태 선언
+const orderStatusCodesSch = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
 const orderStatusCodes = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
 
 /** 날짜 기본값: 올해 1/1 ~ 12/31 */
@@ -193,33 +215,45 @@ const searchOrders = async () => {
   }
 };
 
-/** 주문취소 */
-const cancelOrder = async (order: Order) => {
-  if (!confirm('해당 주문을 취소하시겠습니까?')) {
+// 주문 상태 변경
+const updateOrderStatus = async (order: Order, orderStatusCode: string) => {
+  //(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소)
+  let msg = '';
+  let loadingMsg = '';
+
+  switch (orderStatusCode){
+    case '12':
+      msg = '품절 처리하시겠습니까?';
+      loadingMsg = '품절 처리 중입니다...';
+      break;
+  };
+
+  if (msg != '' && !confirm(msg)) {
     return;
   }
 
   try {
-    uiStore.showLoading('주문 취소 중입니다...');
+    uiStore.showLoading(loadingMsg);
 
     const payload = {
       orderSeq: order.orderSeq,
-      orderStatusCode: '91', // 예: 취소
+      orderStatusCode: orderStatusCode,
+      cnt: order.cnt,
     };
 
-    const response = await api.post('/mngOrder/cancelOrder', payload);
+    const response = await api.post('/mngOrder/updateOrderStatus', payload);
 
     if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
-      toastRef.value?.showToast('주문이 취소되었습니다.');
+      toastRef.value?.showToast('처리 완료되었습니다.');
       await searchOrders();
     } else {
       toastRef.value?.showToast(
-        response.data?.OUT_RESULT_MSG || '주문 취소에 실패했습니다.'
+        response.data?.OUT_RESULT_MSG || '처리 실패했습니다.'
       );
     }
   } catch (e) {
     console.error(e);
-    toastRef.value?.showToast('주문 취소 중 오류가 발생했습니다.');
+    toastRef.value?.showToast('처리 중 오류가 발생했습니다.');
   } finally {
     uiStore.hideLoading();
   }
@@ -228,9 +262,24 @@ const cancelOrder = async (order: Order) => {
 onMounted(async () => {
   //공통코드 조회
   orderStatusCodes.value = await getCodeList('ORDER_STATUS_CODE');
+  const list = [...orderStatusCodes.value]; 
+
+  const extra = [
+    { codeDetailNm: '구매요청/배송중', codeDetail: '001' },
+    { codeDetailNm: '미결제/송금완료', codeDetail: '002' },
+  ];
+  list.unshift(...extra);
+  orderStatusCodesSch.value = list;
 
   initDefaultDates();
   await searchOrders();
+});
+
+/** 미결제 금액 합계 */
+const unpaidAmount = computed(() => {
+  return orders.value
+    .filter(o => o.orderStatusCode === '03' || o.orderStatusCode === '04') // 미결제/송금완료
+    .reduce((sum, o) => sum + o.price * o.cnt, 0);
 });
 </script>
 
@@ -244,6 +293,32 @@ onMounted(async () => {
   background: #f9fbff;
   border-radius: 1rem;
   box-shadow: 0 0.5rem 1rem rgba(15, 23, 42, 0.08);
+}
+
+/* =======================
+   미결제 금액 표시
+   ======================= */
+.order-unpaid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.8rem;
+  background: #fff1f2;          /* 연한 레드 */
+  border: 2px solid #fecdd3;
+  /* box-shadow: 0 0.25rem 0.25rem rgba(220, 38, 38, 0.15); */
+}
+
+.unpaid-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.unpaid-amount {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #e40e0e;
 }
 
 /* =======================
@@ -324,17 +399,10 @@ onMounted(async () => {
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.order-card:hover {
-  border-color: #cbd5e1;
-  transform: translateY(-0.0625rem); /* -1px */
-  box-shadow: 0 0.375rem 1rem rgba(15, 23, 42, 0.12); /* 6px 16px */
-}
-
 /* 이미지 영역 */
 .order-image-box {
   width: 8rem;
-  min-width: 8rem;
-  height: 8rem;
+  height: auto;
   border-radius: 0.5rem;
   border: 0.0625rem solid #e2e8f0;
   background: #f8fafc;
@@ -346,8 +414,8 @@ onMounted(async () => {
 }
 
 .order-image {
-  max-width: 100%;
-  max-height: 100%;
+  width: 8rem;
+  height: 8rem;
   object-fit: contain;
 }
 
@@ -387,42 +455,16 @@ onMounted(async () => {
   color: #0f172a;
 }
 
-/* 주문 취소 버튼 영역 */
+/* 버튼 영역 */
 .order-actions {
   display: flex;
   align-items: flex-end;
+  gap: 0.3rem;
 }
 
-.cancel-btn {
-  min-width: 6rem;          /* 96px */
-  height: 2.25rem;          /* 36px */
-  border-radius: 62.4375rem; /* 999px */
-  border: none;
-  padding: 0 1rem;          /* 16px */
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: #f97373;
-  color: #ffffff;
-  box-shadow: 0 0.1875rem 0.5rem rgba(248, 113, 113, 0.4); /* 3px 8px */
-  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
-}
-
-.cancel-btn:hover:not(:disabled) {
-  transform: translateY(-0.0625rem); /* -1px */
-  box-shadow: 0 0.3125rem 0.75rem rgba(248, 113, 113, 0.55); /* 5px 12px */
-}
-
-.cancel-btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 0.125rem 0.375rem rgba(248, 113, 113, 0.35); /* 2px 6px */
-  opacity: 0.9;
-}
-
-.cancel-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  box-shadow: none;
+.action-button{
+  width: 6rem;
+  height: 2.125rem;
 }
 
 /* 비어 있을 때 */

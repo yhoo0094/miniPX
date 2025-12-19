@@ -22,7 +22,7 @@
     </nav>
 
     <div class="header-button-box">
-      <BaseButton width="5rem" height="2rem" @click="logout" class="button" type="button">로그아웃</BaseButton>
+      <BaseButton width="6rem" height="2rem" @click="logout" class="button" type="button">로그아웃</BaseButton>
     </div>
   </header>
 </template>

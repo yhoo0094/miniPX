@@ -32,8 +32,17 @@ public class OrderService {
      */
     public Map<String, Object> getOrderList(Map<String, Object> inData) {
     	Map<String, Object> result = new HashMap<String, Object>(); 
+    	Map<String, Object> data = new HashMap<String, Object>(); 
+    	
+    	//주문 목록 조회
     	List<Map<String, Object>> list = sqlSession.selectList("com.mpx.minipx.mapper.OrderMapper.getOrderList", inData);
-    	result.put(Constant.OUT_DATA, list);
+    	data.put("list", list);
+    	
+    	//미결제 금액 조회
+    	int unpaidAmount = sqlSession.selectOne("com.mpx.minipx.mapper.OrderMapper.getUnpaidAmount", inData);
+    	data.put("unpaidAmount", unpaidAmount);
+    	
+    	result.put(Constant.OUT_DATA, data);
     	result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
     	return result;
     }
@@ -44,10 +53,10 @@ public class OrderService {
      * @생성일: 2025. 12. 9.
      * @설명: 주문취소
      */    
-    public Map<String, Object> cancelOrder(Map<String, Object> inData) {
+    public Map<String, Object> updateOrderStatus(Map<String, Object> inData) {
         Map<String, Object> result = new HashMap<>();
 
-        int affected = sqlSession.update("com.mpx.minipx.mapper.OrderMapper.cancelOrder", inData);
+        int affected = sqlSession.update("com.mpx.minipx.mapper.OrderMapper.updateOrderStatus", inData);
         result.put(Constant.OUT_DATA, affected);
         result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
         return result;

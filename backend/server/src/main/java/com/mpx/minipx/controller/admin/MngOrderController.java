@@ -58,13 +58,13 @@ public class MngOrderController {
     }
     
     /**
-     * @메소드명: cancelOrder
+     * @메소드명: updateOrderStatus
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 9.
-     * @설명: 주문취소
+     * @설명: 주문 상태 변경
      */
-    @PostMapping("/cancelOrder")
-    public ResponseEntity<?> cancelOrder(@RequestBody Map<String, Object> inData,
+    @PostMapping("/updateOrderStatus")
+    public ResponseEntity<?> updateOrderStatus(@RequestBody Map<String, Object> inData,
                                             HttpServletRequest request,
                                             HttpServletResponse response) throws Exception {
         Map<String, Object> result = new HashMap<>();
@@ -80,7 +80,7 @@ public class MngOrderController {
         inData.put("userId", (String) claims.get("userId"));
         inData.put("userSeq", (String) claims.get("userSeq"));
         
-        result = mngOrderService.cancelOrder(inData);
+        result = mngOrderService.updateOrderStatus(inData);
         return ResponseEntity.ok(result);
     }       
 }

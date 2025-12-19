@@ -31,12 +31,12 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-//            	.requestMatchers( "/api/user/login"
-//            					, "/api/auth/check"
-//            					, "/api/auth/reissue"
-//            					, "/css/**", "/js/**").permitAll()  // 로그인 등은 허용
-//                .anyRequest().authenticated()
-                .anyRequest().permitAll()  // 개발 중 일시적 허용
+            	.requestMatchers( "/api/user/login"
+            					, "/api/auth/check"
+            					, "/api/auth/reissue"
+            					, "/css/**", "/js/**").permitAll()  // 로그인 등은 허용
+                .anyRequest().authenticated()
+//                .anyRequest().permitAll()  // 개발 중 일시적 허용
             )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();

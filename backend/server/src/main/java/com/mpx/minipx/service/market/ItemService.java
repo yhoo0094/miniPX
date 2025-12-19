@@ -56,19 +56,33 @@ public class ItemService {
     }
     
     /**
+     * @메소드명: getItemDetail
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 19.
+     * @설명: 상품상세 조회
+     */
+    public Map<String, Object> getItemDetail(Map<String, Object> inData) {
+    	Map<String, Object> result = new HashMap<String, Object>(); 
+    	Map<String, Object> map = sqlSession.selectOne("com.mpx.minipx.mapper.ItemMapper.getItemDetail", inData);
+    	result.put(Constant.OUT_DATA, map);
+    	result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
+    	return result;
+    }    
+    
+    /**
      * @메소드명: getItemImage
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 6.
      * @설명: 상품 이미지 조회
      */
-    public ItemImage getItemImage(Long itemSeq) throws Exception {
-    	String imageName = sqlSession.selectOne("com.mpx.minipx.mapper.ItemMapper.getItemImage", itemSeq);
+    public ItemImage getItemImage(String img) throws Exception {
+    	//String imageName = sqlSession.selectOne("com.mpx.minipx.mapper.ItemMapper.getItemImage", itemSeq);
 
-        if (imageName == null || imageName.isBlank()) {
+        if (img == null || img.isBlank()) {
             throw new IllegalStateException("이미지 경로 없음");
         }
         
-        Path filePath = Paths.get(imageBasePath + imageName);
+        Path filePath = Paths.get(imageBasePath + img);
         if (!Files.exists(filePath)) {
             throw new IllegalStateException("이미지 파일 없음: " + filePath);
         }
@@ -83,5 +97,4 @@ public class ItemService {
 
         return new ItemImage(resource, mediaType, filePath.getFileName().toString());
     }    
-    
 }

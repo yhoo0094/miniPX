@@ -28,21 +28,25 @@
 
     <!-- 일반 콘솔 로그 -->
     <Console name="Console" target="SYSTEM_OUT">
-      <PatternLayout pattern="%5p %d{yyyy-MM-dd HH:mm:ss,SSS} [%C{2}.%M] %m%n"/>
+      <PatternLayout pattern="Console(%c): %5p %d{yyyy-MM-dd HH:mm:ss,SSS} [%C{2}.%M] %m%n"/>
     </Console>
 
     <!-- log4jdbc 전용 콘솔 -->
     <Console name="SpyConsole" target="SYSTEM_OUT">
-      <PatternLayout pattern="%5p %d{yyyy-MM-dd HH:mm:ss,SSS} [%C{2}.%M] %m%n"/>
+      <PatternLayout pattern="SpyConsole(%c): %5p %d{yyyy-MM-dd HH:mm:ss,SSS} [%C{2}.%M] %m%n"/>
       <RegexFilter
-        regex=".*Connection\.isValid\("
+        regex=".*"
+        onMatch="DENY"
+        onMismatch="ACCEPT"/>      
+      <RegexFilter
+        regex="(?s).*ResultSet\.getMetaData\("
         onMatch="DENY"
         onMismatch="ACCEPT"/>
     </Console>
 
     <!-- SQL만 깔끔하게 출력하고 싶을 때 -->
     <Console name="SqlConsole" target="SYSTEM_OUT">
-      <PatternLayout pattern="%n%n%m%n%n"/>
+      <PatternLayout pattern="SqlConsole(%c): %n%n%m%n%n"/>
     </Console>
 
   </Appenders>
@@ -69,6 +73,11 @@
     <Logger name="log4jdbc" level="INFO" additivity="false">
       <AppenderRef ref="SpyConsole"/>
     </Logger>
+    
+    <!-- Log4jdbc 관련 로거 레벨 설정 -->
+    <Logger name="net.sf.log4jdbc.log4j2.Log4j2SpyLogDelegator" level="WARN" additivity="false">
+        <AppenderRef ref="SpyConsole"/> <!-- 또는 원하는 Appender 이름 사용 -->
+    </Logger>    
 
     <!-- SQL + 실행 시간(ms) 로그 -->
     <Logger name="jdbc.sqltiming" level="OFF" additivity="false">
@@ -79,6 +88,9 @@
     <Logger name="jdbc.sqlonly" level="OFF" additivity="false">
       <AppenderRef ref="SqlConsole"/>
     </Logger>
+    
+    <!-- DB 커넥션 로그 -->
+    <Logger name="jdbc.connection" level="OFF" additivity="false"/>
 
     <!-- 기본(root) 로그는 Console로 -->
     <Root level="INFO">

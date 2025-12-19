@@ -7,10 +7,12 @@ import java.util.Map;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
-import com.mpx.minipx.service.common.OpenAIService.GetItemListArgs;
-
 /**
- * LLM이 생성한 SQL을 실제로 DB에 실행하는 서비스
+ * @파일명: ProductQueryService.java
+ * @패키지: com.mpx.minipx.service.common
+ * @작성자: KimSangMin
+ * @생성일: 2025. 12. 17.
+ * @설명: LLM이 요청한 작업을 실행하는 서비스
  */
 @Service
 public class ProductQueryService {
@@ -36,15 +38,4 @@ public class ProductQueryService {
 
         return jdbcTemplate.queryForList(sql);
     };
-    
-    /**
-     * @메소드명: getItemList
-     * @작성자: KimSangMin
-     * @생성일: 2025. 12. 16.
-     * @설명: 상품 목록 조회
-     */
-    public List<Map<String, Object>> getItemList(GetItemListArgs args){
-    	List<Map<String, Object>> result = new ArrayList<Map<String, Object>>();
-    	return result;
-    }
 }

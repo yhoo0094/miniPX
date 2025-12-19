@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mpx.minipx.mapper.AiMapper">
+
+	<!-- AI 상품 목록 조회 -->
+	<select id="aiGetItemList" parameterType="map" resultType="map">
+		SELECT T1.ITEM_SEQ                                                       AS "상품일련번호"
+			 , T1.ITEM_NM                                                        AS "상품명"
+			 , T1.PRICE                                                          AS "낱개가격"
+			 , T1.UNIT                                                           AS "가격"
+			 , T1.PRICE * T1.UNIT 												 AS "단위가격"
+			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'ITEM_TYPE_CODE' AND CODE_DETAIL = T1.ITEM_TYPE_CODE)	AS "상품분류"
+			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'ITEM_DTL_TYPE_CODE' AND CODE_DETAIL = T1.ITEM_DTL_TYPE_CODE) AS "상품상세분류"
+			 , T1.SOLD_OUT_YN                                                    AS "품절여부"
+			 , ROUND(IFNULL(O.SALE_CNT, 0) / T1.UNIT)							 AS "판매량"
+			 , T1.FST_REG_DTTI                                                   AS "등록일"
+		  FROM tb_item T1					       								 /*테이블_상품 정보 관리*/
+		  LEFT JOIN (
+			      SELECT ITEM_SEQ
+			           , SUM(CNT) AS SALE_CNT
+			        FROM tb_order
+			       WHERE ORDER_STATUS_CODE = '11'
+			       GROUP BY ITEM_SEQ) O
+		    ON T1.ITEM_SEQ = O.ITEM_SEQ			  
+		 WHERE T1.USE_YN = 'Y'
+		 <if test='itemSeq != null and itemSeq != ""'>
+		   AND T1.ITEM_SEQ = #{itemSeq} 
+		 </if>		 
+		 <if test='itemNm != null and itemNm != ""'>
+		   AND T1.ITEM_NM LIKE CONCAT('%', #{itemNm}, '%')
+		 </if>		 
+		 <if test='itemType != null and itemType != ""'>
+		   AND T1.ITEM_TYPE_CODE = (SELECT CODE_DETAIL FROM tb_code_detail WHERE CODE_GROUP = 'ITEM_TYPE_CODE' AND CODE_DETAIL_NM = #{itemType}) 
+		 </if>
+		 <if test="excludeSoldOut == null or excludeSoldOut">
+		   AND T1.SOLD_OUT_YN = 'N'
+		 </if>	
+		 ORDER BY	
+		 <choose>
+		   <when test="sort == '단위가격_오름차순'"> (T1.PRICE * T1.UNIT) ASC, T1.ITEM_NM ASC </when>
+		   <when test="sort == '단위가격_내림차순'"> (T1.PRICE * T1.UNIT) DESC, T1.ITEM_NM ASC </when>
+		   <when test="sort == '등록일_내림차순'"> T1.FST_REG_DTTI DESC, T1.ITEM_NM ASC </when>
+		   <otherwise> T1.ITEM_NM ASC </otherwise>
+		 </choose>		 
+		 <if test="limit != null">
+		 LIMIT #{limit} 
+		 </if>		 	 
+		 <if test="limit != null and offset != null">
+		OFFSET #{offset} 
+		 </if>	
+	</select>
+	
+	<!-- 상품 설명을 기반으로 문의와 연관된 상품 목록 조회 -->
+	<select id="aiGetDetailItemList" parameterType="map" resultType="map">
+		SELECT T1.ITEM_SEQ                                                       AS "상품일련번호"
+			 , T1.ITEM_NM                                                        AS "상품명"
+			 , T1.PRICE                                                          AS "낱개가격"
+			 , T1.UNIT                                                           AS "가격"
+			 , T1.PRICE * T1.UNIT 												 AS "단위가격"
+			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'ITEM_TYPE_CODE' AND CODE_DETAIL = T1.ITEM_TYPE_CODE)	AS "상품분류"
+			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'ITEM_DTL_TYPE_CODE' AND CODE_DETAIL = T1.ITEM_DTL_TYPE_CODE) AS "상품상세분류"
+			 , T1.SOLD_OUT_YN                                                    AS "품절여부"
+			 , ROUND(IFNULL(O.SALE_CNT, 0) / T1.UNIT)							 AS "판매량"
+			 , T1.FST_REG_DTTI                                                   AS "등록일"
+			 , T1.RMRK															 AS "상품상세정보"
+		  FROM tb_item T1					       								 /*테이블_상품 정보 관리*/
+		  LEFT JOIN (
+			      SELECT ITEM_SEQ
+			           , SUM(CNT) AS SALE_CNT
+			        FROM tb_order
+			       WHERE ORDER_STATUS_CODE = '11'
+			       GROUP BY ITEM_SEQ) O
+		    ON T1.ITEM_SEQ = O.ITEM_SEQ	
+	  	 WHERE T1.ITEM_SEQ IN
+	     <foreach collection="itemSeqList" item="id" open="(" separator="," close=")">
+	       #{id}
+	     </foreach>
+	       AND T1.USE_YN = 'Y'
+	       AND T1.SOLD_OUT_YN = 'N'
+	     ORDER BY FIELD(T1.ITEM_SEQ,
+	     <foreach collection="itemSeqList" item="id" separator=",">
+	       #{id}
+	     </foreach>
+	     )
+	</select>	
+	
+</mapper>

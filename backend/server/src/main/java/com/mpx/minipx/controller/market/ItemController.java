@@ -47,6 +47,21 @@ public class ItemController {
         result = itemService.getItemList(inData);
         return result;
     }
+    
+    /**
+     * @메소드명: getItemDetail
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 19.
+     * @설명: 상품상세 조회
+     */
+    @PostMapping("/getItemDetail")
+    public Map<String, Object> getItemDetail(@RequestBody Map<String, Object> inData,
+                                           HttpServletRequest request,
+                                           HttpServletResponse response) throws Exception {
+        Map<String, Object> result = new HashMap<>();
+        result = itemService.getItemDetail(inData);
+        return result;
+    }    
 
     /**
      * 
@@ -56,9 +71,9 @@ public class ItemController {
      * @설명: 상품 이미지 조회
      */
     @GetMapping("/getItemImage")
-    public ResponseEntity<Resource> getItemImage(@RequestParam("itemSeq") Long itemSeq) {
+    public ResponseEntity<Resource> getItemImage(@RequestParam("img") String img) {
         try {
-            ItemImage itemImage = itemService.getItemImage(itemSeq);
+            ItemImage itemImage = itemService.getItemImage(img);
             return ResponseEntity.ok()
                     .contentType(itemImage.getMediaType())
                     .body(itemImage.getResource());

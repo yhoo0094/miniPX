@@ -5,8 +5,18 @@
 
     <div class="order-header">
       <div class="order-title-main">
-        <span class="order-title-pill">주문내역({{ orders.length }})</span>
+        <span class="order-title-pill">
+          주문내역({{ orders.length }})
+        </span>
       </div>
+
+      <!-- 미결제 금액 -->
+      <div class="order-unpaid">
+        <span class="unpaid-label">미결제 금액</span>
+        <span class="unpaid-amount">
+          {{ unpaidAmount.toLocaleString() }}원
+        </span>
+      </div>      
     </div>
 
     <!-- 검색 조건 영역 -->
@@ -18,8 +28,8 @@
         <input type="date" v-model="searchForm.endDate" class="search-input date" />
 
         <div>
-          <BaseDropdown label="주문상태" v-model="searchForm.orderStatusCode" :options="orderStatusCodes"
-            :showPlaceholder="true" placeholderLabel="선택" />
+          <BaseDropdown label="주문상태" v-model="searchForm.orderStatusCode" :options="orderStatusCodes" @change="searchOrders"
+            :showPlaceholder="true" placeholderLabel="전체" />
         </div>
 
         <BaseInput height="2.125rem" v-model="searchForm.itemNm" class="search-text" placeholder="상품명 입력" @keydown.enter.prevent="searchOrders" />
@@ -44,14 +54,14 @@
             <span class="field-cont">{{ order.itemNm }}</span>
           </div>
           <div class="field-row">
-            <span class="field-label">가격</span>
-            <span class="field-cont">
-              {{ order.price.toLocaleString() }} 원
-            </span>
-          </div>
-          <div class="field-row">
             <span class="field-label">개수</span>
             <span class="field-cont">{{ order.cnt }}</span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">가격</span>
+            <span class="field-cont">
+              {{ (order.price * order.cnt).toLocaleString() }}원<span v-if="order.cnt > 1">(개당 {{ order.price.toLocaleString() }}원)</span>
+            </span>
           </div>
           <div class="field-row">
             <span class="field-label">주문일시</span>
@@ -59,15 +69,23 @@
           </div>
           <div class="field-row">
             <span class="field-label">주문상태</span>
-            <span class="field-cont">{{ order.orderStatusCodeNm }}</span>
+            <span class="field-cont" :class="{ 'red-text': order.orderStatusCode === '03' }">
+              {{ order.orderStatusCodeNm }}
+            </span>
           </div>
         </div>
 
-        <!-- 주문 취소 버튼 -->
+        <!-- 버튼 영역(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소) -->
         <div class="order-actions">
-          <button v-if="order.orderStatusCode == '01'" type="button" class="cancel-btn" @click="cancelOrder(order)">
+          <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
+              @click="cancelOrder(order)" variant="danger" type="button">
             주문취소
-          </button>
+          </BaseButton>     
+          <BaseButton v-if="order.orderStatusCode == '03'" class="action-button"
+              @click="paymentCompleted(order)" variant="primary" type="button"
+              title="송금을 완료한 후 눌러주세요.">
+            송금완료
+          </BaseButton>                 
         </div>
       </article>
 
@@ -79,7 +97,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import api from '@/plugins/axios';
 import type { ApiResponse } from '@/types/api/response';
 import Constant from '@/constants/constant';
@@ -93,6 +111,7 @@ import { getCodeList } from '@/api/code';
 
 const uiStore = useUiStore();
 const toastRef = ref();
+const unpaidAmount = ref<number>(0);
 
 /** 주문 1건 정보 */
 interface Order {
@@ -154,7 +173,7 @@ const searchOrders = async () => {
 
     // TODO: 실제 API URL로 변경
     const res = await api.post<ApiResponse<any[]>>('/order/getOrderList', payload);
-    const list = res.data.OUT_DATA || [];
+    const list = res.data.OUT_DATA['list'] || [];
 
     orders.value = list.map((row) => {
       // 백엔드 필드명에 맞게 매핑
@@ -172,10 +191,12 @@ const searchOrders = async () => {
         orderStatusCodeNm: row.orderStatusCodeNm,
         orderStatusNm,
         imgFile:
-          row.imgFile ??
-          `/api/item/getItemImage?itemSeq=${row.itemSeq}`,
+          row.orderDvcd == '01'? `/api/item/getItemImage?itemSeq=${row.itemSeq}` : `/api/itemNew/getItemNewImage?orderSeq=${row.orderSeq}`,
       } as Order;
     });
+
+    //미결제 금액 합계
+    unpaidAmount.value = res.data.OUT_DATA['unpaidAmount'] || 0;
   } catch (e) {
     console.error(e);
     toastRef.value?.showToast('주문 내역 조회 중 오류가 발생했습니다.');
@@ -192,12 +213,7 @@ const cancelOrder = async (order: Order) => {
 
   try {
     uiStore.showLoading('주문 취소 중입니다...');
-
-    const payload = {
-      orderSeq: order.orderSeq,
-      orderStatusCode: '91', // 예: 취소
-    };
-
+    const payload = {orderSeq: order.orderSeq};
     const response = await api.post('/order/cancelOrder', payload);
 
     if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
@@ -211,6 +227,33 @@ const cancelOrder = async (order: Order) => {
   } catch (e) {
     console.error(e);
     toastRef.value?.showToast('주문 취소 중 오류가 발생했습니다.');
+  } finally {
+    uiStore.hideLoading();
+  }
+};
+
+/** 송금완료 */
+const paymentCompleted = async (order: Order) => {
+  if (!confirm('송금 완료 처리하시겠습니까?')) {
+    return;
+  }
+
+  try {
+    uiStore.showLoading('처리 중입니다...');
+    const payload = {orderSeq: order.orderSeq};
+    const response = await api.post('/order/paymentCompleted', payload);
+
+    if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
+      toastRef.value?.showToast('송금 완료 처리되었습니다.');
+      await searchOrders();
+    } else {
+      toastRef.value?.showToast(
+        response.data?.OUT_RESULT_MSG || '처리에 실패했습니다.'
+      );
+    }
+  } catch (e) {
+    console.error(e);
+    toastRef.value?.showToast('처리 중 오류가 발생했습니다.');
   } finally {
     uiStore.hideLoading();
   }
@@ -235,6 +278,32 @@ onMounted(async () => {
   background: #f9fbff;
   border-radius: 16px;
   box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+/* =======================
+   미결제 금액 표시
+   ======================= */
+.order-unpaid {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.8rem;
+  background: #fff1f2;          /* 연한 레드 */
+  border: 2px solid #fecdd3;
+  /* box-shadow: 0 0.25rem 0.25rem rgba(220, 38, 38, 0.15); */
+}
+
+.unpaid-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000000;
+}
+
+.unpaid-amount {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #e40e0e;
 }
 
 /* =======================
@@ -378,42 +447,19 @@ onMounted(async () => {
   color: #0f172a;
 }
 
+.red-text {
+  color: red;
+}
+
 /* 주문 취소 버튼 영역 */
 .order-actions {
   display: flex;
   align-items: flex-end;
 }
 
-.cancel-btn {
-  min-width: 96px;
-  height: 36px;
-  border-radius: 999px;
-  border: none;
-  padding: 0 16px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  background: #f97373;
-  color: #ffffff;
-  box-shadow: 0 3px 8px rgba(248, 113, 113, 0.4);
-  transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
-}
-
-.cancel-btn:hover:not(:disabled) {
-  transform: translateY(-1px);
-  box-shadow: 0 5px 12px rgba(248, 113, 113, 0.55);
-}
-
-.cancel-btn:active:not(:disabled) {
-  transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(248, 113, 113, 0.35);
-  opacity: 0.9;
-}
-
-.cancel-btn:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-  box-shadow: none;
+.action-button{
+  width: 6rem;
+  height: 2.125rem;
 }
 
 /* 비어 있을 때 */

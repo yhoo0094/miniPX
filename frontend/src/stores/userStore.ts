@@ -6,7 +6,8 @@ import type { UserType } from '@/types/userType';
 export const useUserStore = defineStore('user', {
   state: () => ({
     user: null as UserType | null,
-    authMap: {} as Record<string, number>,
+    authMap: {} as Record<string, number>,  // 경로별 권한 맵
+    currentAuthLv: 0,                       // 현재 페이지 권한 (반응형)
   }),
 
   actions: {
@@ -41,9 +42,11 @@ export const useUserStore = defineStore('user', {
       this.authMap[path] = grade;
     },
 
-    // 경로에 대한 권한 조회
-    getAuth(path: string): number | undefined {
-      return this.authMap[path];
+     // 현재 페이지 권한 세팅
+    setCurrentAuth(path: string): number {
+      const lv = this.authMap[path] ?? 0;
+      this.currentAuthLv = lv;
+      return lv;
     },    
   },
 

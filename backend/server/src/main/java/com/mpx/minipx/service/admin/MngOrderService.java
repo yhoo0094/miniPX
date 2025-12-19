@@ -39,15 +39,15 @@ public class MngOrderService {
     }
     
     /**
-     * @메소드명: cancelOrder
+     * @메소드명: updateOrderStatus
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 9.
-     * @설명: 주문취소
+     * @설명: 주문 상태 변경
      */    
-    public Map<String, Object> cancelOrder(Map<String, Object> inData) {
+    public Map<String, Object> updateOrderStatus(Map<String, Object> inData) {
         Map<String, Object> result = new HashMap<>();
 
-        int affected = sqlSession.update("com.mpx.minipx.mapper.MngOrderMapper.cancelOrder", inData);
+        int affected = sqlSession.update("com.mpx.minipx.mapper.MngOrderMapper.updateOrderStatus", inData);
         result.put(Constant.OUT_DATA, affected);
         result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
         return result;

@@ -6,6 +6,8 @@
       :value="modelValue"
       @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement)?.value)"
       :placeholder="placeholder"
+      :disabled="disabled"
+      :readonly="readonly"      
       :style="styleProp"
     ></textarea>
   </div>
@@ -19,6 +21,8 @@ interface Props {
   label?: string;
   modelValue: string;
   placeholder?: string;
+  disabled?: boolean;
+  readonly?: boolean;  
   width?: string | number;
   height?: string | number;
 }

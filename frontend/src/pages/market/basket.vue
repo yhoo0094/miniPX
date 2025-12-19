@@ -28,19 +28,21 @@
             <div class="basket-item-info">
               <div class="field-row">
                 <label class="field-label">상품명</label>
-                <label class="field-cont">{{ item.itemNm }}</label>
+                <label class="field-cont">
+                  {{ item.itemNm }} <span v-if="item.unit > 1">{{ item.unit }}개</span>
+                </label>
               </div>
 
               <div class="field-row">
                 <label class="field-label">가격</label>
-                <label class="field-cont">{{ item.price.toLocaleString() }}</label>
+                <label class="field-cont">{{ item.unitPrice.toLocaleString() }}</label>
               </div>
 
               <div class="field-row small">
                 <label class="field-label">개수</label>
                 <div class="cnt-box">
                   <button type="button" class="cnt-btn" @click="decreaseCnt(index)">−</button>
-                  <span class="cnt-value">{{ item.cnt }}</span>
+                  <span class="cnt-value">{{ item.unitCnt }}</span>
                   <button type="button" class="cnt-btn" @click="increaseCnt(index)">+</button>
                 </div>
 
@@ -115,7 +117,10 @@ const getBasketList = async () => {
     itemSeq: item.itemSeq,
     itemNm: item.itemNm,
     price: item.price,
+    unitPrice: item.unitPrice,
     cnt: item.cnt,
+    unitCnt: item.unitCnt,
+    unit: item.unit,
     checked: true,
     imgFile: `/api/item/getItemImage?itemSeq=${item.itemSeq}`,
   }));
@@ -199,7 +204,8 @@ const requestOrderApi = async (itemSeqList: number[]) => {
 const increaseCnt = async (index: number) => {
   try {
     uiStore.showLoading('수량 변경 중입니다...');
-    BasketTypes.value[index].cnt++;
+      BasketTypes.value[index].cnt = BasketTypes.value[index].cnt + BasketTypes.value[index].unit;
+      BasketTypes.value[index].unitCnt++;
     const response = await updateBasketCnt(BasketTypes.value[index]);
 
     if (response.data?.RESULT !== Constant.RESULT_SUCCESS) {
@@ -214,10 +220,11 @@ const increaseCnt = async (index: number) => {
 
 //수량 감소
 const decreaseCnt = async (index: number) => {
-  if (BasketTypes.value[index].cnt > 1) {
+  if (BasketTypes.value[index].cnt > BasketTypes.value[index].unit) {
     try {
       uiStore.showLoading('수량 변경 중입니다...');
-      BasketTypes.value[index].cnt--;
+      BasketTypes.value[index].cnt = BasketTypes.value[index].cnt - BasketTypes.value[index].unit;
+      BasketTypes.value[index].unitCnt--;
       const response = await updateBasketCnt(BasketTypes.value[index]);
 
       if (response.data?.RESULT !== Constant.RESULT_SUCCESS) {

@@ -15,7 +15,7 @@
 			 , T2.ITEM_NM					/*상품명*/
 			 , T1.PRICE                     /*가격*/
 			 , T1.CNT                       /*개수*/
-			 , T1.ORDER_STATUS_CODE         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 11:구매완료, 12:품절, 91:취소)*/    
+			 , T1.ORDER_STATUS_CODE         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소)*/    
 			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'ORDER_STATUS_CODE' AND CODE_DETAIL = T1.ORDER_STATUS_CODE) ORDER_STATUS_CODE_NM  /*주문상태코드명*/
 			 , DATE_FORMAT(T1.ORDER_DTTI, '%Y-%m-%d %H:%i:%s') AS ORDER_DTTI	/*주문일시*/
 			 , T1.ORDER_STATUS_DTL          /*주문상태상세*/
@@ -27,17 +27,22 @@
 		  JOIN tb_item T2					/*테이블_상품*/
 		    ON T1.ITEM_SEQ = T2.ITEM_SEQ
 		 WHERE 1 = 1
-		<choose>
-		  <when test="orderStatusCode != null and orderStatusCode != ''">
-		   AND T1.ORDER_STATUS_CODE = #{orderStatusCode}
-		  </when>
-		  <otherwise>
-		   AND T1.ORDER_STATUS_CODE IN ('01', '02', '03', '11', '12')		/*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 11:구매완료, 12:품절, 91:취소)*/
-		  </otherwise>
-		</choose>		
+	   <choose>
+	     <when test="orderStatusCode == '001'">
+	       AND T1.ORDER_STATUS_CODE IN ('01', '02')
+	     </when>
+	     <when test="orderStatusCode == '002'">
+	       AND T1.ORDER_STATUS_CODE IN ('03', '04')
+	     </when>	      
+	     <when test="orderStatusCode != null and orderStatusCode != ''">
+	       AND T1.ORDER_STATUS_CODE = #{orderStatusCode}
+	     </when>
+	   </choose>
 		 <if test='itemNm != null and itemNm != ""'>
-		   AND T2.ITEM_NM LIKE CONCAT('%', #{itemNm}, '%')
-		 </if>		 
+		   AND ( T2.ITEM_NM LIKE CONCAT('%', #{itemNm}, '%')
+		   		 OR (SELECT USER_NM FROM tb_user WHERE USER_SEQ = T1.USER_SEQ) LIKE CONCAT('%', #{itemNm}, '%')
+		   	   )
+		 </if>	 
 		 <if test='startDate != null and startDate != "" and endDate != "" and endDate != ""'>
 		   AND DATE_FORMAT(T1.ORDER_DTTI, '%Y%m%d') BETWEEN DATE_FORMAT(#{startDate}, '%Y%m%d') AND DATE_FORMAT(#{endDate}, '%Y%m%d') 
 		 </if>			 
@@ -50,7 +55,7 @@
 			 , T1.ITEM_NM					/*상품명*/
 			 , T1.PRICE                     /*가격*/
 			 , T1.CNT                       /*개수*/
-			 , T1.ORDER_STATUS_CODE         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 11:구매완료, 12:품절, 91:취소)*/    
+			 , T1.ORDER_STATUS_CODE         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소)*/    
 			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'ORDER_STATUS_CODE' AND CODE_DETAIL = T1.ORDER_STATUS_CODE) ORDER_STATUS_CODE_NM  /*주문상태코드명*/
 			 , DATE_FORMAT(T1.ORDER_DTTI, '%Y-%m-%d %H:%i:%s') AS ORDER_DTTI	/*주문일시*/
 			 , T1.ORDER_STATUS_DTL          /*주문상태상세*/
@@ -60,16 +65,21 @@
 			 , T1.LST_UPD_DTTI              /*최종수정일시*/
 		  FROM tb_new_order T1				/*테이블_신규상품주문*/
 		 WHERE 1 = 1
-		<choose>
-		  <when test="orderStatusCode != null and orderStatusCode != ''">
-		   AND T1.ORDER_STATUS_CODE = #{orderStatusCode}
-		  </when>
-		  <otherwise>
-		   AND T1.ORDER_STATUS_CODE IN ('01', '02', '03', '11', '12')		/*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 11:구매완료, 12:품절, 91:취소)*/
-		  </otherwise>
-		</choose>		
+	    <choose>
+	      <when test="orderStatusCode == '001'">
+	        AND T1.ORDER_STATUS_CODE IN ('01', '02')
+	      </when>
+	      <when test="orderStatusCode == '002'">
+	        AND T1.ORDER_STATUS_CODE IN ('03', '04')
+	      </when>	      
+	      <when test="orderStatusCode != null and orderStatusCode != ''">
+	        AND T1.ORDER_STATUS_CODE = #{orderStatusCode}
+	      </when>
+	    </choose>		
 		 <if test='itemNm != null and itemNm != ""'>
-		   AND T2.ITEM_NM LIKE CONCAT('%', #{itemNm}, '%')
+		   AND ( T1.ITEM_NM LIKE CONCAT('%', #{itemNm}, '%')
+		   		 OR (SELECT USER_NM FROM tb_user WHERE USER_SEQ = T1.USER_SEQ) LIKE CONCAT('%', #{itemNm}, '%')
+		   	   )
 		 </if>		 
 		 <if test='startDate != null and startDate != "" and endDate != "" and endDate != ""'>
 		   AND DATE_FORMAT(T1.ORDER_DTTI, '%Y%m%d') BETWEEN DATE_FORMAT(#{startDate}, '%Y%m%d') AND DATE_FORMAT(#{endDate}, '%Y%m%d') 
@@ -77,10 +87,11 @@
 		 ORDER BY ORDER_DTTI DESC
 	</select>	
 	
-	<!-- 주문취소 -->
-	<update id="cancelOrder" parameterType="map">
+	<!-- 주문 상태 변경 -->
+	<update id="updateOrderStatus" parameterType="map">
 	    UPDATE tb_order
 	       SET ORDER_STATUS_CODE    = #{orderStatusCode}
+			 , CNT 					= #{cnt}
 	         , LST_UPD_SEQ 			= #{userSeq}
 	         , LST_UPD_DTTI 		= NOW()
 	     WHERE ORDER_SEQ   			= #{orderSeq}

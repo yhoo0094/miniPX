@@ -80,7 +80,36 @@ public class OrderController {
         inData.put("userId", (String) claims.get("userId"));
         inData.put("userSeq", (String) claims.get("userSeq"));
         
-        result = orderService.cancelOrder(inData);
+        inData.put("orderStatusCode", "91");
+        result = orderService.updateOrderStatus(inData);
         return ResponseEntity.ok(result);
-    }       
+    }    
+    
+    /**
+     * @메소드명: paymentCompleted
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 19.
+     * @설명: 송금완료
+     */
+    @PostMapping("/paymentCompleted")
+    public ResponseEntity<?> paymentCompleted(@RequestBody Map<String, Object> inData,
+                                            HttpServletRequest request,
+                                            HttpServletResponse response) throws Exception {
+        Map<String, Object> result = new HashMap<>();
+
+    	// 사용자 정보 추출
+        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        Claims claims;
+        try {
+            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid refresh token");
+        }        
+        inData.put("userId", (String) claims.get("userId"));
+        inData.put("userSeq", (String) claims.get("userSeq"));
+        
+        inData.put("orderStatusCode", "04");
+        result = orderService.updateOrderStatus(inData);
+        return ResponseEntity.ok(result);
+    }        
 }

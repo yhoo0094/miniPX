@@ -5,16 +5,16 @@
     <div class="filters">
       <div>
         <BaseDropdown label="분류" v-model="selectedCategory" :options="categoryOptions" :showPlaceholder="true"
-          placeholderLabel="선택" @change="handleCategoryChange" 
+          placeholderLabel="전체" @change="handleCategoryChange" 
           />
       </div>
       <div>
         <BaseDropdown label="상세분류" v-model="selectedSubCategory" :options="subCategoryOptions" :showPlaceholder="true"
-          placeholderLabel="선택" @change="getItemList" :disabled="!selectedCategory" />
+          placeholderLabel="전체" @change="getItemList" :disabled="!selectedCategory" />
       </div>
       <div>
         <BaseDropdown label="정렬기준" v-model="selectedSort" :options="sortOptions" :showPlaceholder="false"
-          placeholderLabel="선택" @change="getItemList" caretText="⇅"
+          @change="getItemList" caretText="⇅"
           />
       </div>      
       <div class="filter-search">
@@ -25,14 +25,14 @@
 
     <!-- 상품 목록 표시 -->
     <div class="item-list">
-      <div class="item-card" v-for="(item, index) in itemList" :key="item.itemSeq" @click="clickItemCard">
-        <div class="image-box">
+      <div class="item-card" v-for="(item, index) in itemList" :key="item.itemSeq" >
+        <div class="image-box" @click="clickItemCard(item.itemSeq)">
           <img v-if="item.imgFile" :src="item.imgFile" alt="상품 이미지" class="item-image" />
           <span v-else class="no-image">이미지 없음</span>
         </div>
 
         <div class="info-main">
-          <div class="item-name" :title="item.itemNm">
+          <div class="item-name" :title="item.itemNm" @click="clickItemCard">
               {{ item.itemNm }} <span v-if="item.unit > 1">{{ item.unit }}개</span>
           </div>
           <div class="item-price">
@@ -44,7 +44,7 @@
           <div class="rating">
             {{ item.starRating }}
           </div>
-          <button @click.stop="clickBasketBtn(item)" class="basket-btn" type="button">🛒 장바구니</button>
+          <BaseButton stop @click="clickBasketBtn(item)" class="basket-button" type="button" size="sm">🛒 장바구니</BaseButton>
         </div>
       </div>
 
@@ -70,19 +70,19 @@ import BaseToast from '@/components/common/BaseToast.vue';
 import api from '@/plugins/axios';
 import Constant from '@/constants/constant';
 import { useUiStore } from '@/stores/uiStore';
+import router from '@/router';
 
 
 // 현재 라우트에 대한 권한 정보
 const route = useRoute();
 const userStore = useUserStore();
 const path = computed(() => route.path);
-const authGrade = computed(() => userStore.getAuth(path.value));
 const uiStore = useUiStore();
 
 // 검색 조건
 const selectedCategory = ref('');
 const selectedSubCategory = ref('');
-const selectedSort = ref('');
+const selectedSort = ref('01');
 const searchItemNm = ref('');
 
 // 상태 선언
@@ -151,7 +151,7 @@ const getItemList = async () => {
     // 실제 응답 형식에 맞게 추출
     itemList.value = (response.data?.OUT_DATA || []).map(item => ({
       ...item,
-      imgFile: getItemImageUrl(item.itemSeq),   // 이미지 경로 자동 매핑
+      imgFile: getItemImageUrl(item.img),   // 이미지 경로 자동 매핑
       starRating: '★★★★★',                    // 서버에서 별점이 없으면 기본값 설정
     }));
   } catch (error) {
@@ -163,13 +163,16 @@ const getItemList = async () => {
 };
 
 // 상품 이미지 조회
-const getItemImageUrl = (itemSeq: number) => {
-  return `/api/item/getItemImage?itemSeq=${itemSeq}`;
+const getItemImageUrl = (img: string) => {
+  return `/api/item/getItemImage?img=${img}`;
 };
 
 //상품 상세보기
-const clickItemCard = () => {
-  alert('상품 상세보기 기능은 구현 예정입니다.');
+const clickItemCard = (itemSeq: number) => {
+  router.push({
+    path: '/market/itemDetail',
+    query: { itemSeq }
+  });
 };
 
 //장바구니
@@ -241,26 +244,23 @@ const insertBasket = async (payload: { itemSeq: number; }) => {
   gap: 8px;
   box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
-  cursor: pointer;
-}
-
-.item-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.12);
-  border-color: #bfdbfe;
 }
 
 /* 이미지 영역 */
 .image-box {
-  height: 180px;
-  /* 살짝 더 키워서 카드 비율 예쁘게 */
-  border-radius: 12px;
+  height: 11rem;
+  border-radius: 0.75rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
   overflow: hidden;
   position: relative;
+  cursor: pointer;
+}
+
+.image-box:hover {
+  transform: scale(1.1);
 }
 
 .item-image {
@@ -289,21 +289,19 @@ const insertBasket = async (payload: { itemSeq: number; }) => {
 }
 
 .item-name {
-  font-size: 0.95rem;
+  font-size: 0.9rem;
   font-weight: 600;
   color: #0f172a;
   line-height: 1.3;
-  max-height: 2.6em;
+  height: 2.6em;
+  display: flex;
+  align-items: flex-end;   /* ✅ 아래로 */
   overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  /* -webkit-line-clamp: 2; */
-  /* 2줄까지만 표시 */
-  -webkit-box-orient: vertical;
+  /* cursor: pointer; */
 }
 
 .item-price {
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: #dc2626;
 }
@@ -322,27 +320,8 @@ const insertBasket = async (payload: { itemSeq: number; }) => {
 }
 
 /* 장바구니 버튼 */
-.basket-btn {
-  border: none;
-  background: #0f172a;
-  color: #ffffff;
-  font-size: 0.8rem;
-  border-radius: 999px;
-  padding: 4px 10px;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s ease;
-}
-
-.basket-btn:hover {
-  background: #111827;
-  transform: translateY(-1px);
-}
-
-.basket-btn:active {
-  transform: translateY(0);
+.basket-button {
+  border-radius: 10rem;
 }
 
 /* 데이터 없을 때 */

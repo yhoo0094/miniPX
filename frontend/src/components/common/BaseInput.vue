@@ -3,11 +3,19 @@
     <label v-if="label" :for="id">{{ label }}</label>
     <input
       :id="id"
-      :type="type"
+      :type="type ?? 'text'"
       :value="modelValue"
-      @input="$emit('update:modelValue', ($event.target as HTMLInputElement)?.value)"
       :placeholder="placeholder"
-      :style="styleProp"
+      :disabled="disabled"
+      :readonly="readonly"
+      :min="type === 'number' ? min : undefined"
+      :max="type === 'number' ? max : undefined"
+      :step="type === 'number' ? step : undefined"
+      :style="{
+        ...styleProp,
+        textAlign: inputAlign
+      }"
+      @input="onInput"
     />
   </div>
 </template>
@@ -19,27 +27,59 @@ import { ref, computed } from 'vue';
 interface Props {
   id?: string;
   label?: string;
-  type?: string;
-  modelValue: string;
+  type?: 'text' | 'number' | 'password';
+  modelValue: string | number;
   placeholder?: string;
+  disabled?: boolean;
+  readonly?: boolean;
   width?: string | number;
-  height?: string | number;    
+  height?: string | number;
+  padding?: string | number;
+  align?: 'left' | 'center' | 'right';
+
+  /* 숫자 전용 옵션 */
+  min?: number;
+  max?: number;
+  step?: number;
+  numberOnly?: boolean; 
 }
 
-// ✅ Emits 타입 정의
-const emit = defineEmits<{
-  (e: 'update:modelValue', value: string): void;
-}>();
+  // ✅ Emits 타입 정의
+  const emit = defineEmits<{
+    (e: 'update:modelValue', value: string): void;
+  }>();
 
   // 버튼의 width와 height 값 계산 (매개변수 값이 없으면 기본값 사용)
   const styleProp = computed(() => {
     return {
       width: props.width,  
       height: props.height, 
+      padding: props.padding, 
     };
   });
 
-const props = defineProps<Props>();
+  //입력 제어 로직
+  const onInput = (e: Event) => {
+    const target = e.target as HTMLInputElement;
+    let value: string | number = target.value;
+
+    if (props.type === 'number' || props.numberOnly) {
+      //숫자 타입일 때
+      value = value.replace(/[^0-9]/g, '');
+      emit('update:modelValue', value === '' ? '' : Number(value));
+    } else {
+      emit('update:modelValue', value);
+    }
+  };  
+
+  //정렬 로직
+  const inputAlign = computed(() => {
+    if (props.align) return props.align;
+    if (props.type === 'number' || props.numberOnly) return 'right';
+    return 'left';
+  });
+
+  const props = defineProps<Props>();
 </script>
 
 <style scoped>

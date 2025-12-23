@@ -47,21 +47,6 @@ public class ItemController {
         result = itemService.getItemList(inData);
         return result;
     }
-    
-    /**
-     * @메소드명: getItemDetail
-     * @작성자: KimSangMin
-     * @생성일: 2025. 12. 19.
-     * @설명: 상품상세 조회
-     */
-    @PostMapping("/getItemDetail")
-    public Map<String, Object> getItemDetail(@RequestBody Map<String, Object> inData,
-                                           HttpServletRequest request,
-                                           HttpServletResponse response) throws Exception {
-        Map<String, Object> result = new HashMap<>();
-        result = itemService.getItemDetail(inData);
-        return result;
-    }    
 
     /**
      * 

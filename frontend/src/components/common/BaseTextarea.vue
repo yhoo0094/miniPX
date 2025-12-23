@@ -86,4 +86,16 @@ const styleProp = computed(() => {
 .base-textarea textarea:hover {
   border-color: #7a8ea5;
 }
+
+/* readonly + focus → 효과 제거 */
+.base-textarea textarea[readonly]:focus {
+  border-color: #b8c4d1;
+  background-color: #f8fbff;
+  box-shadow: none;
+}
+
+/* readonly + hover → 효과 제거 */
+.base-textarea textarea[readonly]:hover {
+  border-color: #b8c4d1;
+}
 </style>

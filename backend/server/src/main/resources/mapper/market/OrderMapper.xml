@@ -12,6 +12,7 @@
 			 , T1.USER_SEQ                  /*사용자일련번호*/
 			 , T1.ITEM_SEQ                  /*상품일련번호*/
 			 , T2.ITEM_NM					/*상품명*/
+			 , T2.IMG                     	/*이미지*/
 			 , T1.PRICE                     /*가격*/
 			 , T1.CNT                       /*개수*/
 			 , T1.ORDER_STATUS_CODE         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소)*/    
@@ -29,18 +30,19 @@
 		 <if test="orderStatusCode != null and orderStatusCode != ''">
 		   AND T1.ORDER_STATUS_CODE = #{orderStatusCode}
 		</if>	
-		 <if test='itemNm != null and itemNm != ""'>
+		<if test='itemNm != null and itemNm != ""'>
 		   AND T2.ITEM_NM LIKE CONCAT('%', #{itemNm}, '%')
-		 </if>		 
-		 <if test='startDate != null and startDate != "" and endDate != "" and endDate != ""'>
+		</if>		 
+		<if test='startDate != null and startDate != "" and endDate != "" and endDate != ""'>
 		   AND DATE_FORMAT(T1.ORDER_DTTI, '%Y%m%d') BETWEEN DATE_FORMAT(#{startDate}, '%Y%m%d') AND DATE_FORMAT(#{endDate}, '%Y%m%d') 
-		 </if>			 
+		</if>			 
 		 UNION ALL 
 		SELECT '02' AS ORDER_DVCD			/*주문구분코드(01:주문, 02:신규상품주문)*/		 
 			 , T1.NEW_ORDER_SEQ				/*신규상품주문일련번호*/
 			 , T1.USER_SEQ                  /*사용자일련번호*/
 			 , 0                  			/*상품일련번호*/
 			 , T1.ITEM_NM					/*상품명*/
+			 , T1.IMG                     	/*이미지*/
 			 , T1.PRICE                     /*가격*/
 			 , T1.CNT                       /*개수*/
 			 , T1.ORDER_STATUS_CODE         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소)*/    

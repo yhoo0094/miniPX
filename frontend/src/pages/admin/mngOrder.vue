@@ -203,7 +203,7 @@ const searchOrders = async () => {
         orderStatusCodeNm: row.orderStatusCodeNm,
         orderStatusNm,
         imgFile:
-          row.orderDvcd == '01'? `/api/item/getItemImage?itemSeq=${row.itemSeq}` : `/api/itemNew/getItemNewImage?orderSeq=${row.orderSeq}`
+          row.orderDvcd == '01'? `/api/item/getItemImage?img=${row.img}` : `/api/itemNew/getItemNewImage?img=${row.img}`
           ,
       } as Order;
     });

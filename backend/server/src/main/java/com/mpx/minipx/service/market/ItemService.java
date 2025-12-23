@@ -56,20 +56,6 @@ public class ItemService {
     }
     
     /**
-     * @메소드명: getItemDetail
-     * @작성자: KimSangMin
-     * @생성일: 2025. 12. 19.
-     * @설명: 상품상세 조회
-     */
-    public Map<String, Object> getItemDetail(Map<String, Object> inData) {
-    	Map<String, Object> result = new HashMap<String, Object>(); 
-    	Map<String, Object> map = sqlSession.selectOne("com.mpx.minipx.mapper.ItemMapper.getItemDetail", inData);
-    	result.put(Constant.OUT_DATA, map);
-    	result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
-    	return result;
-    }    
-    
-    /**
      * @메소드명: getItemImage
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 6.

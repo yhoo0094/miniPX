@@ -5,6 +5,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,6 +40,20 @@ public class ItemNewService {
     @Value("${item.new.image-path}")
     private String imageBasePath;
 
+    /**
+     * @메소드명: getNewOrder
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 23.
+     * @설명: 신규상품주문 조회
+     */    
+    public Map<String, Object> getNewOrder(Map<String, Object> inData) {
+    	Map<String, Object> result = new HashMap<String, Object>(); 
+    	Map<String, Object> map = sqlSession.selectOne("com.mpx.minipx.mapper.ItemNewMapper.getNewOrder", inData);
+    	result.put(Constant.OUT_DATA, map);
+    	result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
+    	return result;
+    }    
+    
     /**
      * @메소드명: insertNewOrder
      * @작성자: KimSangMin
@@ -102,19 +117,81 @@ public class ItemNewService {
     }
     
     /**
+     * @메소드명: updateNewOrder
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 23.
+     * @설명: 신규상품주문 수정
+     */    
+    public Map<String, Object> updateNewOrder(Map<String, Object> inData, MultipartFile imageFile) {
+        Map<String, Object> result = new HashMap<>();
+
+        // 1. 이미지 파일 저장 처리
+        if (imageFile != null && !imageFile.isEmpty()) {
+            try {
+                // 경로 객체 생성
+                Path dirPath = Paths.get(imageBasePath);
+
+                // 디렉터리가 없다면 생성
+                if (!Files.exists(dirPath)) {
+                    Files.createDirectories(dirPath);
+                }
+
+                // 원본 파일명 & 확장자 추출
+                String originalFilename = imageFile.getOriginalFilename();
+                String ext = "";
+                if (originalFilename != null && originalFilename.lastIndexOf(".") != -1) {
+                    ext = originalFilename.substring(originalFilename.lastIndexOf("."));
+                }
+
+                // 저장용 파일명 (UUID + 확장자)
+                String savedFileName = UUID.randomUUID().toString() + ext;
+
+                // 전체 경로
+                Path targetPath = dirPath.resolve(savedFileName);
+
+                // 실제 파일 저장
+                imageFile.transferTo(targetPath.toFile());
+
+                // ★ DB에 넣을 값 세팅
+                inData.put("img", savedFileName);         // 예: 파일명
+
+            } catch (IOException e) {
+                log.error("신규상품주문 이미지 저장 중 오류", e);
+                result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+                result.put(Constant.OUT_RESULT_MSG, "이미지 저장 중 오류가 발생했습니다.");
+                return result;
+            }
+        }
+
+        // 2. 신규상품주문 INSERT
+        int affected = sqlSession.update("com.mpx.minipx.mapper.ItemNewMapper.updateNewOrder", inData);
+
+        if (affected > 0) {
+            result.put(Constant.OUT_DATA, affected);
+            result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
+        } else {
+            result.put(Constant.OUT_DATA, affected);
+            result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+            result.put(Constant.OUT_RESULT_MSG, "신규상품주문 등록에 실패했습니다.");
+        }
+
+        return result;
+    }    
+    
+    /**
      * @메소드명: getItemNewImage
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 15.
      * @설명: 신규상품주문 이미지 조회
      */
-	public ItemImage getItemNewImage(Long orderSeq) throws Exception {
-		String imageName = sqlSession.selectOne("com.mpx.minipx.mapper.ItemNewMapper.getItemNewImage", orderSeq);
+	public ItemImage getItemNewImage(String img) throws Exception {
+		//String img = sqlSession.selectOne("com.mpx.minipx.mapper.ItemNewMapper.getItemNewImage", orderSeq);
 	
-	    if (imageName == null || imageName.isBlank()) {
+	    if (img == null || img.isBlank()) {
 	        throw new IllegalStateException("이미지 경로 없음");
 	    }
 	    
-	    Path filePath = Paths.get(imageBasePath + imageName);
+	    Path filePath = Paths.get(imageBasePath + img);
 	    if (!Files.exists(filePath)) {
 	        throw new IllegalStateException("이미지 파일 없음: " + filePath);
 	    }

@@ -53,6 +53,12 @@
         조회된 상품이 없습니다.
       </div>
     </div>
+    <!-- 버튼 -->
+    <div v-if="authLv > 1" class="btn-box">
+      <BaseButton type="button" @click="moveToItemDetail" class="action-btn">
+        상품등록
+      </BaseButton>
+    </div>
   </div>
 </template>
 
@@ -62,7 +68,7 @@ import { useRoute } from 'vue-router'
 import { useUserStore } from '@/stores/userStore';
 import { getCodeList } from '@/api/code';
 import type { ApiResponse } from '@/types/api/response';
-import type { ItemType } from '@/types/itemType';
+import type { ItemType } from '@/types/item/itemType';
 import BaseInput from '@/components/common/BaseInput.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
@@ -72,12 +78,12 @@ import Constant from '@/constants/constant';
 import { useUiStore } from '@/stores/uiStore';
 import router from '@/router';
 
-
 // 현재 라우트에 대한 권한 정보
 const route = useRoute();
 const userStore = useUserStore();
 const path = computed(() => route.path);
 const uiStore = useUiStore();
+const authLv = computed(() => userStore.currentAuthLv);
 
 // 검색 조건
 const selectedCategory = ref('');
@@ -178,8 +184,9 @@ const clickItemCard = (itemSeq: number) => {
 //장바구니
 const clickBasketBtn = async (item: ItemType) => {
   try {
+    uiStore.showLoading('장바구니에 담는 중입니다...');
     item.cnt = 1;
-    const response = await insertBasket(item);
+    const response = await upsertBasket(item);
 
     if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
       toastRef.value?.showToast("장바구니에 담았습니다 🛒");
@@ -188,11 +195,21 @@ const clickBasketBtn = async (item: ItemType) => {
     }
   } catch (error) {
     toastRef.value?.showToast("장바구니 추가 중 오류 발생");
+  } finally {
+    uiStore.hideLoading();
   }
 };
 
-const insertBasket = async (payload: { itemSeq: number; }) => {
-  return await api.post('/basket/insertBasket', payload);
+//장바구니 담기
+const upsertBasket = async (payload: { itemSeq: number; }) => {
+  return await api.post('/basket/upsertBasket', payload);
+};
+
+//신규상품 등록 화면 이동
+const moveToItemDetail = () => {
+  router.push({
+    path: '/market/itemDetail',
+  });
 };
 </script>
 
@@ -259,16 +276,16 @@ const insertBasket = async (payload: { itemSeq: number; }) => {
   cursor: pointer;
 }
 
-.image-box:hover {
-  transform: scale(1.1);
-}
-
 .item-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
   /* 잘리기보다는 전체가 보이게 */
   border-radius: 10px;
+}
+
+.item-image:hover {
+  transform: scale(1.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -331,6 +348,14 @@ const insertBasket = async (payload: { itemSeq: number; }) => {
   text-align: center;
   font-size: 0.9rem;
   color: #9ca3af;
+}
+
+/*버튼 영역*/
+.btn-box{
+  text-align: right;
+  height: 3rem;
+  vertical-align: middle;
+  line-height: 3rem;  
 }
 
 /* 반응형(모바일) */

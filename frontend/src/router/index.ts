@@ -67,6 +67,9 @@ router.beforeEach(async (to, from, next) => {
       return next('/login');
     }
   }
+
+  // 현재 경로 권한 세팅
+  userStore.setCurrentAuth(to.path);
   next();
 });
 

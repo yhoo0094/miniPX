@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mpx.minipx.mapper.ItemDetailMapper">
+
+	<!-- 상품상세 조회 -->
+	<select id="getItemDetail" parameterType="map" resultType="camelCaseMap">
+		SELECT T1.ITEM_SEQ                         /*상품일련번호*/
+			 , T1.ITEM_NM                          /*상품명*/
+			 , T1.PRICE                            /*가격*/
+			 , T1.UNIT                             /*판매단위*/
+			 , T1.PRICE * T1.UNIT AS UNIT_PRICE    /*단위가격*/
+			 , T1.RMRK                             /*비고*/
+			 , T1.IMG                              /*이미지*/
+			 , T1.ITEM_TYPE_CODE                   /*상품 분류코드*/
+			 , T1.ITEM_DTL_TYPE_CODE               /*상품 상세 분류코드*/
+			 , T1.SOLD_OUT_YN                      /*품절여부*/
+			 , T1.USE_YN                           /*사용여부*/
+			 , T1.FST_REG_SEQ                      /*최초등록자일련번호*/
+			 , ROUND(IFNULL(O.SALE_CNT, 0) / T1.UNIT)  AS SALE_CNT   /*판매량*/
+			 , T1.FST_REG_DTTI                     /*최초등록일시*/
+			 , T1.LST_UPD_SEQ                      /*최종수정자일련번호*/
+			 , T1.LST_UPD_DTTI                     /*최종수정일시*/
+		  FROM tb_item T1					       /*테이블_상품 정보 관리*/
+		  LEFT JOIN (
+			      SELECT ITEM_SEQ
+			           , SUM(CNT) AS SALE_CNT
+			        FROM tb_order
+			       WHERE ORDER_STATUS_CODE = '11'
+			       GROUP BY ITEM_SEQ) O
+		    ON T1.ITEM_SEQ = O.ITEM_SEQ		  
+		 WHERE T1.ITEM_SEQ = #{itemSeq} 
+		 LIMIT 1
+	</select>	
+	
+	<!-- 주문 등록 -->
+	<insert id="insertOrder" parameterType="map">
+		INSERT INTO tb_order				/*테이블_주문*/ 
+		     ( USER_SEQ                     /*사용자일련번호*/
+			 , ITEM_SEQ                     /*상품일련번호*/
+			 , PRICE                        /*가격*/
+			 , CNT                          /*개수*/
+			 , ORDER_STATUS_CODE            /*주문상태코드*/
+			 , ORDER_DTTI					/*주문일시*/
+			 , FST_REG_SEQ                  /*최초등록자일련번호*/
+			 , FST_REG_DTTI                 /*최초등록일시*/
+			 , LST_UPD_SEQ                  /*최종수정자일련번호*/
+			 , LST_UPD_DTTI                 /*최종수정일시*/
+			 )
+		VALUES 
+		 	 ( #{userSeq}                   /*사용자일련번호*/                      
+			 , #{itemSeq}                   /*상품일련번호*/                       
+			 , #{price}                     /*가격*/                           
+			 , #{cnt}        				/*개수*/                           
+			 , '01'                         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소)*/    
+			 , NOW()						/*주문일시*/
+			 , #{userSeq}                   /*최초등록자일련번호*/                    
+			 , NOW()                    	/*최초등록일시*/                       
+			 , #{userSeq}                   /*최종수정자일련번호*/                    
+			 , NOW()                    	/*최종수정일시*/                       
+			 )	 
+	</insert>	
+	
+	<!-- 장바구니 등록 -->
+	<insert id="upsertBasket" parameterType="map">
+		INSERT INTO tb_basket              /*테이블_장바구니*/ 
+		     ( USER_SEQ                    /*사용자일련번호*/ 
+		     , ITEM_SEQ                    /*상품일련번호*/  
+		     , CNT                         /*개수*/ 
+		     , FST_REG_SEQ                 /*최초등록자일련번호*/    
+		     , FST_REG_DTTI                /*최초등록일시*/       
+		     , LST_UPD_SEQ                 /*최종수정자일련번호*/    
+		     , LST_UPD_DTTI                /*최종수정일시*/       
+			 ) 
+		VALUES 
+			 ( #{userSeq}                  /*사용자일련번호*/            
+			 , #{itemSeq}                  /*상품일련번호*/             
+		     , #{unit} * #{cnt}    		   /*개수*/                 
+			 , #{userSeq}                  /*최초등록자일련번호*/                    
+			 , NOW()                       /*최초등록일시*/                       
+			 , #{userSeq}                  /*최종수정자일련번호*/                    
+			 , NOW()                       /*최종수정일시*/ 		    
+			 )
+			ON DUPLICATE KEY 
+		UPDATE CNT         		= CNT + (#{unit} * #{cnt}) 
+		     , LST_UPD_SEQ 		= #{userSeq}
+		     , LST_UPD_DTTI 	= NOW();
+	</insert>	
+	
+	<!-- 상품 등록 -->
+	<insert id="insertItem" parameterType="map" useGeneratedKeys="true" keyProperty="itemSeq">
+		INSERT INTO tb_item                /*테이블_상품*/ 
+		     ( ITEM_NM                     /*상품명*/
+		     , PRICE                       /*가격*/
+		     , UNIT                        /*판매단위*/
+		     , RMRK                        /*비고*/
+		     , IMG                         /*이미지*/
+		     , ITEM_TYPE_CODE              /*상품 분류코드*/
+		     , ITEM_DTL_TYPE_CODE          /*상품 상세 분류코드*/
+		     , SOLD_OUT_YN                 /*품절여부*/
+		     , USE_YN                      /*사용여부*/
+		     , FST_REG_SEQ                 /*최초등록자일련번호*/    
+		     , FST_REG_DTTI                /*최초등록일시*/       
+		     , LST_UPD_SEQ                 /*최종수정자일련번호*/    
+		     , LST_UPD_DTTI                /*최종수정일시*/       
+			 ) 
+		VALUES 
+			 ( #{itemNm}                   /*상품명*/
+		     , #{price}                    /*가격*/
+		     , #{unit}                     /*판매단위*/
+		     , #{rmrk}                     /*비고*/
+		     , #{img}                      /*이미지*/
+		     , #{itemTypeCode}             /*상품 분류코드*/
+		     , #{itemDtlTypeCode}          /*상품 상세 분류코드*/
+		     , #{soldOutYn}                /*품절여부*/
+		     , #{useYn}                    /*사용여부*/
+			 , #{userSeq}                  /*최초등록자일련번호*/                    
+			 , NOW()                       /*최초등록일시*/                       
+			 , #{userSeq}                  /*최종수정자일련번호*/                    
+			 , NOW()                       /*최종수정일시*/ 		    
+			 )
+	</insert>		
+	
+	<!-- 상품 수정 -->
+	<update id="updateItem" parameterType="map">
+		UPDATE tb_item
+		   SET ITEM_NM                   = #{itemNm}                         /*상품명*/
+		     , PRICE                     = #{price}                          /*가격*/
+		     , UNIT                      = #{unit}                           /*판매단위*/
+		     , RMRK                      = #{rmrk}                           /*비고*/
+		 <if test='img != null and img != ""'>
+		     , IMG                       = #{img}                            /*이미지*/
+		 </if>		     
+		     , ITEM_TYPE_CODE            = #{itemTypeCode}                   /*상품 분류코드*/
+		     , ITEM_DTL_TYPE_CODE        = #{itemDtlTypeCode}             	 /*상품 상세 분류코드*/
+		     , SOLD_OUT_YN               = #{soldOutYn}                      /*품절여부*/
+		     , USE_YN                    = #{useYn}                          /*사용여부*/
+		     , LST_UPD_SEQ               = #{userSeq}                    	 /*최종수정자일련번호*/
+		     , LST_UPD_DTTI              = NOW()                   			 /*최종수정일시*/
+		 WHERE ITEM_SEQ = #{itemSeq}
+	</update>		
+		
+	
+</mapper>

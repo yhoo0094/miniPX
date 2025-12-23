@@ -19,8 +19,8 @@
           <!-- 카드 본문 -->
           <div class="basket-item-body">
             <!-- 이미지 영역 -->
-            <div class="basket-item-image-box">
-              <img v-if="item.imgFile" :src="item.imgFile" alt="상품 이미지" class="basket-item-image" />
+            <div class="basket-item-image-box" @click="clickItemCard(item.itemSeq)">
+              <img v-if="item.imgFile" :src="item.imgFile" alt="상품 이미지" class="basket-item-image"/>
               <span v-else class="basket-item-no-image">이미지</span>
             </div>
 
@@ -95,6 +95,7 @@ import type { BasketType } from '@/types/basketType';
 import Constant from '@/constants/constant';
 import BaseToast from '@/components/common/BaseToast.vue';
 import { useUiStore } from '@/stores/uiStore';
+import router from '@/router';
 
 const BasketTypes = ref<BasketType[]>([]);
 
@@ -116,13 +117,14 @@ const getBasketList = async () => {
   BasketTypes.value = (res.data.OUT_DATA || []).map(item => ({
     itemSeq: item.itemSeq,
     itemNm: item.itemNm,
+    img: item.img,
     price: item.price,
     unitPrice: item.unitPrice,
     cnt: item.cnt,
     unitCnt: item.unitCnt,
     unit: item.unit,
     checked: true,
-    imgFile: `/api/item/getItemImage?itemSeq=${item.itemSeq}`,
+    imgFile: `/api/item/getItemImage?img=${item.img}`,
   }));
 };
 
@@ -138,6 +140,14 @@ const totalAmount = computed(() =>
     0
   )
 );
+
+//상품 상세보기
+const clickItemCard = (itemSeq: number) => {
+  router.push({
+    path: '/market/itemDetail',
+    query: { itemSeq }
+  });
+};
 
 //삭제 버튼
 const clickDeleteBtn = async (index: number) => {
@@ -334,12 +344,18 @@ const toggleAll = () => {
   justify-content: center;
   overflow: hidden;
   box-sizing: border-box;
+  cursor: pointer;
 }
 
 .basket-item-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+
+.basket-item-image:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .basket-item-no-image {

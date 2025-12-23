@@ -15,6 +15,7 @@
 			 , T2.ITEM_NM					/*상품명*/
 			 , T1.PRICE                     /*가격*/
 			 , T1.CNT                       /*개수*/
+			 , T2.IMG						/*이미지*/
 			 , T1.ORDER_STATUS_CODE         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소)*/    
 			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'ORDER_STATUS_CODE' AND CODE_DETAIL = T1.ORDER_STATUS_CODE) ORDER_STATUS_CODE_NM  /*주문상태코드명*/
 			 , DATE_FORMAT(T1.ORDER_DTTI, '%Y-%m-%d %H:%i:%s') AS ORDER_DTTI	/*주문일시*/
@@ -55,6 +56,7 @@
 			 , T1.ITEM_NM					/*상품명*/
 			 , T1.PRICE                     /*가격*/
 			 , T1.CNT                       /*개수*/
+			 , T1.IMG                       /*이미지*/
 			 , T1.ORDER_STATUS_CODE         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소)*/    
 			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'ORDER_STATUS_CODE' AND CODE_DETAIL = T1.ORDER_STATUS_CODE) ORDER_STATUS_CODE_NM  /*주문상태코드명*/
 			 , DATE_FORMAT(T1.ORDER_DTTI, '%Y-%m-%d %H:%i:%s') AS ORDER_DTTI	/*주문일시*/

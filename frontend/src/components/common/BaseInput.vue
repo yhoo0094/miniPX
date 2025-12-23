@@ -125,4 +125,22 @@ interface Props {
 .base-input input:hover {
   border-color: #7a8ea5;
 }
+
+/* readonly 기본 상태 */
+.base-input input[readonly] {
+  background-color: #f3f4f6;
+  cursor: default;
+}
+
+/* readonly + focus → 효과 제거 */
+.base-input input[readonly]:focus {
+  border-color: #b8c4d1;
+  background-color: #f3f4f6;
+  box-shadow: none;
+}
+
+/* readonly + hover → 효과 제거 */
+.base-input input[readonly]:hover {
+  border-color: #b8c4d1;
+}
 </style>

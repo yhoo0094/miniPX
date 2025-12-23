@@ -9,6 +9,7 @@
 	<select id="getBasketList" parameterType="map" resultType="camelCaseMap">
 		SELECT T1.USER_SEQ                  			/*사용자일련번호*/
 			 , T1.ITEM_SEQ                  			/*상품일련번호*/
+			 , T2.IMG									/*이미지*/
 			 , T2.ITEM_NM								/*상품명*/
 			 , T2.PRICE									/*가격*/
 			 , T2.PRICE * T2.UNIT AS UNIT_PRICE    		/*단위가격*/
@@ -27,7 +28,7 @@
 	</select>	
 	
 	<!-- 장바구니 등록 -->
-	<insert id="insertBasket" parameterType="map">
+	<insert id="upsertBasket" parameterType="map">
 		INSERT INTO tb_basket              /*테이블_상품*/ 
 		     ( USER_SEQ                    /*사용자일련번호*/ 
 		     , ITEM_SEQ                    /*상품일련번호*/  

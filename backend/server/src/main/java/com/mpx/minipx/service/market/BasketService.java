@@ -45,10 +45,10 @@ public class BasketService {
      * @생성일: 2025. 12. 8.
      * @설명: 장바구니 등록
      */
-    public Map<String, Object> insertBasket(Map<String, Object> inData) {
+    public Map<String, Object> upsertBasket(Map<String, Object> inData) {
         Map<String, Object> result = new HashMap<>();
 
-        int affected = sqlSession.insert("com.mpx.minipx.mapper.BasketMapper.insertBasket", inData);
+        int affected = sqlSession.insert("com.mpx.minipx.mapper.BasketMapper.upsertBasket", inData);
         result.put(Constant.OUT_DATA, affected);
         result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
         return result;

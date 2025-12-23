@@ -63,8 +63,8 @@ public class BasketController {
      * @생성일: 2025. 12. 8.
      * @설명: 장바구니 등록
      */
-    @PostMapping("/insertBasket")
-    public ResponseEntity<?> insertBasket(@RequestBody Map<String, Object> inData,
+    @PostMapping("/upsertBasket")
+    public ResponseEntity<?> upsertBasket(@RequestBody Map<String, Object> inData,
                                             HttpServletRequest request,
                                             HttpServletResponse response) throws Exception {
         Map<String, Object> result = new HashMap<>();
@@ -80,7 +80,7 @@ public class BasketController {
         inData.put("userId", (String) claims.get("userId"));
         inData.put("userSeq", (String) claims.get("userSeq"));
         
-        result = basketService.insertBasket(inData);
+        result = basketService.upsertBasket(inData);
         return ResponseEntity.ok(result);
     }    
     

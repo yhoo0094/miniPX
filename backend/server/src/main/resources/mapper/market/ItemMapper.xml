@@ -52,37 +52,6 @@
 		 </choose>
 	</select>	
 	
-	<!-- 상품상세 조회 -->
-	<select id="getItemDetail" parameterType="map" resultType="camelCaseMap">
-		SELECT T1.ITEM_SEQ                         /*상품일련번호*/
-			 , T1.ITEM_NM                          /*상품명*/
-			 , T1.PRICE                            /*가격*/
-			 , T1.UNIT                             /*판매단위*/
-			 , T1.PRICE * T1.UNIT AS UNIT_PRICE    /*단위가격*/
-			 , T1.RMRK                             /*비고*/
-			 , T1.IMG                              /*이미지*/
-			 , T1.ITEM_TYPE_CODE                   /*상품 분류코드*/
-			 , T1.ITEM_DTL_TYPE_CODE               /*상품 상세 분류코드*/
-			 , T1.SOLD_OUT_YN                      /*품절여부*/
-			 , T1.USE_YN                           /*사용여부*/
-			 , T1.FST_REG_SEQ                      /*최초등록자일련번호*/
-			 , ROUND(IFNULL(O.SALE_CNT, 0) / T1.UNIT)  AS SALE_CNT   /*판매량*/
-			 , T1.FST_REG_DTTI                     /*최초등록일시*/
-			 , T1.LST_UPD_SEQ                      /*최종수정자일련번호*/
-			 , T1.LST_UPD_DTTI                     /*최종수정일시*/
-		  FROM tb_item T1					       /*테이블_상품 정보 관리*/
-		  LEFT JOIN (
-			      SELECT ITEM_SEQ
-			           , SUM(CNT) AS SALE_CNT
-			        FROM tb_order
-			       WHERE ORDER_STATUS_CODE = '11'
-			       GROUP BY ITEM_SEQ) O
-		    ON T1.ITEM_SEQ = O.ITEM_SEQ		  
-		 WHERE T1.ITEM_SEQ = #{itemSeq} 
-		 LIMIT 1
-	</select>	
-	
-	
 	<!-- 상품 이미지 조회 -->
 	<select id="getItemImage" parameterType="long" resultType="string">
 		SELECT T1.IMG                       /*이미지*/

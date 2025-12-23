@@ -1,6 +1,7 @@
 export interface BasketType {
   itemSeq: number;
   itemNm: string;
+  img: string;
   price: number;
   unitPrice: number;
   cnt: number;

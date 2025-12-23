@@ -26,14 +26,11 @@
         <input type="date" v-model="searchForm.startDate" class="search-input date" />
         <span class="search-tilde">~</span>
         <input type="date" v-model="searchForm.endDate" class="search-input date" />
-
         <div>
           <BaseDropdown label="주문상태" v-model="searchForm.orderStatusCode" :options="orderStatusCodes" @change="searchOrders"
             :showPlaceholder="true" placeholderLabel="전체" />
         </div>
-
         <BaseInput height="2.125rem" v-model="searchForm.itemNm" class="search-text" placeholder="상품명 입력" @keydown.enter.prevent="searchOrders" />
-
         <BaseButton width="5rem" height="2.125rem" @click="searchOrders" type="button">검색</BaseButton>
       </div>
     </section>
@@ -42,7 +39,7 @@
     <section class="order-list">
       <article class="order-card" v-for="order in orders" :key="order.orderSeq">
         <!-- 이미지 영역 -->
-        <div class="order-image-box">
+        <div class="order-image-box" @click="clickItemCard(order.orderSeq, order.orderDvcd)">
           <img v-if="order.imgFile" :src="order.imgFile" alt="상품 이미지" class="order-image" />
           <span v-else class="order-no-image">이미지</span>
         </div>
@@ -101,13 +98,13 @@ import { ref, onMounted, computed } from 'vue';
 import api from '@/plugins/axios';
 import type { ApiResponse } from '@/types/api/response';
 import Constant from '@/constants/constant';
-
 import BaseInput from '@/components/common/BaseInput.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseToast from '@/components/common/BaseToast.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
 import { useUiStore } from '@/stores/uiStore';
 import { getCodeList } from '@/api/code';
+import router from '@/router';
 
 const uiStore = useUiStore();
 const toastRef = ref();
@@ -115,6 +112,7 @@ const unpaidAmount = ref<number>(0);
 
 /** 주문 1건 정보 */
 interface Order {
+  orderDvcd: string;
   orderSeq: number;
   itemSeq: number;
   itemNm: string;
@@ -181,9 +179,11 @@ const searchOrders = async () => {
       const orderStatusNm = row.orderStatusNm ?? row.orderStatusName ?? '';
 
       return {
+        orderDvcd: row.orderDvcd,
         orderSeq: row.orderSeq,
         itemSeq: row.itemSeq,
         itemNm: row.itemNm,
+        img: row.img,
         price: row.price,
         cnt: row.cnt ?? 1,
         orderDtti: row.orderDtti, // 'YYYY-MM-DD' 로 내려온다고 가정
@@ -191,7 +191,7 @@ const searchOrders = async () => {
         orderStatusCodeNm: row.orderStatusCodeNm,
         orderStatusNm,
         imgFile:
-          row.orderDvcd == '01'? `/api/item/getItemImage?itemSeq=${row.itemSeq}` : `/api/itemNew/getItemNewImage?orderSeq=${row.orderSeq}`,
+          row.orderDvcd == '01'? `/api/item/getItemImage?img=${row.img}` : `/api/itemNew/getItemNewImage?img=${row.img}`,
       } as Order;
     });
 
@@ -257,6 +257,15 @@ const paymentCompleted = async (order: Order) => {
   } finally {
     uiStore.hideLoading();
   }
+};
+
+//상품 상세보기
+const clickItemCard = (orderSeq: number, orderDvcd: string) => {
+  let path = (orderDvcd === '01') ? '/market/itemDetail' : '/market/itemNew';
+  router.push({
+    path: path,
+    query: { orderSeq }
+  });
 };
 
 onMounted(async () => {
@@ -384,12 +393,6 @@ onMounted(async () => {
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.order-card:hover {
-  border-color: #cbd5e1;
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.12);
-}
-
 /* 이미지 영역 */
 .order-image-box {
   width: 160px;
@@ -403,12 +406,18 @@ onMounted(async () => {
   justify-content: center;
   overflow: hidden;
   box-sizing: border-box;
+  cursor: pointer;
 }
 
 .order-image {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+}
+
+.order-image:hover {
+  transform: scale(1.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .order-no-image {

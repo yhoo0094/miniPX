@@ -30,20 +30,14 @@ public class OpenAIService {
 	protected static final Log log = LogFactory.getLog(BaseController.class);	
 
     private final OpenAIClient openAIClient;
-    private final ProductQueryService productQueryService;
     private final QdrantService qdrantService;
-    
-    
-    
     
     @Autowired
     private SqlSessionTemplate sqlSession;      
 
     public OpenAIService(OpenAIClient openAIClient,
-                         ProductQueryService productQueryService,
                          QdrantService qdrantService) {
         this.openAIClient = openAIClient;
-        this.productQueryService = productQueryService;
         this.qdrantService = qdrantService;
     }
 
@@ -70,23 +64,16 @@ public class OpenAIService {
         - 툴을 호출하면 서버가 결과(JSON)를 돌려준다.
         - 필요한 경우 툴을 여러 번 호출해도 된다(여러 번 왕복 가능).
         - 툴 결과를 바탕으로 사람이 이해하기 쉬운 한국어로 요약/정리해서 답변한다.
-        - 질문이 애매해서 파라미터가 부족하면, 사용자에게 추가 질문을 해도 된다.
-        
-        규칙:
-        - 가격에 대한 질문은 단위가격(가격 * 판매단위)를 기준으로 답변한다.
-        - 모든 상품은 판매단위에 맞춰서 판매된다.
         
 		[검색/툴 호출 절차 - 매우 중요]
 		1) 사용자의 질문에서 핵심 키워드(예: 향/맛/성분/효능/용도/피부타입/원산지/무알콜/저당 등)를 추출한다.
 		2) 1차 조회: AiGetItemList를 호출해 "상품명/분류" 기반으로 빠르게 후보를 찾는다.
-		3) 2차(필수) 보강 조회: 아래 조건 중 하나라도 만족하면, 답변 전에 반드시 AiGetDetailItemList(userQuery=사용자 원문 질문)을 추가 호출한다.
-		   - AiGetItemList 결과가 0건이거나 너무 적어서(예: 0~2개) 단정하기 어려운 경우
-		   - 사용자 질문이 "향/성분/기능/효과/특징/사용법/주의사항" 등 상품명만으로 판별하기 어려운 속성을 포함하는 경우
-		   - AiGetItemList 결과가 있어도, 그 결과만으로 사용자 조건(예: 체리향)을 충족한다고 확신할 수 없는 경우
+		3) 2차 조회(필수): AiGetDetailItemList(userQuery=사용자 원문 질문)을 호출하여 상품상세정보를 기반으로 후보를 찾는다.
 		4) 최종 답변 규칙:
 		   - "없습니다/재고가 없습니다/등록되지 않았습니다" 같은 결론은
 		     AiGetItemList + AiGetDetailItemList까지 확인한 뒤에만 말한다.
-		   - 두 툴 결과가 충돌하면, 더 자세한 정보를 가진 AiGetDetailItemList 결과를 우선한다.        
+		   - 두 툴 결과가 충돌하면, 더 자세한 정보를 가진 AiGetDetailItemList 결과를 우선한다.
+		   - 가격에 대한 질문은 가격(낱개가격 * 판매단위)를 기준으로 답변한다.        
         
         [툴 카탈로그]
         1) AiGetItemList

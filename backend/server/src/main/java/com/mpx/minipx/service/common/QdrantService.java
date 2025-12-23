@@ -192,12 +192,44 @@ public class QdrantService {
     }
     
     /**
-     * @메소드명: fullLoad
+     * @메소드명: qdrantUpsertItem
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 20.
+     * @설명: Qdrant 상품정보 저장(임베딩)
+     */
+    public Map<String, Object> qdrantUpsertItem(Map<String, Object> inData) {
+        Map<String, Object> result = new HashMap<>();
+        Map<String, Object> item = sqlSession.selectOne("com.mpx.minipx.mapper.QdrantMapper.qdrantSelectItem", inData);
+
+        String text = buildEmbeddingText(item);
+        float[] vector = embed(text);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("itemSeq", item.get("itemSeq"));
+        payload.put("item_type_code_nm", item.get("itemTypeCodeNm"));
+        payload.put("item_dtl_type_code_nm", item.get("itemDtlTypeCodeNm"));
+        payload.put("text", text);
+
+        Map<String, Object> point = new LinkedHashMap<>();
+        point.put("id", item.get("itemSeq"));
+        point.put("vector", vector);
+        point.put("payload", payload);
+
+        upsertPoints(List.of(point));
+
+        result.put("success", true);
+        return result;
+    }    
+    
+    /**
+     * @메소드명: upsertAllItem
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 17.
      * @설명: 모든 상품 정보를 Qdrant에 저장
      */    
     public Map<String, Object> upsertAllItem(Map<String, Object> inData) {
+    	Map<String, Object> result = new HashMap<>();
+    	
     	//기존 컬렉션 제거
     	try {
 		  webClient.delete()
@@ -225,11 +257,9 @@ public class QdrantService {
 		//인덱스 생성
 		createKeywordIndex("item_type_code_nm");
 		createKeywordIndex("item_dtl_type_code_nm");
-
-    	Map<String, Object> result = new HashMap<>();
     	
     	//상품 조회
-        List<Map<String, Object>> rows = sqlSession.selectList("com.mpx.minipx.mapper.QdrantMapper.selectAllForEmbedding");
+        List<Map<String, Object>> rows = sqlSession.selectList("com.mpx.minipx.mapper.QdrantMapper.qdrantSelectItem");
 
         //Qdrant에 데이터 적재
         final int batchSize = 10;
@@ -247,13 +277,13 @@ public class QdrantService {
             payload.put("text", text);
 
             Map<String, Object> point = new LinkedHashMap<>();
-            point.put("id", p.get("itemSeq"));      // Qdrant point id = item_id로 통일 (단순/좋음)
-            point.put("vector", vec);         // float[]도 JSON으로 잘 나감(Jackson)
+            point.put("id", p.get("itemSeq"));
+            point.put("vector", vec);
             point.put("payload", payload);
 
             buffer.add(point);
             if (buffer.size() >= batchSize || i == rows.size() - 1) {
-                upsertPoints(buffer);
+            	upsertPoints(buffer);
                 buffer.clear();
                 log.info("저장 중(" + (i + 1) + "/" + rows.size() + ")...");
             }
@@ -265,6 +295,32 @@ public class QdrantService {
         result.put("msg", rows.size() + "건 저장하였습니다.");
     	return result;        
     }    
+    
+    /**
+     * @메소드명: qdrantDeleteItem
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 22.
+     * @설명: Qdrant 상품정보 삭제
+     */
+    public void qdrantDeleteItem(Object itemSeq) {
+        try {
+            Map<String, Object> body = Map.of(
+                "points", List.of(Long.valueOf(String.valueOf(itemSeq)))
+            );
+
+            webClient.post()
+                .uri("/collections/{c}/points/delete?wait=true", collection)
+                .header(HttpHeaders.CONTENT_TYPE, "application/json")
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(body)
+                .retrieve()
+                .toBodilessEntity()
+                .block();
+
+        } catch (Exception e) {
+            throw new RuntimeException("Qdrant delete failed", e);
+        }
+    }
     
     /**
      * @메소드명: upsertPoints
@@ -374,55 +430,6 @@ public class QdrantService {
             vec[i] = emb.get(i).floatValue();
         }
         return vec;
-    }    
-    
-    /**
-     * @메소드명: runIncremental
-     * @작성자: KimSangMin
-     * @생성일: 2025. 12. 18.
-     * @설명: 변경된 상품 정보를 Qdrant에 저장
-     */
-    public void runIncremental() {
-        List<Map<String, Object>> rows =
-            sqlSession.selectList("com.mpx.minipx.mapper.QdrantMapper.selectChangedForEmbedding");
-
-        final int batchSize = 50;
-        List<Map<String, Object>> buffer = new ArrayList<>(batchSize);
-
-        for (int i = 0; i < rows.size(); i++) {
-            Map<String, Object> p = rows.get(i);
-
-            String text = buildEmbeddingText(p);
-            float[] vec = embed(text);
-
-            Map<String, Object> payload = new LinkedHashMap<>();
-            payload.put("item_id", p.get("itemSeq"));                 // 통일 추천
-            payload.put("item_type_code", p.get("itemTypeCode"));
-            payload.put("item_dtl_type_code", p.get("itemDtlTypeCode"));
-            payload.put("text", text);
-
-            Map<String, Object> point = new LinkedHashMap<>();
-            point.put("id", p.get("itemSeq"));
-            point.put("vector", vec);
-            point.put("payload", payload);
-
-            buffer.add(point);
-
-            // 캐시 테이블 upsert (임베딩 성공 후)
-            Map<String, Object> meta = new LinkedHashMap<>();
-            meta.put("itemSeq", p.get("itemSeq"));
-            meta.put("textHash", p.get("newHash"));
-            meta.put("embeddingModel", "text-embedding-3-small");
-            meta.put("vectorSize", 1536);
-            sqlSession.insert("com.mpx.minipx.mapper.QdrantMapper.upsertEmbeddingMeta", meta);
-
-            if (buffer.size() >= batchSize || i == rows.size() - 1) {
-//                qdrantUpsertClient.upsertPoints(buffer);
-                buffer.clear();
-            }
-            
-            System.out.println(rows.size() + "회 증분 실행");
-        }
     }    
 }
     

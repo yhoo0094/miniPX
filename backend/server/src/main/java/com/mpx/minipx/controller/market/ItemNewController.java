@@ -45,12 +45,24 @@ public class ItemNewController {
      * @설명: 신규상품주문 조회
      */
     @PostMapping("/getNewOrder")
-    public Map<String, Object> getNewOrder(@RequestBody Map<String, Object> inData,
+    public ResponseEntity<?> getNewOrder(@RequestBody Map<String, Object> inData,
                                            HttpServletRequest request,
                                            HttpServletResponse response) throws Exception {
+    	
+        // ---------- 사용자 정보 추출 ----------
+        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        Claims claims;
+        try {
+            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid refresh token");
+        }
+        inData.put("userId", (String) claims.get("userId"));
+        inData.put("userSeq", (String) claims.get("userSeq"));    	
+    	
         Map<String, Object> result = new HashMap<>();
         result = itemNewService.getNewOrder(inData);
-        return result;
+        return ResponseEntity.ok(result);
     }    
 
     /**
@@ -138,5 +150,4 @@ public class ItemNewController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }    
-    
 }

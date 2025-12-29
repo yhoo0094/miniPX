@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia';
 import api from '@/plugins/axios';
 import router from '@/router';
-import type { UserType } from '@/types/userType';
+import type { UserType } from '@/types/user/user.base.type';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -22,8 +22,6 @@ export const useUserStore = defineStore('user', {
 
     // 로그아웃
     async logout() {
-      if (!confirm('로그아웃 하시겠습니까?')) return;
-
       this.user = null;
       this.authMap = {}; 
 

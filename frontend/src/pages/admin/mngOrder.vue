@@ -22,16 +22,18 @@
     <!-- 검색 조건 영역 -->
     <section class="order-search">
       <div class="search-row">
-        <label class="search-label">주문일</label>
-        <input type="date" v-model="searchForm.startDate" class="search-input date" />
-        <span class="search-tilde">~</span>
-        <input type="date" v-model="searchForm.endDate" class="search-input date" />
-        <div>
-          <BaseDropdown label="주문상태" v-model="searchForm.orderStatusCode" :options="orderStatusCodesSch" @change="searchOrders"
-            :showPlaceholder="true" placeholderLabel="전체" />
+        <div class="search-group">
+          <label class="search-label">주문일</label>
+          <input type="date" v-model="searchForm.startDate" class="search-input date" />
+          <span class="search-tilde">~</span>
+          <input type="date" v-model="searchForm.endDate" class="search-input date" />
+            <BaseDropdown label="주문상태" v-model="searchForm.orderStatusCode" :options="orderStatusCodesSch" @change="searchOrders"
+              :showPlaceholder="true" placeholderLabel="전체" />
         </div>
-        <BaseInput height="2.125rem" v-model="searchForm.itemNm" class="search-text" placeholder="주문자/상품명 입력" @keydown.enter.prevent="searchOrders" />
-        <BaseButton width="5rem" height="2.125rem" @click="searchOrders" type="button">검색</BaseButton>
+        <div class="search-group flex">
+          <BaseInput height="2.125rem" v-model="searchForm.itemNm" class="search-text" placeholder="주문자/상품명 입력" @keydown.enter.prevent="searchOrders" />
+          <BaseButton width="5rem" height="2.125rem" @click="searchOrders" type="button">검색</BaseButton>
+        </div>
       </div>
     </section>
 
@@ -52,14 +54,13 @@
           </div>
           <div class="field-row">
             <span class="field-label">가격</span>
-            <span class="field-cont">
-              {{ order.price.toLocaleString() }} 원
-            </span>
+            <BaseInput v-if="order.orderStatusCode == '01'" type="number" align="right" width="6rem" height="2.125rem" v-model="order.price"/>
+            <span v-else class="field-cont">{{ order.price.toLocaleString() }} 원</span>
           </div>
           <div class="field-row">
             <span class="field-label">개수</span>
-            <BaseInput v-if="order.orderStatusCode == '01'" type="number" align="right" width="6rem" height="2.125rem" v-model="order.cnt" class="search-text" />
-            <span v-if="order.orderStatusCode != '01'" class="field-cont">{{ order.cnt }}</span>
+            <BaseInput v-if="order.orderStatusCode == '01'" type="number" align="right" width="6rem" height="2.125rem" v-model="order.cnt"/>
+            <span v-else class="field-cont">{{ order.cnt }}</span>
           </div>
           <div class="field-row">
             <span class="field-label">주문일시</span>
@@ -73,26 +74,25 @@
             <span class="field-label">주문자</span>
             <span class="field-cont">{{ order.userNm }}</span>
           </div>          
-        </div>
-
-        <!-- 버튼 영역(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소) -->
-        <div class="order-actions">
-          <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
-            @click="updateOrderStatus(order, '02')" variant="primary" type="button">배송중
-          </BaseButton>
-          <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
-            @click="updateOrderStatus(order, '12')" variant="danger" type="button">품절
-          </BaseButton>   
-          <BaseButton v-if="order.orderStatusCode == '02'" class="action-button"
-            @click="updateOrderStatus(order, '03')" type="button">미결제
-          </BaseButton>           
-          <BaseButton v-if="order.orderStatusCode == '02'" class="action-button"
-            @click="updateOrderStatus(order, '01')" variant="danger" type="button">구매요청
-          </BaseButton>     
-          <BaseDropdown v-if="!['01', '02'].includes(order.orderStatusCode)" :showPlaceholder="false"
-            v-model="order.orderStatusCode" :options="orderStatusCodes"
-            @change="updateOrderStatus(order, order.orderStatusCode)"
-            />
+          <!-- 버튼 영역(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소) -->
+          <div class="order-actions">
+            <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
+              @click="updateOrderStatus(order, '02')" variant="primary" type="button">배송중
+            </BaseButton>
+            <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
+              @click="updateOrderStatus(order, '12')" variant="danger" type="button">품절
+            </BaseButton>   
+            <BaseButton v-if="order.orderStatusCode == '02'" class="action-button"
+              @click="updateOrderStatus(order, '03')" type="button">미결제
+            </BaseButton>           
+            <BaseButton v-if="order.orderStatusCode == '02'" class="action-button"
+              @click="updateOrderStatus(order, '01')" variant="danger" type="button">구매요청
+            </BaseButton>     
+            <BaseDropdown v-if="!['01', '02'].includes(order.orderStatusCode)" :showPlaceholder="false"
+              v-model="order.orderStatusCode" :options="orderStatusCodes"
+              @change="updateOrderStatus(order, order.orderStatusCode)"
+              />
+          </div>
         </div>
       </article>
 
@@ -108,7 +108,6 @@ import { ref, onMounted, computed } from 'vue';
 import api from '@/plugins/axios';
 import type { ApiResponse } from '@/types/api/response';
 import Constant from '@/constants/constant';
-
 import BaseInput from '@/components/common/BaseInput.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseToast from '@/components/common/BaseToast.vue';
@@ -203,8 +202,8 @@ const searchOrders = async () => {
         orderStatusCodeNm: row.orderStatusCodeNm,
         orderStatusNm,
         imgFile:
-          row.orderDvcd == '01'? `/api/item/getItemImage?img=${row.img}` : `/api/itemNew/getItemNewImage?img=${row.img}`
-          ,
+          row.orderDvcd == '01'? `/api/item/getItemImage?img=${row.img}` : `/api/itemNew/getItemNewImage?img=${row.img}`,
+        orderDvcd: row.orderDvcd  
       } as Order;
     });
   } catch (e) {
@@ -239,6 +238,8 @@ const updateOrderStatus = async (order: Order, orderStatusCode: string) => {
       orderSeq: order.orderSeq,
       orderStatusCode: orderStatusCode,
       cnt: order.cnt,
+      orderDvcd: order.orderDvcd,
+      price: order.price,
     };
 
     const response = await api.post('/mngOrder/updateOrderStatus', payload);
@@ -376,6 +377,30 @@ const unpaidAmount = computed(() => {
   color: #6b7280;
 }
 
+/* 검색 입력 + 버튼 그룹 */
+.search-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.flex{
+  flex: 1;
+}
+
+/* 검색 input은 줄어들 수 있도록 */
+.search-itemNm {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* 버튼은 줄어들지 않도록 */
+.search-group > button {
+  flex-shrink: 0;
+}
+
 /* =======================
    주문 카드 리스트
    ======================= */
@@ -458,7 +483,7 @@ const unpaidAmount = computed(() => {
 /* 버튼 영역 */
 .order-actions {
   display: flex;
-  align-items: flex-end;
+  justify-content: end;
   gap: 0.3rem;
 }
 

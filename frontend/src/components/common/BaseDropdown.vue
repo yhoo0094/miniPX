@@ -179,7 +179,6 @@ const select = (option: Option) => {
 /* 정렬 아이콘(⇅)은 아이콘처럼 + 회전 금지 */
 .dropdown-caret.is-sort {
   width: 1.5rem;
-  height: 1.5rem;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;

@@ -6,8 +6,6 @@ import { useUserStore } from '@/stores/userStore';
 // 라우트 타입 명시
 const routes: RouteRecordRaw[] = [
   { path: '/', 
-    // redirect: '/main', 
-    // component: () => import('@/pages/common/main.vue'),
     component: () => import('@/pages/market/itemList.vue'),
   },
   {
@@ -20,8 +18,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/layouts/DefaultLayout.vue'),
     children: [
       {
-        path: '/main',
-        // component: () => import('@/pages/common/main.vue'),
+        path: 'main',
         component: () => import('@/pages/market/itemList.vue'),
         meta: { requiresAuth: true },
       },
@@ -61,12 +58,9 @@ router.beforeEach(async (to, from, next) => {
   if (to.meta.requiresAuth) {
     const isAuthenticated = await checkAuth(to.path, userStore);
     if (!isAuthenticated) {
-      if(to.path !== '/'){
-        alert('로그인 정보가 없습니다. 다시 로그인해주세요.');
-      }
       return next('/login');
     }
-  }
+  }  
 
   // 현재 경로 권한 세팅
   userStore.setCurrentAuth(to.path);

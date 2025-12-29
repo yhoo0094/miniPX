@@ -41,7 +41,7 @@ public class TbToken {
 
     @Column(name = "FST_REG_SEQ")
     @JsonProperty("fstRegSeq")
-    private String fstRegSeq;
+    private Long fstRegSeq;
 
     @Column(name = "FST_REG_DTTI", insertable = false, updatable = false)
     @JsonProperty("fstRegDtti")
@@ -49,7 +49,7 @@ public class TbToken {
 
     @Column(name = "LST_UPD_SEQ")
     @JsonProperty("lstUpdSeq")
-    private String lstUpdSeq;
+    private Long lstUpdSeq;
 
     @Column(name = "LST_UPD_DTTI")
     @JsonProperty("lstUpdDtti")

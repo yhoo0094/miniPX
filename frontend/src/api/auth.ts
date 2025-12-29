@@ -1,5 +1,5 @@
 import api from '@/plugins/axios'
-import type { PiniaUserStoreType } from '@/types/userStoreType';
+import type { PiniaUserStoreType } from '@/types/user/userStoreType';
 
 export const checkAuth = async (path: string, userStore: PiniaUserStoreType): Promise<boolean> => {
   try {

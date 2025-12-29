@@ -21,7 +21,7 @@ public class AuthService {
 	
 	private final TbTokenRepository tbTokenRepository;
 	
-    public void saveRefreshToken(String userId, String userSeq, String refreshTokenValue, long validityInMillis, String deviceInfo) {
+    public void saveRefreshToken(String userId, Long userSeq, String refreshTokenValue, long validityInMillis, String deviceInfo) {
         LocalDateTime now = LocalDateTime.now();
         LocalDateTime expiry = now.plusSeconds(validityInMillis / 1000); // 밀리초 → 초
 

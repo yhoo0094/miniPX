@@ -7,7 +7,8 @@
       @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement)?.value)"
       :placeholder="placeholder"
       :disabled="disabled"
-      :readonly="readonly"      
+      :readonly="readonly"    
+      :maxlength="props.maxlength"  
       :style="styleProp"
     ></textarea>
   </div>
@@ -25,9 +26,12 @@ interface Props {
   readonly?: boolean;  
   width?: string | number;
   height?: string | number;
+  maxlength?: number;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+  maxlength: 100,
+});
 
 const emit = defineEmits<{
   (e: 'update:modelValue', value: string): void;

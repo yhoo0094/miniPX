@@ -1,5 +1,6 @@
 package com.mpx.minipx.service.common;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,15 +15,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mpx.minipx.controller.common.BaseController;
+import com.mpx.minipx.dto.user.UserInfoDto;
+import com.mpx.minipx.entity.TbLogLogin;
 import com.mpx.minipx.entity.TbUser;
 import com.mpx.minipx.framework.util.Constant;
 import com.mpx.minipx.framework.util.JwtUtil;
 import com.mpx.minipx.repository.RedisPermissionRepository;
+import com.mpx.minipx.repository.TbLogLoginRepository;
 import com.mpx.minipx.repository.TbTokenRepository;
 //import com.mpx.minipx.framework.aop.ControllerAdvice;
 import com.mpx.minipx.repository.TbUserRepository;
 
 import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -30,7 +35,6 @@ import lombok.RequiredArgsConstructor;
 public class UserService {
 	
 	protected static final Log log = LogFactory.getLog(BaseController.class);
-//	protected static final Logger logger = LogManager.getLogger(ControllerAdvice.class);
 	
 	private final AuthService authService;
 	
@@ -39,6 +43,9 @@ public class UserService {
     
     @Autowired
     private TbUserRepository tbUserRepository;
+    
+    @Autowired
+    private TbLogLoginRepository tbLogLoginRepository;
     
     @Autowired
     private TbTokenRepository tbTokenRepository;        
@@ -51,19 +58,6 @@ public class UserService {
     
     @Value("${jwt.secret}")
     private String jwtSecret;  // JWT 비밀 키 (application.properties에서 가져오기)    
-
-    /**
-     * @메소드명: getUserList
-     * @작성자: KimSangMin
-     * @생성일: 2025. 6. 19.
-     * @설명:
-     */
-    public List<TbUser> getUserList() {
-    	List<TbUser> result = tbUserRepository.findAll(); 
-    	
-    	return result;
-//    	return sqlSession.selectList("com.mpx.minipx.mapper.UserMapper.getUserList");
-    }
     
     /**
      * @메소드명: logout
@@ -72,8 +66,20 @@ public class UserService {
      * @설명: 로그아웃
      */
     @Transactional
-    public Map<String, Object> logout(String userId) {
+    public Map<String, Object> logout(String userId, HttpServletRequest request) {
     	Map<String, Object> result = new HashMap<>();
+
+        //ip구하기
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isBlank()) ip = request.getRemoteAddr();
+        else ip = ip.split(",")[0].trim();    
+        
+        // 사용자 조회
+        TbUser user = tbUserRepository.findByUserId(userId);         
+    	
+        //로그인 정보 저장
+        saveLoginLog(user, userId, ip, "02");
+        
     	tbTokenRepository.deleteByUserId(userId);
     	return result;
     }    
@@ -84,32 +90,58 @@ public class UserService {
      * @생성일: 2025. 6. 19.
      * @설명: 로그인
      */
-    public Map<String, Object> login(Map<String, Object> inData) {
+    public Map<String, Object> login(Map<String, Object> inData, HttpServletRequest request) {
     	Map<String, Object> result = new HashMap<>();
     	
         String userId = (String) inData.get("userId");
         String userPw = (String) inData.get("userPw");
         
+        //ip구하기
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isBlank()) ip = request.getRemoteAddr();
+        else ip = ip.split(",")[0].trim();        
+        
         // 사용자 조회
         TbUser user = tbUserRepository.findByUserId(userId);   
-        
         if (user == null) {
-            result.put("success", false);
-            result.put("message", "존재하지 않는 사용자입니다.");
+        	saveLoginLog(null, userId, ip, "03");
+            result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+            result.put(Constant.OUT_RESULT_MSG, "존재하지 않는 사용자입니다.");
             return result;
         }
+        
+        //오입력 횟수 초과
+        if (5 <= user.getPwErrCnt()) {
+        	saveLoginLog(user, userId, ip, "05");
+        	result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+        	result.put(Constant.OUT_RESULT_MSG, "비밀번호 오입력 횟수를 초과하였습니다. 관리자에게 문의하세요.");
+        	return result;
+        }   
         
         // BCrypt로 비밀번호 비교
         if (!passwordEncoder.matches(userPw, user.getUserPw())) {
-            result.put("success", false);
-            result.put("message", "비밀번호가 일치하지 않습니다.");  
+        	saveLoginLog(user, userId, ip, "04");
+            result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+            result.put(Constant.OUT_RESULT_MSG, "비밀번호가 일치하지 않습니다.");  
+            
+            user.increasePwErrCnt();
+            tbUserRepository.save(user);
             return result;
         }
         
+        //로그인 정보 저장
+        saveLoginLog(user, userId, ip, "01");
+        
         //사용자 정보 저장
-        Map<String, Object> userInfo = new HashMap<String, Object>();
-        userInfo.put("userId", user.getUserId());
-        userInfo.put("userNm", user.getUserNm());
+        UserInfoDto userInfo = new UserInfoDto();
+        userInfo.setUserSeq(user.getUserSeq());
+        userInfo.setUserId(user.getUserId());
+        userInfo.setUserNm(user.getUserNm());
+        userInfo.setAiOpenYn(user.getAiOpenYn());
+        userInfo.setCredit(user.getCredit());
+        userInfo.setUseYn(user.getUseYn());
+        userInfo.setRoleSeq(user.getRoleSeq());
+        userInfo.setPwInitYn(user.getPwInitYn());
         result.put("userInfo", userInfo);
 
         // accessToken 생성
@@ -118,7 +150,7 @@ public class UserService {
         accessCookie.setHttpOnly(true);
 //        accessCookie.setSecure(true);		//HTTPS에서만 전송(주석 풀어야함)
         accessCookie.setSecure(false);		//개발용도
-        accessCookie.setMaxAge((int)Constant.REFRESH_TOKEN_VALIDITY);
+        accessCookie.setMaxAge((int)Constant.ACCESS_TOKEN_VALIDITY);
         accessCookie.setPath("/");   
         result.put("accessToken", accessCookie);	//컨트롤러에서 response에 추가해야함
         
@@ -156,11 +188,75 @@ public class UserService {
             }
         }
     	
-        result.put("success", true);
-        result.put("message", "로그인 성공");
+        result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
+        result.put(Constant.OUT_RESULT_MSG, "로그인 성공");
     	
     	return result;
     }    
     
+    /**
+     * @메소드명: changePassword
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 23.
+     * @설명: 비밀번호 변경
+     */    
+    public Map<String, Object> changePassword(Map<String, Object> inData) {
+        Map<String, Object> result = new HashMap<>();
+        
+        // 사용자 조회
+        TbUser user = tbUserRepository.findByUserId((String)inData.get("userId"));   
+        if (user == null) {
+            result.put(Constant.RESULT, false);
+            result.put("message", "존재하지 않는 사용자입니다.");
+            return result;
+        }
+        
+        // BCrypt로 비밀번호 비교
+        String userPw = user.getUserPw();
+        if (!passwordEncoder.matches((String)inData.get("currentPassword"), userPw)) {
+            result.put(Constant.RESULT, false);
+            result.put("message", "비밀번호가 일치하지 않습니다.");  
+            return result;
+        }        
+
+        String encodedNewPassword = passwordEncoder.encode((String)inData.get("newPassword"));
+        
+        inData.put("encodedNewPassword", encodedNewPassword);
+        inData.put("userPw", userPw);
+        int affected = sqlSession.update("com.mpx.minipx.mapper.UserMapper.changePassword", inData);
+
+        if (affected > 0) {
+            result.put(Constant.OUT_DATA, affected);
+            result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
+        } else {
+            result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+        }
+        return result;
+    }       
+    
+    /**
+     * @메소드명: saveLoginLog
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 29.
+     * @설명: 로그인 로그 저장
+     */
+    private void saveLoginLog(TbUser user, String userId, String ip, String loginCode) {
+        TbLogLogin log = new TbLogLogin();
+        log.setLoginDtti(LocalDateTime.now());
+        log.setUserId(userId);
+        log.setIp(ip);
+        log.setLoginCode(loginCode);	//01: 로그인, 02: 로그아웃, 03: 존재하지 않는 아이디, 04: 비밀번호 오입력, 05: 비밀번호 오입력 횟수 초과 
+
+        // 사용자 존재 여부에 따라 저장값 세팅
+        if (user != null) {
+            try {
+                log.setUserSeq(Long.parseLong(String.valueOf(user.getUserSeq())));
+            } catch (Exception ignore) {
+                // userSeq가 숫자가 아니면 null로 두거나 별도 처리
+            }
+        } 
+
+        tbLogLoginRepository.save(log);
+    }
     
 }

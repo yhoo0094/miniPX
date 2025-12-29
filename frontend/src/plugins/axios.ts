@@ -14,30 +14,35 @@ const api: AxiosInstance = axios.create({
 });
 
 // ✅ 응답 인터셉터 (401 → 토큰 재발급)
+let isSessionExpiredHandled = false;
 api.interceptors.response.use(
   response => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as CustomAxiosRequestConfig;
 
     if (
-      error.response &&
-      error.response.status === 401 &&
+      error.response?.status === 401 &&
       !originalRequest._retry &&
       originalRequest.url !== '/auth/reissue'
     ) {
       originalRequest._retry = true;
 
       try {
-        console.log('토큰 재발급');
         const res = await api.post('/auth/reissue', {});
         if (res.status === 200) {
           return api(originalRequest);
         }
       } catch (e) {
-        const userStore = useUserStore();
-        userStore.logout();
-        alert('로그인 정보가 만료되었습니다. 다시 로그인해주세요.');
-        window.location.href = '/login';
+        if (!isSessionExpiredHandled) {
+          isSessionExpiredHandled = true;
+
+          const userStore = useUserStore();
+          userStore.logout();
+
+          alert('로그인 정보가 만료되었습니다. 다시 로그인해주세요.');
+          window.location.href = '/login';
+        }
+
         return Promise.reject(e);
       }
     }
@@ -45,5 +50,6 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
 
 export default api;

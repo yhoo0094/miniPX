@@ -22,16 +22,18 @@
     <!-- 검색 조건 영역 -->
     <section class="order-search">
       <div class="search-row">
-        <label class="search-label">주문일</label>
-        <input type="date" v-model="searchForm.startDate" class="search-input date" />
-        <span class="search-tilde">~</span>
-        <input type="date" v-model="searchForm.endDate" class="search-input date" />
-        <div>
+        <div class="search-group">
+          <label class="search-label">주문일</label>
+          <input type="date" v-model="searchForm.startDate" class="search-input date" />
+          <span class="search-tilde">~</span>
+          <input type="date" v-model="searchForm.endDate" class="search-input date" />
           <BaseDropdown label="주문상태" v-model="searchForm.orderStatusCode" :options="orderStatusCodes" @change="searchOrders"
             :showPlaceholder="true" placeholderLabel="전체" />
         </div>
-        <BaseInput height="2.125rem" v-model="searchForm.itemNm" class="search-text" placeholder="상품명 입력" @keydown.enter.prevent="searchOrders" />
-        <BaseButton width="5rem" height="2.125rem" @click="searchOrders" type="button">검색</BaseButton>
+        <div class="search-group flex">
+          <BaseInput height="2.125rem" v-model="searchForm.itemNm" class="search-text" placeholder="상품명 입력" @keydown.enter.prevent="searchOrders" />
+          <BaseButton width="5rem" height="2.125rem" @click="searchOrders" type="button">검색</BaseButton>
+        </div>
       </div>
     </section>
 
@@ -48,17 +50,17 @@
         <div class="order-main-info">
           <div class="field-row">
             <span class="field-label">상품명</span>
-            <span class="field-cont">{{ order.itemNm }}</span>
-          </div>
-          <div class="field-row">
-            <span class="field-label">개수</span>
-            <span class="field-cont">{{ order.cnt }}</span>
+            <span class="field-cont" :title="order.itemNm">{{ order.itemNm }}</span>
           </div>
           <div class="field-row">
             <span class="field-label">가격</span>
             <span class="field-cont">
               {{ (order.price * order.cnt).toLocaleString() }}원<span v-if="order.cnt > 1">(개당 {{ order.price.toLocaleString() }}원)</span>
             </span>
+          </div>
+          <div class="field-row">
+            <span class="field-label">개수</span>
+            <span class="field-cont">{{ order.cnt }}</span>
           </div>
           <div class="field-row">
             <span class="field-label">주문일시</span>
@@ -70,20 +72,25 @@
               {{ order.orderStatusCodeNm }}
             </span>
           </div>
+          <!-- 버튼 영역(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소) -->
+          <div class="order-actions">
+            <BaseButton v-if="order.orderStatusCode == '01' && order.orderDvcd == '02'" class="action-button"
+                @click="clickItemCard(order.orderSeq, order.orderDvcd)" type="button">
+              수정하기
+            </BaseButton>           
+            <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
+                @click="cancelOrder(order)" variant="danger" type="button">
+              주문취소
+            </BaseButton>     
+            <BaseButton v-if="order.orderStatusCode == '03'" class="action-button"
+                @click="paymentCompleted(order)" variant="primary" type="button"
+                title="송금을 완료한 후 눌러주세요.">
+              송금완료
+            </BaseButton>                 
+          </div>
         </div>
 
-        <!-- 버튼 영역(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소) -->
-        <div class="order-actions">
-          <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
-              @click="cancelOrder(order)" variant="danger" type="button">
-            주문취소
-          </BaseButton>     
-          <BaseButton v-if="order.orderStatusCode == '03'" class="action-button"
-              @click="paymentCompleted(order)" variant="primary" type="button"
-              title="송금을 완료한 후 눌러주세요.">
-            송금완료
-          </BaseButton>                 
-        </div>
+
       </article>
 
       <div v-if="orders.length === 0" class="order-empty">
@@ -94,7 +101,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted } from 'vue';
 import api from '@/plugins/axios';
 import type { ApiResponse } from '@/types/api/response';
 import Constant from '@/constants/constant';
@@ -213,7 +220,10 @@ const cancelOrder = async (order: Order) => {
 
   try {
     uiStore.showLoading('주문 취소 중입니다...');
-    const payload = {orderSeq: order.orderSeq};
+    const payload = {
+      orderSeq: order.orderSeq,
+      orderDvcd: order.orderDvcd,
+    };
     const response = await api.post('/order/cancelOrder', payload);
 
     if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
@@ -240,7 +250,10 @@ const paymentCompleted = async (order: Order) => {
 
   try {
     uiStore.showLoading('처리 중입니다...');
-    const payload = {orderSeq: order.orderSeq};
+    const payload = {
+      orderSeq: order.orderSeq,
+      orderDvcd: order.orderDvcd,
+    };
     const response = await api.post('/order/paymentCompleted', payload);
 
     if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
@@ -282,11 +295,11 @@ onMounted(async () => {
    전체 페이지 래퍼
    ======================= */
 .order-page-wrap {
-  padding: 20px 24px;
+  padding: 1.25rem 1.5rem;
   box-sizing: border-box;
   background: #f9fbff;
-  border-radius: 16px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 0.5rem 1.125rem rgba(15, 23, 42, 0.08);
 }
 
 /* =======================
@@ -298,9 +311,8 @@ onMounted(async () => {
   gap: 0.5rem;
   padding: 0.375rem 0.75rem;
   border-radius: 0.8rem;
-  background: #fff1f2;          /* 연한 레드 */
-  border: 2px solid #fecdd3;
-  /* box-shadow: 0 0.25rem 0.25rem rgba(220, 38, 38, 0.15); */
+  background: #fff1f2;
+  border: 0.125rem solid #fecdd3;
 }
 
 .unpaid-label {
@@ -319,19 +331,19 @@ onMounted(async () => {
    검색 영역
    ======================= */
 .order-search {
-  margin-bottom: 18px;
+  margin-bottom: 1.125rem;
 }
 
 .search-row {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 10px;
-  padding: 12px 16px;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
+  gap: 0.625rem;
+  padding: 0.75rem 1rem;
+  border-radius: 0.875rem;
+  border: 0.0625rem solid #e2e8f0;
   background-color: #ffffff;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 0.25rem 0.625rem rgba(15, 23, 42, 0.06);
 }
 
 .search-label {
@@ -340,14 +352,14 @@ onMounted(async () => {
   color: #475569;
 }
 
-.search-text{
+.search-text {
   flex: 1;
 }
 
 .search-input {
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  padding: 4px 8px;
+  border-radius: 0.5rem;
+  border: 0.0625rem solid #cbd5e1;
+  padding: 0.25rem 0.5rem;
   font-size: 0.9rem;
   background: #f8fafc;
   outline: none;
@@ -357,49 +369,62 @@ onMounted(async () => {
 .search-input:focus {
   border-color: #3b82f6;
   background: #ffffff;
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 0.0625rem rgba(59, 130, 246, 0.2);
 }
 
 .search-input.date {
-  width: 135px;
+  width: 8rem;
 }
 
 .search-tilde {
-  margin: 0 4px;
+  margin: 0 0.25rem;
   font-size: 0.9rem;
   color: #6b7280;
+}
+
+/* 검색 입력 + 버튼 그룹 */
+.search-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.flex{
+  flex: 1;
 }
 
 /* =======================
    주문 카드 리스트
    ======================= */
 .order-list {
-  margin-top: 4px;
+  margin-top: 0.25rem;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 0.75rem;
 }
 
 /* 개별 주문 카드 */
 .order-card {
   display: flex;
-  gap: 16px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
+  gap: 1rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.875rem;
+  border: 0.0625rem solid #e2e8f0;
   background-color: #ffffff;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 0.25rem 0.625rem rgba(15, 23, 42, 0.06);
   box-sizing: border-box;
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 /* 이미지 영역 */
 .order-image-box {
-  width: 160px;
-  min-width: 160px;
-  height: 160px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  width: 10rem;
+  min-width: 10rem;
+  height: 10rem;
+  border-radius: 0.75rem;
+  border: 0.0625rem solid #e2e8f0;
   background: #f8fafc;
   display: flex;
   align-items: center;
@@ -423,10 +448,10 @@ onMounted(async () => {
 .order-no-image {
   font-size: 0.85rem;
   color: #64748b;
-  padding: 6px 10px;
-  border-radius: 999px;
+  padding: 0.375rem 0.625rem;
+  border-radius: 62.4375rem;
   background: rgba(15, 23, 42, 0.04);
-  border: 1px dashed #cbd5e1;
+  border: 0.0625rem dashed #cbd5e1;
 }
 
 /* 상품 정보 영역 */
@@ -434,13 +459,15 @@ onMounted(async () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 .field-row {
   display: flex;
   align-items: center;
   gap: 0.8rem;
+  min-width: 0;
 }
 
 .field-label {
@@ -454,6 +481,11 @@ onMounted(async () => {
   font-size: 0.9rem;
   font-weight: 600;
   color: #0f172a;
+  white-space: nowrap;    /* 한 줄 */
+  overflow: hidden;       /* 넘침 숨김 */
+  text-overflow: ellipsis;/* ... 처리 */  
+  flex: 1; 
+  min-width: 0;
 }
 
 .red-text {
@@ -463,17 +495,19 @@ onMounted(async () => {
 /* 주문 취소 버튼 영역 */
 .order-actions {
   display: flex;
-  align-items: flex-end;
+  justify-content: end;
+  gap: 0.5rem;
 }
 
-.action-button{
+.action-button {
   width: 6rem;
   height: 2.125rem;
+  font-size: 0.9rem;
 }
 
 /* 비어 있을 때 */
 .order-empty {
-  padding: 24px 0;
+  padding: 1.5rem 0;
   text-align: center;
   font-size: 0.9rem;
   color: #9ca3af;
@@ -497,42 +531,10 @@ onMounted(async () => {
 .order-title-pill {
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 0.375rem 0.875rem;
   font-size: 1.3rem;
   font-weight: bold;
   letter-spacing: 0.02rem;
 }
-
-/* =======================
-   반응형
-   ======================= */
-@media (max-width: 900px) {
-  .order-page-wrap {
-    padding: 14px 12px;
-  }
-
-  .search-row {
-    align-items: flex-start;
-  }
-
-  .order-card {
-    flex-direction: column;
-  }
-
-  .order-image-box {
-    width: 100%;
-    max-width: 260px;
-    height: 200px;
-  }
-
-  .order-meta {
-    flex-direction: row;
-    justify-content: flex-start;
-    gap: 16px;
-  }
-
-  .order-actions {
-    justify-content: flex-end;
-  }
-}
 </style>
+

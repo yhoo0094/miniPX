@@ -14,7 +14,7 @@ export const useMenuStore = defineStore('menu', {
     clearMenuList() {
       this.menuList = [];
     },
-    restoreRoutes() {
+    async restoreRoutes() {
       //기존 등록된 메뉴 제거
       const existingRoutes = router.getRoutes();
       existingRoutes.forEach((route) => {

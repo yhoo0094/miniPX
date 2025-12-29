@@ -39,6 +39,7 @@
   .content-area {
     flex: 1;
     padding: 2rem 2rem 8rem 2rem;
+    width: 100%;
   }
   </style>
   

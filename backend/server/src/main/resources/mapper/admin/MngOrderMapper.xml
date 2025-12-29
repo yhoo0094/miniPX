@@ -44,7 +44,7 @@
 		   		 OR (SELECT USER_NM FROM tb_user WHERE USER_SEQ = T1.USER_SEQ) LIKE CONCAT('%', #{itemNm}, '%')
 		   	   )
 		 </if>	 
-		 <if test='startDate != null and startDate != "" and endDate != "" and endDate != ""'>
+		 <if test='startDate != null and startDate != "" and endDate != null and endDate != ""'>
 		   AND DATE_FORMAT(T1.ORDER_DTTI, '%Y%m%d') BETWEEN DATE_FORMAT(#{startDate}, '%Y%m%d') AND DATE_FORMAT(#{endDate}, '%Y%m%d') 
 		 </if>			 
 		 UNION ALL 
@@ -94,8 +94,20 @@
 	    UPDATE tb_order
 	       SET ORDER_STATUS_CODE    = #{orderStatusCode}
 			 , CNT 					= #{cnt}
-	         , LST_UPD_SEQ 			= #{userSeq}
+			 , PRICE				= #{price}
+	         , LST_UPD_SEQ 			= #{loginUserSeq}
 	         , LST_UPD_DTTI 		= NOW()
 	     WHERE ORDER_SEQ   			= #{orderSeq}
+	</update>		
+	
+	<!-- 주문 상태 변경 -->
+	<update id="updateNewOrderStatus" parameterType="map">
+	    UPDATE tb_new_order
+	       SET ORDER_STATUS_CODE    = #{orderStatusCode}
+			 , CNT 					= #{cnt}
+			 , PRICE				= #{price}
+	         , LST_UPD_SEQ 			= #{loginUserSeq}
+	         , LST_UPD_DTTI 		= NOW()
+	     WHERE NEW_ORDER_SEQ   		= #{orderSeq}
 	</update>		
 </mapper>

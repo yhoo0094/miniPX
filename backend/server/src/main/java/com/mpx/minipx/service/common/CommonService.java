@@ -29,7 +29,7 @@ public class CommonService {
     private String jwtSecret;  // JWT 비밀 키 (application.properties에서 가져오기)    
 
     /**
-     * @메소드명: getUserList
+     * @메소드명: getCodeList
      * @작성자: KimSangMin
      * @생성일: 2025. 7. 16.
      * @설명: 공통 코드 목록 조회

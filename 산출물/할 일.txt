@@ -1,69 +1,45 @@
-[상품]
-* [완]검색버튼 디자인 수정
-* [완]상품 상세 화면 필요
-* [완]상품 수정할 경우 임베딩 다시하도록 처리
+----------MPX 기능 구현----------
+getReqLogList 구현부터 진행하면 됨!!!!
 
-[신규상품주문]
-* [완]화면 구축
-* [완]테이블 설계
-* [완]수정 기능 구현
-* 본인 글만 볼 수 있도록 제한
+* 로그인 로그, 거래 로그 구현
+* 도메인 연결
+* 로그아웃 버튼 옆에 로그인 아이디 표시
+* log4jdbc 넣어서 SQL로그 찍기
 
-[관리자 주문관리]
-* [완]화면 구축(모바일 기준)
-* [완]주문상태 조회 필터
-- 전체
-- 주문(구매요청 + 배송중)
-- 배송(미결제 + 송금완료)
-* [완]검색 조건에 주문자 넣기
-* [완]통계 화면 필요
-- 미결제 금액
-* [완]주문 개수보다 재고가 부족할 떄
-- 주문 개수 수정 기능
-* 신규상품 주문 관련 테스트
+----------AI 기능 구현----------
+* AI 사용권한 및 크레딧 관리 기능 구현
+* AI 로그 관리 페이지 구현
+* HOW TO USE 페이지 구현
+* QnA 페이지 구현
 
-[주문내역]
-* [완]주문상태 코드 정리
-* [완]조회조건 적용
-* [완]신규상품주문 내역 노출
-* [완]통계 화면 필요
-- 미결제 금액
-* 품절된 상품 재주문 기능
-* 신규상품 주문 관련 테스트
-
-[챗봇]
-* [완]Qdrant 처리
-* [완]챗봇 닫기 버튼 만들기
-
-[데이터]
-* [완]마이그레이션 파일 만들기
-
-[로그인]
-* [완]디자인 깨진 거 고치기
-* [완]ip주소로 로그인 안 됨
-
-[장바구니]
-* [완]장바구니 메뉴 제목 붙이기
-* [완]장바구니 테이블 빼기
-* [완]단위 가격 적용하기
-
-[상품상세조회]
-* [완]화면 구축
-* [완]상품 등록/수정 기능 구현
-
-[마이페이지]
-* 화면 구축
-
-[공통]
-* [완]http://localhost:8080 제거
-* [완]github 올리기
-* [완]배포
+----------나중에----------
+* 동시 로그인 관리 로직 추가
+* '/auth/check'에 권한 없을 경우 사유 나오도록 수정
+* exception 처리
+* 백엔드 userId, userSeq => login 붙이기
+* 동적 컴포넌트 로드 제거
 * 공통 import -> default layout으로 옮기기
 * composable만들기
 ex) useBasket.ts
-* log4jdbc 넣어서 SQL로그 찍기
-* 메뉴 sequence 제거하고 url key 값으로 만들기
-* input 태그 lenth 값 제한 두기
-
 * 엣지 브라우저 테스트
-* 사용자 일련번호 바꾸기
+
+---------관리자 API 권한 검증---------
+// 사용자 정보 추출 (가능하면 accessToken으로 바꾸는 걸 권장)
+String token = JwtUtil.extractTokenFromCookies(request, "accessToken");
+if (token == null) {
+    return ResponseEntity.status(401).body("Missing access token");
+}
+
+Claims claims;
+try {
+    claims = JwtUtil.validateToken(token, jwtSecret);
+} catch (Exception e) {
+    return ResponseEntity.status(401).body("Invalid token");
+}
+
+// 관리자 권한 검증
+Integer roleSeq = claims.get("roleSeq", Integer.class);
+if (!Integer.valueOf(3).equals(roleSeq)) {
+    return ResponseEntity.status(403).body("권한이 없습니다.");
+}
+---------관리자 API 권한 검증---------

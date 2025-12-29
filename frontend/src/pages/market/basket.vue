@@ -28,30 +28,25 @@
             <div class="basket-item-info">
               <div class="field-row">
                 <label class="field-label">상품명</label>
-                <label class="field-cont">
+                <label class="field-cont" :title="item.itemNm">
                   {{ item.itemNm }} <span v-if="item.unit > 1">{{ item.unit }}개</span>
                 </label>
               </div>
-
               <div class="field-row">
                 <label class="field-label">가격</label>
                 <label class="field-cont">{{ item.unitPrice.toLocaleString() }}</label>
               </div>
-
-              <div class="field-row small">
+              <div class="field-row">
                 <label class="field-label">개수</label>
                 <div class="cnt-box">
                   <button type="button" class="cnt-btn" @click="decreaseCnt(index)">−</button>
                   <span class="cnt-value">{{ item.unitCnt }}</span>
                   <button type="button" class="cnt-btn" @click="increaseCnt(index)">+</button>
                 </div>
-
               </div>
-            </div>
-
-            <!-- 삭제 버튼 -->
-            <div class="basket-item-actions">
-              <button type="button" class="delete-btn" @click="clickDeleteBtn(index)">삭제</button>
+              <div class="btn-area">
+                <button type="button" class="delete-btn" @click="clickDeleteBtn(index)">삭제</button>
+              </div>              
             </div>
           </div>
         </div>
@@ -275,17 +270,18 @@ const toggleAll = () => {
 
 <style scoped>
 .basket-page-wrap {
-  padding: 20px 24px;
+  padding: 1.25rem 1.5rem;
   box-sizing: border-box;
   background: #f9fbff;
-  border-radius: 16px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  border-radius: 1rem;
+  box-shadow: 0 0.5rem 1.125rem rgba(15, 23, 42, 0.08);
+  min-width: 31.25rem;
 }
 
 /* 전체 페이지 컨테이너 */
 .basket-page {
   display: flex;
-  gap: 24px;
+  gap: 1.5rem;
 }
 
 /* 좌측: 장바구니 리스트 */
@@ -293,13 +289,13 @@ const toggleAll = () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 0.875rem;
 }
 
 /* 개별 아이템 래퍼 (체크박스 + 카드) */
 .basket-item {
   display: flex;
-  gap: 10px;
+  gap: 0.625rem;
   align-items: stretch;
 }
 
@@ -307,25 +303,27 @@ const toggleAll = () => {
 .basket-item-check {
   display: flex;
   align-items: center;
-  padding-top: 6px;
+  padding-top: 0.375rem;
+  min-width: 0;
 }
 
 .basket-item-check input[type='checkbox'] {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   accent-color: #0c254d;
 }
 
 /* 카드 본체 */
 .basket-item-body {
+  width: 95%;
   flex: 1;
   display: flex;
-  gap: 16px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
+  gap: 1rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 0.875rem;
+  border: 0.0625rem solid #e2e8f0;
   background-color: #ffffff;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 0.25rem 0.625rem rgba(15, 23, 42, 0.06);
   box-sizing: border-box;
   transition: transform 0.15s ease, box-shadow 0.15s ease,
     border-color 0.15s ease;
@@ -333,11 +331,10 @@ const toggleAll = () => {
 
 /* 이미지 영역 */
 .basket-item-image-box {
-  width: 160px;
-  min-width: 160px;
-  height: 160px;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
+  width: 10rem;
+  height: 10rem;
+  border-radius: 0.75rem;
+  border: 0.0625rem solid #e2e8f0;
   background: #f8fafc;
   display: flex;
   align-items: center;
@@ -361,10 +358,10 @@ const toggleAll = () => {
 .basket-item-no-image {
   font-size: 0.85rem;
   color: #64748b;
-  padding: 6px 10px;
-  border-radius: 999px;
+  padding: 0.375rem 0.625rem;
+  border-radius: 62.4375rem;
   background: rgba(15, 23, 42, 0.04);
-  border: 1px dashed #cbd5e1;
+  border: 0.0625rem dashed #cbd5e1;
 }
 
 /* 정보 영역 */
@@ -372,14 +369,15 @@ const toggleAll = () => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 0.5rem;
+  min-width: 0;
 }
 
 /* 라벨 + 인풋 한 줄 */
 .field-row {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  min-width: 0;
 }
 
 .field-label {
@@ -390,39 +388,35 @@ const toggleAll = () => {
 }
 
 .field-cont {
+  flex: 1;
+  min-width: 0;
   font-weight: bold;
   font-size: 0.9rem;
+  white-space: nowrap;    /* 한 줄 */
+  overflow: hidden;       /* 넘침 숨김 */
+  text-overflow: ellipsis;/* ... 처리 */  
 }
 
-.field-input {
+.btn-area {
   flex: 1;
-  height: 32px;
-  border-radius: 8px;
-  border: 1px solid #cbd5e1;
-  padding: 4px 8px;
-  box-sizing: border-box;
-  font-size: 0.9rem;
-  outline: none;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.field-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
+  text-align: right;
+  justify-content: end;
+  align-items: end;
+  display: flex;
 }
 
 /* ----------------수량 조절 박스---------------- */
 .cnt-box {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 
 .cnt-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 6px;
-  border: 1px solid #cbd5e1;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.375rem;
+  border: 0.0625rem solid #cbd5e1;
   background: #f1f5f9;
   color: #0f172a;
   font-size: 1.1rem;
@@ -432,69 +426,61 @@ const toggleAll = () => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.15s ease;
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 0.125rem 0.25rem rgba(15, 23, 42, 0.08);
 }
 
 /* hover 효과 */
 .cnt-btn:hover {
   background: #e2e8f0;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+  transform: translateY(-0.0625rem);
+  box-shadow: 0 0.25rem 0.625rem rgba(15, 23, 42, 0.18);
 }
 
 /* 클릭 효과 */
 .cnt-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 0.125rem 0.25rem rgba(15, 23, 42, 0.08);
 }
 
 /* 숫자 */
 .cnt-value {
-  min-width: 24px;
+  min-width: 1.5rem;
   text-align: center;
   font-size: 0.9rem;
   font-weight: bold;
   color: #0f172a;
 }
 
-/* ----------------수량 조절 박스---------------- */
-
-/* 삭제 버튼 영역 */
-.basket-item-actions {
-  display: flex;
-  align-items: flex-end;
-}
-
-/* 삭제 버튼 */
+/* ----------------버튼 영역---------------- */
 .delete-btn {
-  min-width: 80px;
-  height: 36px;
-  border-radius: 999px;
+  min-width: 5rem;
+  height: 2.25rem;
+  border-radius: 62.4375rem;
   border: none;
-  padding: 0 14px;
+  padding: 0 0.875rem;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
   background: #f97373;
   color: #ffffff;
-  box-shadow: 0 3px 8px rgba(248, 113, 113, 0.4);
+  box-shadow: 0 0.1875rem 0.5rem rgba(248, 113, 113, 0.4);
   transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
 
 .delete-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 5px 12px rgba(248, 113, 113, 0.55);
+  transform: translateY(-0.0625rem);
+  box-shadow: 0 0.3125rem 0.75rem rgba(248, 113, 113, 0.55);
 }
 
 .delete-btn:active {
   transform: translateY(0);
-  box-shadow: 0 2px 6px rgba(248, 113, 113, 0.35);
+  box-shadow: 0 0.125rem 0.375rem rgba(248, 113, 113, 0.35);
   opacity: 0.9;
 }
 
 /* 비어 있을 때 */
 .basket-empty {
-  padding: 24px 0;
+  padding: 1.5rem 0;
   text-align: center;
   font-size: 0.9rem;
   color: #9ca3af;
@@ -502,16 +488,16 @@ const toggleAll = () => {
 
 /* 우측 요약 박스 */
 .basket-summary {
-  width: 240px;
+  width: 15rem;
   flex-shrink: 0;
 }
 
 .summary-card {
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
+  border-radius: 0.875rem;
+  border: 0.0625rem solid #e2e8f0;
   background-color: #ffffff;
-  padding: 16px 16px 14px;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  padding: 1rem 1rem 0.875rem;
+  box-shadow: 0 0.25rem 0.625rem rgba(15, 23, 42, 0.06);
   box-sizing: border-box;
 }
 
@@ -519,8 +505,8 @@ const toggleAll = () => {
 .summary-row {
   display: flex;
   align-items: center;
-  margin-bottom: 16px;
-  gap: 8px;
+  margin-bottom: 1rem;
+  gap: 0.5rem;
 }
 
 .summary-label {
@@ -538,9 +524,9 @@ const toggleAll = () => {
 /* 구매 요청 버튼 */
 .summary-submit {
   width: 100%;
-  height: 38px;
-  margin-top: 4px;
-  border-radius: 999px;
+  height: 2.375rem;
+  margin-top: 0.25rem;
+  border-radius: 0.5rem;
   border: none;
   font-size: 0.9rem;
   font-weight: 600;
@@ -550,18 +536,18 @@ const toggleAll = () => {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.3);
+  box-shadow: 0 0.25rem 0.625rem rgba(15, 23, 42, 0.3);
   transition: transform 0.12s ease, box-shadow 0.12s ease, opacity 0.12s ease;
 }
 
 .summary-submit:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 6px 14px rgba(15, 23, 42, 0.45);
+  transform: translateY(-0.0625rem);
+  box-shadow: 0 0.375rem 0.875rem rgba(15, 23, 42, 0.45);
 }
 
 .summary-submit:active {
   transform: translateY(0);
-  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.25);
+  box-shadow: 0 0.1875rem 0.5rem rgba(15, 23, 42, 0.25);
   opacity: 0.95;
 }
 
@@ -572,9 +558,9 @@ const toggleAll = () => {
 }
 
 /* 반응형 */
-@media (max-width: 900px) {
+@media (max-width: 56.25rem) {
   .basket-page {
-    flex-direction: column;
+    flex-direction: column-reverse;
   }
 
   .basket-summary {
@@ -589,22 +575,22 @@ const toggleAll = () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 14px;
-  margin-bottom: 12px;
+  padding: 0.75rem 0.875rem;
+  margin-bottom: 0.75rem;
 }
 
 .check-all-box {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   font-size: 0.95rem;
   font-weight: 600;
   color: #1e293b;
 }
 
 .check-all-box input[type="checkbox"] {
-  width: 18px;
-  height: 18px;
+  width: 1.125rem;
+  height: 1.125rem;
   accent-color: #0c254d;
 }
 
@@ -626,22 +612,10 @@ const toggleAll = () => {
 .basket-title-pill {
   display: inline-flex;
   align-items: center;
-  padding: 6px 14px;
+  padding: 0.375rem 0.875rem;
   font-size: 1.3rem;
   font-weight: bold;
   letter-spacing: 0.02rem;
 }
-
-/* 반응형: 모바일에서 세로 정렬 */
-@media (max-width: 900px) {
-  .basket-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
-  }
-}
-
-/* =======================
-   상단 장바구니 헤더
-   ======================= */
 </style>
+

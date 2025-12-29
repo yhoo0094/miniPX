@@ -12,7 +12,6 @@
       <div class="login-banner-container">
         <img :src="delivery_man" alt="no img"/>
       </div>
-      <!-- <div class="login-banner-underLine"></div> -->
     </div>
   </div>  
 </template>
@@ -28,9 +27,10 @@ import BaseCheckbox from '@/components/common/BaseCheckbox.vue';
 import router from '@/router';
 import api from '@/plugins/axios';
 import delivery_man from '@/assets/img/delivery_man.webp';
-import type { UserType } from '@/types/userType';
+import type { UserType } from '@/types/user/user.base.type';
 import type { MenuType } from '@/types/menuType';
 import type { ApiResponse } from '@/types/api/response';
+import Constant from '@/constants/constant';
 
 interface LoginPayload {
   userInfo: UserType;
@@ -66,7 +66,7 @@ const login = async () => {
       userPw: userPw.value,
     });
 
-    if (response.data.success) {
+    if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
       const userInfo = response.data['userInfo'];
       userStore.setUserInfo(userInfo);
 
@@ -85,11 +85,17 @@ const login = async () => {
       // 메뉴 저장 및 라우트 추가
       const mnuList = response.data['mnuList'];
       menuStore.setMenuList(mnuList);
-      menuStore.restoreRoutes();
+      await menuStore.restoreRoutes();
 
-      router.push('/market/itemList');
+      if(userInfo.pwInitYn === 'Y'){
+        //최초 로그인한 경우
+        alert("비밀번호가 초기화되었습니다. \n비밀번호를 변경해주세요.");
+        await router.replace('/info/pwchng');
+      } else {
+        await router.replace('/main');
+      }
     } else {
-      alert(response.data.message);
+      alert(response.data[Constant.OUT_RESULT_MSG]);
     }
   } catch (error) {
     alert('로그인에 실패했습니다.\n' + error);

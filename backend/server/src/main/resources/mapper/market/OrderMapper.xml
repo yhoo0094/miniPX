@@ -76,12 +76,21 @@
 		   AND T1.ORDER_STATUS_CODE IN ('03')
 	</select>		
 	
-	<!-- 주문취소 -->
+	<!-- 주문상태수정 -->
 	<update id="updateOrderStatus" parameterType="map">
 	    UPDATE tb_order
 	       SET ORDER_STATUS_CODE    = #{orderStatusCode}
 	         , LST_UPD_SEQ 			= #{userSeq}
 	         , LST_UPD_DTTI 		= NOW()
 	     WHERE ORDER_SEQ   			= #{orderSeq}
+	</update>		
+	
+	<!-- 신규상품주문 상태수정 -->
+	<update id="updateNewOrderStatus" parameterType="map">
+	    UPDATE tb_new_order
+	       SET ORDER_STATUS_CODE    = #{orderStatusCode}
+	         , LST_UPD_SEQ 			= #{userSeq}
+	         , LST_UPD_DTTI 		= NOW()
+	     WHERE NEW_ORDER_SEQ   		= #{orderSeq}
 	</update>		
 </mapper>

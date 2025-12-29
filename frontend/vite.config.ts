@@ -44,5 +44,8 @@ export default defineConfig(({ mode }) => {
         }
       }
     },
+    build: {
+      sourcemap: false,      // ✅ JS/CSS sourcemap 생성 안 함
+    },    
   };
 });

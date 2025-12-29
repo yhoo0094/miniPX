@@ -48,15 +48,22 @@ public class OrderService {
     }
     
     /**
-     * @메소드명: cancelOrder
+     * @메소드명: updateOrderStatus
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 9.
-     * @설명: 주문취소
+     * @설명: 주문상태수정
      */    
     public Map<String, Object> updateOrderStatus(Map<String, Object> inData) {
         Map<String, Object> result = new HashMap<>();
 
-        int affected = sqlSession.update("com.mpx.minipx.mapper.OrderMapper.updateOrderStatus", inData);
+        String sql;
+        if("01".equals(inData.get("orderDvcd"))) {
+        	sql = "com.mpx.minipx.mapper.OrderMapper.updateOrderStatus";
+        } else {
+        	sql = "com.mpx.minipx.mapper.OrderMapper.updateNewOrderStatus";
+        }        
+        
+        int affected = sqlSession.update(sql, inData);
         result.put(Constant.OUT_DATA, affected);
         result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
         return result;

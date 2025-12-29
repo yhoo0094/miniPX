@@ -1,13 +1,14 @@
 <template>
-  <div class="base-input">
+  <div class="base-input" :style="wrapperStyle">
     <label v-if="label" :for="id">{{ label }}</label>
     <input
       :id="id"
-      :type="type ?? 'text'"
+      :type="props.type"
       :value="modelValue"
       :placeholder="placeholder"
       :disabled="disabled"
       :readonly="readonly"
+      :maxlength="(props.type === 'text' || props.type === 'password') ? props.maxlength : undefined"
       :min="type === 'number' ? min : undefined"
       :max="type === 'number' ? max : undefined"
       :step="type === 'number' ? step : undefined"
@@ -36,6 +37,8 @@ interface Props {
   height?: string | number;
   padding?: string | number;
   align?: 'left' | 'center' | 'right';
+  display?: 'flex' | 'inline-flex' | 'block';
+  maxlength?: number;
 
   /* 숫자 전용 옵션 */
   min?: number;
@@ -44,10 +47,20 @@ interface Props {
   numberOnly?: boolean; 
 }
 
+const props = withDefaults(defineProps<Props>(), {
+  maxlength: 100,
+  type: 'text',
+});
+
   // ✅ Emits 타입 정의
   const emit = defineEmits<{
     (e: 'update:modelValue', value: string): void;
   }>();
+  
+  /* base-input(wrapper)에 적용될 style */
+  const wrapperStyle = computed(() => ({
+    display: props.display ?? 'flex',
+  }));
 
   // 버튼의 width와 height 값 계산 (매개변수 값이 없으면 기본값 사용)
   const styleProp = computed(() => {
@@ -55,6 +68,7 @@ interface Props {
       width: props.width,  
       height: props.height, 
       padding: props.padding, 
+      textAlign: inputAlign.value,
     };
   });
 
@@ -78,8 +92,6 @@ interface Props {
     if (props.type === 'number' || props.numberOnly) return 'right';
     return 'left';
   });
-
-  const props = defineProps<Props>();
 </script>
 
 <style scoped>
@@ -107,6 +119,7 @@ interface Props {
   outline: none;
   transition: all 0.2s ease;
   background-color: #f8fbff;
+  /* flex: 1; */
 }
 
 /* placeholder */

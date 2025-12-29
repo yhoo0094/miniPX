@@ -49,6 +49,16 @@ public class ItemNewService {
     public Map<String, Object> getNewOrder(Map<String, Object> inData) {
     	Map<String, Object> result = new HashMap<String, Object>(); 
     	Map<String, Object> map = sqlSession.selectOne("com.mpx.minipx.mapper.ItemNewMapper.getNewOrder", inData);
+    	
+    	//조회하는 사용자와 주문자가 일치하지 않을 경우(관리자는 조회 가능)
+    	if( !"admin".equals(inData.get("userId"))
+    			&& (inData.get("userSeq") == null || map.get("userSeq") == null 
+    			|| !inData.get("userSeq").equals(map.get("userSeq").toString()))) {
+    		result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+    		result.put(Constant.RESULT_DETAIL, Constant.UNAUTHORIZED_ACCESS);
+    		result.put(Constant.OUT_RESULT_MSG, "본인 주문 내용만 조회할 수 있습니다.");
+    	}
+    	
     	result.put(Constant.OUT_DATA, map);
     	result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
     	return result;
@@ -105,7 +115,7 @@ public class ItemNewService {
         int affected = sqlSession.update("com.mpx.minipx.mapper.ItemNewMapper.insertNewOrder", inData);
 
         if (affected > 0) {
-            result.put(Constant.OUT_DATA, affected);
+            result.put(Constant.OUT_DATA, inData);
             result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
         } else {
             result.put(Constant.OUT_DATA, affected);

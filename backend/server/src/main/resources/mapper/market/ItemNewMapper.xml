@@ -24,10 +24,17 @@
 			 , T1.LST_UPD_DTTI              /*최종수정일시*/
 		  FROM tb_new_order T1				/*테이블_신규상품주문*/
 		 WHERE T1.NEW_ORDER_SEQ = #{newOrderSeq}
+	</select>		
+	
+	<!-- 신규상품주문 이미지 조회 -->
+	<select id="getItemNewImage" parameterType="long" resultType="string">
+		SELECT T1.IMG                       	/*이미지*/
+		  FROM tb_new_order T1					/*테이블_신규상품주문*/
+		 WHERE T1.NEW_ORDER_SEQ =  #{orderSeq}	/*신규상품주문일련번호*/
 	</select>			 
 
 	<!-- 신규상품주문 등록 -->
-	<insert id="insertNewOrder" parameterType="map">
+	<insert id="insertNewOrder" parameterType="map" useGeneratedKeys="true" keyProperty="newOrderSeq">
 	    INSERT INTO tb_new_order                   
 	    	 ( USER_SEQ                            /*사용자일련번호*/             
 			 , ITEM_NM                             /*상품명*/                 
@@ -73,11 +80,4 @@
 	         , LST_UPD_DTTI 		= NOW()
 	     WHERE NEW_ORDER_SEQ   		= #{newOrderSeq}		   
 	</update>
-	
-	<!-- 신규상품주문 이미지 조회 -->
-	<select id="getItemNewImage" parameterType="long" resultType="string">
-		SELECT T1.IMG                       	/*이미지*/
-		  FROM tb_new_order T1					/*테이블_신규상품주문*/
-		 WHERE T1.NEW_ORDER_SEQ =  #{orderSeq}	/*신규상품주문일련번호*/
-	</select>		
 </mapper>

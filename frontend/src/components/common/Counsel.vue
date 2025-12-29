@@ -15,7 +15,7 @@
                     <div v-if="msg.role === 'bot'" class="chat-bubble-content" v-html="msg.html || msg.text"></div>
                     <div v-else>{{ msg.text }}</div>
                   </template>
-                </div>                
+                </div>
               </div>
             </template>
           </div>

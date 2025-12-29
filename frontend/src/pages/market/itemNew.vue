@@ -24,18 +24,18 @@
       <div class="form-row">
         <label class="label required">개수</label>
         <div class="field-wrap small">
-          <BaseInput v-model="newOrder.cnt" width="5rem" type="number" :min="1" />
+          <BaseInput v-model="newOrder.cnt" width="5rem" type="number" :min="1" :max="1000" />
         </div>
       </div>
       <div class="form-row">
         <label class="label">상품설명</label>
         <div class="field-wrap">
-          <BaseTextarea v-model="newOrder.newOrderDtl" :height="'10rem'" placeholder="상품 설명을 입력하세요" />
+          <BaseTextarea v-model="newOrder.newOrderDtl" :maxlength="300" :height="'10rem'" placeholder="상품 설명을 입력하세요" />
         </div>
       </div>
       <div class="form-actions">
         <BaseButton v-if="!newOrderSeq" type="submit" width="7rem" height="2.5rem">구매요청</BaseButton>
-        <BaseButton v-else type="submit" width="7rem" height="2.5rem">수정하기</BaseButton>
+        <BaseButton v-if="newOrderSeq && newOrder.orderStatusCode === '01'" type="submit" width="7rem" height="2.5rem">수정하기</BaseButton>
       </div>
     </form>
   </div>
@@ -53,6 +53,7 @@ import Constant from '@/constants/constant';
 import { useUiStore } from '@/stores/uiStore';
 import plusImage from '@/assets/img/upload_icon.png';
 import type { NewOrder } from '@/types/order/order.new.type';
+import router from '@/router';
 
 const uiStore = useUiStore();
 const toastRef = ref();
@@ -155,7 +156,10 @@ const requestOrder = async () => {
                                    {withCredentials: true,}); // ✅ 쿠키 쓰면 필수
 
     if (response.data?.[Constant.RESULT] === Constant.RESULT_SUCCESS) {
-      toastRef.value?.showToast('구매 요청이 등록되었습니다.');
+      alert('구매 요청이 등록되었습니다.');
+      if(!newOrderSeq){
+        window.location.href = `/market/itemNew?orderSeq=` + response.data[Constant.OUT_DATA].newOrderSeq;
+      }
     } else {
       toastRef.value?.showToast(
         response.data?.OUT_RESULT_MSG || '구매 요청 등록에 실패했습니다.'
@@ -176,12 +180,14 @@ const getNewOrder = async () => {
   try {
     const payload = { newOrderSeq };
     const response = await api.post('/itemNew/getNewOrder', payload);
-    const data = response.data?.OUT_DATA;
-    if (!data) return;
-
-    // 실제 응답 형식에 맞게 추출
-    newOrder.value = response.data?.OUT_DATA;
-    newOrder.value.imgPath = `/api/itemNew/getItemNewImage?img=` + newOrder.value.img;
+    if (response.data?.RESULT_DETAIL === Constant.UNAUTHORIZED_ACCESS) {
+      response.data.OUT_RESULT_MSG ? alert(response.data.OUT_RESULT_MSG) : alert("허가되지 않은 접근입니다.");
+      router.push('/market/itemList');
+    } else {
+      // 실제 응답 형식에 맞게 추출
+      newOrder.value = response.data?.OUT_DATA;
+      newOrder.value.imgPath = `/api/itemNew/getItemNewImage?img=` + newOrder.value.img;
+    }
   } catch (error) {
     console.error('주문 조회 실패:', error);
     toastRef.value?.showToast('주문 정보를 불러오지 못했습니다.');
@@ -202,15 +208,15 @@ onMounted(() => {
 
 <style scoped>
 .order-container {
-  padding: 24px 28px;
+  padding: 1.5rem 1.75rem;           /* 24px 28px */
   background: #f9fbff;
-  border-radius: 16px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  border-radius: 1rem;               /* 16px */
+  box-shadow: 0 0.5rem 1.125rem rgba(15, 23, 42, 0.08); /* 8px 18px */
   box-sizing: border-box;
 }
 
 .title {
-  margin: 0 0 18px;
+  margin: 0 0 1.125rem;               /* 18px */
   font-size: 1.3rem;
   font-weight: 700;
   color: #0f172a;
@@ -218,22 +224,22 @@ onMounted(() => {
 
 .order-form {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 20px 22px 16px;
-  border: 1px solid #e2e8f0;
+  border-radius: 0.75rem;             
+  padding: 1.25rem 1.375rem 1rem;     
+  border: 0.0625rem solid #e2e8f0;  
 }
 
 .form-row {
   display: flex;
   align-items: flex-start;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;                
 }
 
 .label {
-  width: 90px;
+  width: 4rem;                
   font-size: 0.9rem;
   color: #111827;
-  padding-top: 6px;
+  padding-top: 0.375rem;      
   font-weight: bold;
   text-align: right;
   margin-right: 1rem;
@@ -242,7 +248,7 @@ onMounted(() => {
 .label.required::before {
   content: '*';
   color: #ef4444;
-  margin-right: 4px;
+  margin-right: 0.25rem;      
 }
 
 .field-wrap {
@@ -250,15 +256,15 @@ onMounted(() => {
 }
 
 .field-wrap.small {
-  max-width: 220px;
+  max-width: 13.75rem;                /* 220px */
 }
 
 .image-box {
   width: 10rem;
   height: 10rem;
-  border: 1px solid #b8c4d1;
-  border-radius: 4px;
-  margin-top: 4px;
+  border: 0.0625rem solid #b8c4d1;    /* 1px */
+  border-radius: 0.25rem;             /* 4px */
+  margin-top: 0.25rem;                /* 4px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -285,9 +291,9 @@ onMounted(() => {
 .image-box {
   width: 10rem;
   height: 10rem;
-  border: 1px solid #b8c4d1;
-  border-radius: 4px;
-  margin-top: 4px;
+  border: 0.0625rem solid #b8c4d1;    /* 1px */
+  border-radius: 0.25rem;             /* 4px */
+  margin-top: 0.25rem;                /* 4px */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -303,7 +309,7 @@ onMounted(() => {
 
 /* 버튼 영역 */
 .form-actions {
-  margin-top: 8px;
+  margin-top: 0.5rem;                 /* 8px */
   display: flex;
   justify-content: flex-end;
 }

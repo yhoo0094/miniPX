@@ -1,18 +1,17 @@
 package com.mpx.minipx.controller.common;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.mpx.minipx.entity.TbUser;
+import com.mpx.minipx.framework.util.Constant;
 import com.mpx.minipx.framework.util.JwtUtil;
 import com.mpx.minipx.service.common.UserService;
 
@@ -33,19 +32,6 @@ public class UserController {
     
     @Value("${jwt.secret}")
     private String jwtSecret;  // JWT 비밀 키 (application.properties에서 가져오기)       
-
-    /**
-     * @메소드명: getUserList
-     * @작성자: KimSangMin
-     * @생성일: 2025. 6. 19.
-     * @설명:
-     */
-    @GetMapping("/getUserList")
-    public List<TbUser>  getUserList() {
-//    	List<Map<String, Object>> result = userService.getUserList();
-    	List<TbUser> result = userService.getUserList();
-        return result;
-    }
     
     /**
      * @throws Exception 
@@ -62,9 +48,9 @@ public class UserController {
     	String remoteAddr = request.getRemoteAddr();
     	inData.put("remoteAddr", remoteAddr);
     	
-    	result = userService.login(inData);
+    	result = userService.login(inData, request);
 
-    	if((boolean) result.get("success")) {
+    	if(Constant.RESULT_SUCCESS.equals(result.get(Constant.RESULT))) {
 			response.addCookie((Cookie)result.get("accessToken"));	// 쿠키를 응답에 추가
 			response.addCookie((Cookie)result.get("refreshToken"));	// 쿠키를 응답에 추가
 		}        
@@ -92,7 +78,7 @@ public class UserController {
         String userId = (String) claims.get("userId");    
         
         // DB에서 refreshToken 제거
-        userService.logout(userId);
+        userService.logout(userId, request);
 
         // 쿠키 삭제 (accessToken + refreshToken)
         Cookie accessDel = new Cookie("accessToken", null);
@@ -109,4 +95,31 @@ public class UserController {
 
         return ResponseEntity.ok("로그아웃 성공");
     }  
+    
+    /**
+     * @메소드명: changePassword
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 23.
+     * @설명: 비밀번호 변경
+     */
+    @PostMapping("/changePassword")
+    public ResponseEntity<?> changePassword(@RequestBody Map<String, Object> inData, HttpServletRequest request, HttpServletResponse response) {
+    	
+        // ---------- 사용자 정보 추출 ----------
+        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        Claims claims;
+        try {
+            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid refresh token");
+        }
+        inData.put("userId", (String) claims.get("userId"));
+        inData.put("userSeq", (String) claims.get("userSeq"));
+        
+        
+        
+        Map<String, Object> result = userService.changePassword(inData);
+
+        return ResponseEntity.ok(result);
+    }      
 }

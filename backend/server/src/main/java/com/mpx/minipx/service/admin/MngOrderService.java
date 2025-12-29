@@ -47,7 +47,15 @@ public class MngOrderService {
     public Map<String, Object> updateOrderStatus(Map<String, Object> inData) {
         Map<String, Object> result = new HashMap<>();
 
-        int affected = sqlSession.update("com.mpx.minipx.mapper.MngOrderMapper.updateOrderStatus", inData);
+        String sql;
+        if("01".equals(inData.get("orderDvcd"))) {
+        	sql = "com.mpx.minipx.mapper.MngOrderMapper.updateOrderStatus";
+        } else {
+        	sql = "com.mpx.minipx.mapper.MngOrderMapper.updateNewOrderStatus";
+        }
+        
+        int affected = sqlSession.update(sql, inData);
+		
         result.put(Constant.OUT_DATA, affected);
         result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
         return result;

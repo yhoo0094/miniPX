@@ -1,22 +1,30 @@
 package com.mpx.minipx.controller.common;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.mpx.minipx.framework.util.Constant;
+import com.mpx.minipx.framework.util.JwtUtil;
 import com.mpx.minipx.service.common.QdrantService;
 
+import io.jsonwebtoken.Claims;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @RestController
 @RequestMapping("/api/qdrant")
 public class QdrantController {
+    @Value("${jwt.secret}")
+    private String jwtSecret;	
+	
     private final QdrantService qdrantService;
 
     
@@ -50,7 +58,26 @@ public class QdrantController {
      */
     @PostMapping(value = "/upsertAllItem")
 	public ResponseEntity<?> upsertAllItem(@RequestBody Map<String, Object> inData, HttpServletRequest request, HttpServletResponse response) throws Exception {
-        Map<String, Object> result = qdrantService.upsertAllItem(inData);
+    	Map<String, Object> result = new HashMap<>();
+    	
+		// 사용자 정보 추출
+		String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
+		Claims claims;
+		try {
+			claims = JwtUtil.validateToken(accessToken, jwtSecret);
+		} catch (Exception e) {
+			return ResponseEntity.status(401).body("Invalid refresh token");
+		}        
+		
+		//관리자 권한 검증
+		Integer roleSeq = claims.get("roleSeq", Integer.class);
+		if (!Integer.valueOf(3).equals(roleSeq)) {
+            result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+            result.put(Constant.OUT_RESULT_MSG, "적합한 권한이 아닙니다.");	
+            return ResponseEntity.ok(result);
+		}	    	
+    	
+        result = qdrantService.upsertAllItem(inData);
         return ResponseEntity.ok(result);    	
     }    
 

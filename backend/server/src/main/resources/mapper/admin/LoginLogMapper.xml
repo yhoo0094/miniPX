@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.mpx.minipx.mapper.LoginLogMapper">
+
+	<!-- 로그인 로그 조회 -->
+	<select id="getLoginLogList" parameterType="map" resultType="camelCaseMap">
+		SELECT T1.LOGIN_SEQ                                  /*로그인일련번호*/
+			 , DATE_FORMAT(T1.LOGIN_DTTI, '%Y-%m-%d %H:%i:%s') AS LOGIN_DTTI    /*로그인일시*/
+			 , T1.USER_SEQ                                   /*사용자일련번호*/
+			 , T1.USER_ID                                    /*사용자아이디*/
+			 , T1.IP                                         /*사용자아이피*/
+			 , T1.LOGIN_CODE                                 /*로그인코드*/
+			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'LOGIN_CODE' AND CODE_DETAIL = T1.LOGIN_CODE) LOGIN_CODE_NM /*로그인코드명*/ 
+		  FROM tb_log_login T1								 /*테이블_로그인로그*/ 
+		 WHERE 1 = 1
+		 <if test='startDate != null and startDate != "" and endDate != null and endDate != ""'>
+		   AND DATE_FORMAT(T1.LOGIN_DTTI, '%Y%m%d') BETWEEN DATE_FORMAT(#{startDate}, '%Y%m%d') AND DATE_FORMAT(#{endDate}, '%Y%m%d') 
+		 </if>			 
+		 <if test='loginCode != null and loginCode != ""'>
+		   AND LOGIN_CODE = #{loginCode}
+		 </if>			 
+		 <if test='searchKeyword != null and searchKeyword != ""'>
+		   AND 	( T1.USER_ID LIKE CONCAT('%', #{searchKeyword}, '%')
+		   	   OR T1.IP LIKE CONCAT('%', #{searchKeyword}, '%')
+		   	   	)
+		 </if>	 
+		 ORDER BY T1.LOGIN_DTTI DESC
+		 LIMIT #{pageSize} OFFSET #{offset}
+	</select>	
+	
+	<!-- 로그인 로그 조회(전체 건수) -->
+	<select id="getLoginLogListCount" parameterType="map" resultType="int">
+	  SELECT COUNT(1)
+	    FROM tb_log_login T1
+	   WHERE 1 = 1
+	   <if test="startDate != null and startDate != ''">
+	     AND T1.LOGIN_DTTI &gt;= CONCAT(#{startDate}, ' 00:00:00')
+	   </if>
+	   <if test="endDate != null and endDate != ''">
+	     AND T1.LOGIN_DTTI &lt;= CONCAT(#{endDate}, ' 23:59:59')
+	   </if>
+	   <if test="loginCode != null and loginCode != ''">
+	     AND T1.LOGIN_CODE = #{loginCode}
+	   </if>
+	   <if test="searchKeyword != null and searchKeyword != ''">
+	     AND (
+	          T1.USER_ID LIKE CONCAT('%', #{searchKeyword}, '%')
+	       OR T1.IP      LIKE CONCAT('%', #{searchKeyword}, '%')
+	     )
+	   </if>
+	</select>	
+</mapper>

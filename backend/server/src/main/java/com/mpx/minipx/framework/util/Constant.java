@@ -34,4 +34,7 @@ public class Constant
 	public static final String EXCEL_DATA 		= "EXCEL_DATA";			    //입력 데이터
 	public static final String EXCEL_UPLOAD_OPTION = "EXCEL_UPLOAD_OPTION";	//엑셀 업로드 옵션
 	
+	//검증 관련                                                             
+	public static final String UNAUTHORIZED_ACCESS 	= "UNAUTHORIZED_ACCESS";	//접근 권한이 없음
+	
 }

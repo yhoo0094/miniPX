@@ -24,6 +24,9 @@ const Constant = {
   EXCEL_COLUMN: "EXCEL_COLUMN",
   EXCEL_DATA: "EXCEL_DATA",
   EXCEL_UPLOAD_OPTION: "EXCEL_UPLOAD_OPTION",
+
+  //검증 관련
+  UNAUTHORIZED_ACCESS: "UNAUTHORIZED_ACCESS",
 } as const;
 
 export default Constant;

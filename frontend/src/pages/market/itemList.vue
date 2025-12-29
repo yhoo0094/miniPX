@@ -3,24 +3,31 @@
     <BaseToast ref="toastRef" />
     <!-- 검색 조건 -->
     <div class="filters">
-      <div>
-        <BaseDropdown label="분류" v-model="selectedCategory" :options="categoryOptions" :showPlaceholder="true"
-          placeholderLabel="전체" @change="handleCategoryChange" 
-          />
+      <BaseDropdown label="분류" v-model="selectedCategory" :options="categoryOptions" :showPlaceholder="true"
+        placeholderLabel="전체" @change="handleCategoryChange" 
+        />
+      <BaseDropdown label="상세분류" v-model="selectedSubCategory" :options="subCategoryOptions" :showPlaceholder="true"
+        placeholderLabel="전체" @change="getItemList" :disabled="!selectedCategory" />
+      <BaseDropdown label="정렬기준" v-model="selectedSort" :options="sortOptions" :showPlaceholder="false"
+        @change="getItemList" caretText="⇅"
+        />
+      <div class="search-group">
+        <BaseInput
+          height="2.125rem"
+          v-model="searchItemNm"
+          class="search-itemNm"
+          placeholder="상품명 입력"
+          @keydown.enter.prevent="getItemList"
+        />
+        <BaseButton
+          width="5rem"
+          height="2.125rem"
+          @click="getItemList"
+          type="button"
+        >
+          검색
+        </BaseButton>
       </div>
-      <div>
-        <BaseDropdown label="상세분류" v-model="selectedSubCategory" :options="subCategoryOptions" :showPlaceholder="true"
-          placeholderLabel="전체" @change="getItemList" :disabled="!selectedCategory" />
-      </div>
-      <div>
-        <BaseDropdown label="정렬기준" v-model="selectedSort" :options="sortOptions" :showPlaceholder="false"
-          @change="getItemList" caretText="⇅"
-          />
-      </div>      
-      <div class="filter-search">
-        <BaseInput height="2.125rem" v-model="searchItemNm" class="input" placeholder="상품명 입력" @keydown.enter.prevent="getItemList" />
-      </div>
-      <BaseButton width="5rem" height="2.125rem" @click="getItemList" type="button">검색</BaseButton>
     </div>
 
     <!-- 상품 목록 표시 -->
@@ -32,8 +39,9 @@
         </div>
 
         <div class="info-main">
-          <div class="item-name" :title="item.itemNm" @click="clickItemCard">
-              {{ item.itemNm }} <span v-if="item.unit > 1">{{ item.unit }}개</span>
+          <div class="item-name" :title="item.itemNm" @click="clickItemCard(item.itemSeq)">
+              <span v-if="item.unit > 1">{{ item.itemNm }} {{ item.unit }}개</span>
+              <span v-else>{{ item.itemNm }}</span>
           </div>
           <div class="item-price">
             {{ item.unitPrice.toLocaleString()}}원<span v-if="item.unit > 1">(개당 {{ item.price.toLocaleString() }}원)</span>
@@ -216,11 +224,10 @@ const moveToItemDetail = () => {
 <style scoped>
 /* 전체 컨테이너 */
 .container {
-  /* max-width: 1200px; */
-  padding: 20px 24px;
+  padding: 1.25rem 1.5rem;
   background: #f9fbff;
-  border-radius: 16px;
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  border-radius: 1rem; 
+  box-shadow: 0 0.5rem 1.125rem rgba(15, 23, 42, 0.08);
   box-sizing: border-box;
 }
 
@@ -228,38 +235,54 @@ const moveToItemDetail = () => {
 .filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 0.5rem;
   align-items: flex-end;
-  padding: 12px 16px;
-  margin-bottom: 18px;
+  padding: 0.75rem 1rem; /* 12px 16px */
+  margin-bottom: 1.125rem; /* 18px */
   background-color: #ffffff;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.05);
+  border-radius: 0.75rem; /* 12px */
+  border: 0.0625rem solid #e2e8f0; /* 1px */
+  box-shadow: 0 0.125rem 0.375rem rgba(15, 23, 42, 0.05); /* 2px 6px */
 }
 
-.filter-search {
+.search-group {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+  white-space: nowrap;
   flex: 1;
 }
 
+.search-itemNm {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.search-group > button {
+  flex-shrink: 0;
+}
+
+
 /* 상품 리스트 그리드 */
 .item-list {
-  margin-top: 8px;
+  margin-top: 0.5rem; /* 8px */
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 18px;
+  gap: 0.5rem;
+  /* grid-template-columns: repeat(auto-fill, minmax(5, 1fr)); */
+  grid-template-columns: repeat(5, 1fr);
 }
 
 /* 개별 카드 */
 .item-card {
   background: #ffffff;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  padding: 12px 12px 10px;
+  border-radius: 0.875rem; /* 14px */
+  border: 0.0625rem solid #e2e8f0; /* 1px */
+  padding: 0.75rem 0.75rem 0.625rem; /* 12px 12px 10px */
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.06);
+  gap: 0.5rem; /* 8px */
+  box-shadow: 0 0.25rem 0.625rem rgba(15, 23, 42, 0.06); /* 4px 10px */
   transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
@@ -281,7 +304,7 @@ const moveToItemDetail = () => {
   max-height: 100%;
   object-fit: contain;
   /* 잘리기보다는 전체가 보이게 */
-  border-radius: 10px;
+  border-radius: 0.625rem; /* 10px */
 }
 
 .item-image:hover {
@@ -292,17 +315,17 @@ const moveToItemDetail = () => {
 .no-image {
   font-size: 0.8rem;
   color: #64748b;
-  padding: 6px 10px;
-  border-radius: 999px;
+  padding: 0.375rem 0.625rem; /* 6px 10px */
+  border-radius: 62.4375rem; /* 999px */
   background: rgba(15, 23, 42, 0.04);
-  border: 1px dashed #cbd5e1;
+  border: 0.0625rem dashed #cbd5e1; /* 1px */
 }
 
 /* 상품명 + 가격 영역 */
 .info-main {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 0.25rem; /* 4px */
 }
 
 .item-name {
@@ -312,9 +335,9 @@ const moveToItemDetail = () => {
   line-height: 1.3;
   height: 2.6em;
   display: flex;
-  align-items: flex-end;   /* ✅ 아래로 */
+  align-items: flex-end;
   overflow: hidden;
-  /* cursor: pointer; */
+  cursor: pointer;
 }
 
 .item-price {
@@ -325,7 +348,7 @@ const moveToItemDetail = () => {
 
 /* 하단 정보 행 */
 .info-row {
-  margin-top: 6px;
+  margin-top: 0.375rem; /* 6px */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -344,35 +367,36 @@ const moveToItemDetail = () => {
 /* 데이터 없을 때 */
 .empty-state {
   grid-column: 1 / -1;
-  padding: 24px 0;
+  padding: 1.5rem 0; /* 24px */
   text-align: center;
   font-size: 0.9rem;
   color: #9ca3af;
 }
 
-/*버튼 영역*/
-.btn-box{
+/* 버튼 영역 */
+.btn-box {
   text-align: right;
   height: 3rem;
   vertical-align: middle;
-  line-height: 3rem;  
+  line-height: 3rem;
 }
 
-/* 반응형(모바일) */
-@media (max-width: 768px) {
-  .container {
-    margin: 12px;
-    padding: 16px;
+/* ...px 이하일 때 */
+@media (max-width: 1400px) {
+  .item-list {
+    grid-template-columns: repeat(4, 1fr);
   }
+}
 
-  .filters {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 1100px) {
+  .item-list {
+    grid-template-columns: repeat(3, 1fr);
   }
+}
 
-  .search-btn {
-    width: 100%;
-    justify-content: center;
+@media (max-width: 700px) {
+  .item-list {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>

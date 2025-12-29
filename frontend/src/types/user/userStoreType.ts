@@ -1,4 +1,4 @@
-import type { UserType } from './userType';
+import type { UserType } from '@/types/user/user.base.type';
 import type { Store } from 'pinia';
 
 export interface UserState {

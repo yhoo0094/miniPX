@@ -5,9 +5,7 @@ import { useUserStore } from '@/stores/userStore';
 
 // 라우트 타입 명시
 const routes: RouteRecordRaw[] = [
-  { path: '/', 
-    component: () => import('@/pages/market/itemList.vue'),
-  },
+  { path: '/', redirect: '/main' },
   {
     path: '/login',
     component: () => import('@/pages/common/login.vue'),
@@ -43,16 +41,6 @@ const router = createRouter({
 // 전역 가드 (타입 자동 추론됨)
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
-
-  //루트 경로 -> 로그인한 경우 메인으로, 로그인 안한 경우 로그인으로
-  if(to.path === '/'){
-    const isAuthenticated = await checkAuth('/main', userStore);
-    if (!isAuthenticated) {
-      return next('/login');
-    } else {
-      return next('/main');
-    }
-  }
 
   //로그인 및 권한 검증
   if (to.meta.requiresAuth) {

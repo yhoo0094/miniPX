@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,7 @@ import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import com.mpx.minipx.dto.common.ReqLog;
 import com.mpx.minipx.framework.util.JwtUtil;
-import com.mpx.minipx.service.common.ReqLogService;
+import com.mpx.minipx.service.admin.ReqLogService;
 
 import io.jsonwebtoken.Claims;
 
@@ -30,11 +31,8 @@ public class ReqLogFilter extends OncePerRequestFilter {
     @Value("${jwt.secret}")
     private String jwtSecret;	
 
-    private final ReqLogService reqLogService;
-
-    public ReqLogFilter(ReqLogService reqLogService) {
-        this.reqLogService = reqLogService;
-    }
+    @Autowired
+    private ReqLogService reqLogService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -59,7 +57,7 @@ public class ReqLogFilter extends OncePerRequestFilter {
             log.setUserSeq(extractUserSeqSafely(wrapped)); // 프로젝트 방식에 맞게 구현
             log.setParam(buildParamText(wrapped));
             if(!isExclusiveUri(uri)) {
-            	reqLogService.save(log);
+            	reqLogService.saveReqLog(log);
         	}
         }
     }

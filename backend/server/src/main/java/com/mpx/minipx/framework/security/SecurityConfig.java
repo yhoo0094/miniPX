@@ -55,7 +55,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-            "http://10.219.35.67:5173",			//로컬 ip
+            "http://10.71.149.18:5173",			//로컬 ip
             "http://43.200.173.163",        	//운영(80포트)
             "https://43.200.173.163",        	//운영(443포트)
             "https://*.ngrok-free.dev",

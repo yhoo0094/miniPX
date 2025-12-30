@@ -6,7 +6,7 @@
     <div class="loginlog-header">
       <div class="loginlog-title-main">
         <span class="loginlog-title-pill">
-          요청 로그({{ logs.length }})
+          요청 로그
         </span>
       </div>
     </div>
@@ -47,7 +47,7 @@
             v-model="searchKeyword"
             class="search-text"
             height="2.125rem"
-            placeholder="URI / IP / USER_SEQ 입력"
+            placeholder="URI / IP 입력"
             @keydown.enter.prevent="getReqLogList(true)"
           />
 
@@ -70,11 +70,11 @@
           <thead>
             <tr>
               <th style="width: 16%;">일시</th>
-              <th style="width: 10%;">USER_SEQ</th>
+              <th style="width: 10%;">요청자</th>
               <th style="width: 14%;">아이피</th>
               <th style="width: 24%;">URI</th>
               <th style="width: 12%;">요청타입</th>
-              <th style="width: 24%;">PARAM</th>
+              <th style="width: 24%;">파라미터</th>
             </tr>
           </thead>
 

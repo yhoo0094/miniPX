@@ -6,7 +6,7 @@
     <div class="loginlog-header">
       <div class="loginlog-title-main">
         <span class="loginlog-title-pill">
-          로그인 로그({{ logs.length }})
+          로그인 로그
         </span>
       </div>
     </div>
@@ -42,7 +42,6 @@
             placeholder="아이디/아이피 입력"
             @keydown.enter.prevent="getLoginLogList(true)"
           />
-
           <BaseButton
             width="5rem"
             height="2.125rem"
@@ -165,12 +164,6 @@ const loginCodes = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
 const page = ref(1);          // 1부터
 const pageSize = ref(10);     // 기본 10개
 const totalCount = ref(0);
-const pageSizeOptions = ref([
-  { codeDetailNm: '10', codeDetail: '10' },
-  { codeDetailNm: '20', codeDetail: '20' },
-  { codeDetailNm: '50', codeDetail: '50' },
-  { codeDetailNm: '100', codeDetail: '100' },
-]);
 
 onMounted(async() => {
   //공통코드 조회

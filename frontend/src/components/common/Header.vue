@@ -4,17 +4,23 @@
       <img class="logo-img" :src="home" alt="logo" @click="main" />
     </div>
 
-    <nav class="nav">
-      <div class="nav-item" v-for="menu in topLevelMenus" :key="menu.path" 
-      @click="activeMenu = (activeMenu == null) ? menu.path : null" 
-        >
-          <div class="nav-link">
-          {{ menu.title }}
-          </div>
+    <nav class="nav" ref="navRef">
+      <div
+        class="nav-item"
+        v-for="menu in topLevelMenus"
+        :key="menu.path"
+        @click.stop="toggleMenu(menu.path)"
+      >
+        <div class="nav-link">{{ menu.title }}</div>
 
-        <!-- 2depth 드롭다운 -->
         <div class="dropdown" v-if="getChildren(menu).length > 0 && activeMenu === menu.path">
-          <router-link v-for="sub in getChildren(menu)" :key="sub.path" :to="sub.path" class="dropdown-link">
+          <router-link
+            v-for="sub in getChildren(menu)"
+            :key="sub.path"
+            :to="sub.path"
+            class="dropdown-link"
+            @click.stop="activeMenu = null"
+          >
             {{ sub.meta.title }}
           </router-link>
         </div>
@@ -22,17 +28,19 @@
     </nav>
 
     <div class="header-button-box">
+      <span class="user-id-info">{{ userStore.userId }}님</span>
       <BaseButton width="6rem" height="2rem" @click="logout" class="button" type="button">로그아웃</BaseButton>
     </div>
   </header>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted, onBeforeUnmount } from 'vue';
 import { useUserStore } from '@/stores/userStore';
 import home from '@/assets/img/home.png';
 import router from '@/router';
 import BaseButton from '@/components/common/BaseButton.vue'
+
 const userStore = useUserStore();
 
 //메인으로 이동
@@ -45,7 +53,34 @@ const logout = () => {
   if (confirm('로그아웃 하시겠습니까?')) {userStore.logout();}
 }
 
-const activeMenu = ref(null);
+const activeMenu = ref<string | null>(null);
+const navRef = ref<HTMLElement | null>(null);
+
+const toggleMenu = (path: string) => {
+  activeMenu.value = activeMenu.value === path ? null : path;
+};
+
+const onDocumentClick = (e: MouseEvent) => {
+  if (!activeMenu.value) return;
+
+  const target = e.target as Node | null;
+  const navEl = navRef.value;
+
+  // nav 영역 밖을 클릭했으면 닫기
+  if (!navEl || !target) return;
+  if (!navEl.contains(target)) {
+    activeMenu.value = null;
+  }
+};
+
+onMounted(() => {
+  // capture 단계로 받으면 더 안정적(컴포넌트 내부 stop과 충돌 최소화)
+  document.addEventListener('click', onDocumentClick, true);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener('click', onDocumentClick, true);
+});
 
 // 모든 실제 등록된 라우트를 가져옴 (동적 포함)
 const allRoutes = router.getRoutes();
@@ -76,7 +111,7 @@ const getChildren = (parent) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 30px;
+  padding: 0 1.875rem;
   background-color: #000000;
   height: 3.75rem;
   position: relative;
@@ -91,14 +126,14 @@ const getChildren = (parent) => {
 }
 
 .logo-img {
-  height: 32px;
+  height: 2rem;
   cursor: pointer;
 }
 
 /* 상단 1depth 메뉴 */
 .nav {
   display: flex;
-  gap: 24px;
+  gap: 1.5rem;
   position: relative;
   align-items: center;
 }
@@ -111,7 +146,7 @@ const getChildren = (parent) => {
 .nav-link {
   color: #e5e7eb;
   text-decoration: none;
-  padding: 8px 10px;
+  padding: 0.5rem 0.625rem;
   font-size: 0.95rem;
   letter-spacing: 0.03em;
 }
@@ -120,20 +155,26 @@ const getChildren = (parent) => {
 .header-button-box {
   display: flex;
   align-items: center;
+  gap: 1rem;
+}
+
+.user-id-info{
+  color: white;
+  font-weight: bold;
 }
 
 /* 2depth dropdown 컨테이너 */
 .dropdown {
   position: absolute;
-  top: calc(100% + 8px);
+  top: calc(100% + 0.5rem);
   left: 50%;
   transform: translateX(-50%);
   background: #0c254d;
-  border-radius: 4px;
-  padding: 4px 0;
+  border-radius: 0.25rem;
+  padding: 0.25rem 0;
   z-index: 20;
-  min-width: 130px;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.45);
+  min-width: 8.125rem;
+  box-shadow: 0 0.625rem 1.5rem rgba(15, 23, 42, 0.45);
   display: flex;
   flex-direction: column;
   font-weight: bold;
@@ -143,18 +184,18 @@ const getChildren = (parent) => {
 .dropdown::before {
   content: "";
   position: absolute;
-  top: -6px;
+  top: -0.375rem;
   left: 50%;
   transform: translateX(-50%) rotate(45deg);
-  width: 10px;
-  height: 10px;
+  width: 0.625rem;
+  height: 0.625rem;
   background: #0c254d;
 }
 
 /* 2depth 링크 */
 .dropdown-link {
   display: block;
-  padding: 9px 18px;
+  padding: 0.5625rem 1.125rem;
   color: #e5e7eb;
   text-decoration: none;
   font-size: 0.9rem;
@@ -166,22 +207,23 @@ const getChildren = (parent) => {
 .dropdown-link:hover {
   background-color: #1f3f6d;
   color: #ffffff;
-  transform: translateY(-1px);
+  transform: translateY(-0.0625rem);
 }
 
 /* 모바일 대응 간단 정리 */
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
   .header {
-    padding: 0 16px;
+    padding: 0 1rem;
   }
 
   .nav {
-    gap: 14px;
+    gap: 0.875rem;
   }
 
   .nav-link {
-    padding: 6px 4px;
+    padding: 0.375rem 0.25rem;
     font-size: 0.9rem;
   }
 }
 </style>
+

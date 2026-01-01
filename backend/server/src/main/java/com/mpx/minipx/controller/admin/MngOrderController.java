@@ -85,7 +85,7 @@ public class MngOrderController {
 			return ResponseEntity.status(401).body("Invalid refresh token");
 		}        
 		inData.put("loginUserId", (String) claims.get("userId"));
-		inData.put("loginUserSeq", (String) claims.get("userSeq"));
+		inData.put("loginUserSeq", claims.get("userSeq"));
 		
 		//관리자 권한 검증
 		Integer roleSeq = claims.get("roleSeq", Integer.class);

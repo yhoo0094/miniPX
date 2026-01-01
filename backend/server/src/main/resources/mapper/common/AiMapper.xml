@@ -86,5 +86,117 @@
 	     </foreach>
 	     )
 	</select>	
-	
+
+    <!-- SESSION -->
+    <insert id="insertAiSession" parameterType="map"
+            useGeneratedKeys="true" keyProperty="sessionId">
+      INSERT INTO tb_ai_session
+      (USER_SEQ, TITLE, LLM_MODEL, FST_REG_SEQ, LST_UPD_SEQ)
+      VALUES
+      (#{loginUserSeq}, #{title}, #{llmModel}, #{loginUserSeq}, #{loginUserSeq})
+    </insert>
+    
+    <select id="existsAiSession" parameterType="map" resultType="int">
+      SELECT COUNT(1) FROM tb_ai_session WHERE SESSION_ID = #{sessionId}
+    </select>
+    
+    <update id="touchAiSession" parameterType="map">
+      UPDATE tb_ai_session
+      SET LST_UPD_SEQ = #{lstUpdSeq}, LST_UPD_DTTI = NOW()
+      WHERE SESSION_ID = #{sessionId}
+    </update>
+    
+    <!-- TURN -->
+    <select id="selectMaxTurnNo" parameterType="map" resultType="int">
+      SELECT MAX(TURN_NO) FROM tb_ai_turn WHERE SESSION_ID = #{sessionId}
+    </select>
+    
+    <insert id="insertAiTurn" parameterType="map"
+            useGeneratedKeys="true" keyProperty="turnId">
+      INSERT INTO tb_ai_turn
+      (SESSION_ID, TURN_NO, USER_INPUT, FST_REG_SEQ, LST_UPD_SEQ)
+      VALUES
+      (#{sessionId}, #{turnNo}, #{userInput}, #{loginUserSeq}, #{loginUserSeq})
+    </insert>
+    
+    <update id="updateAiTurnFinish" parameterType="map">
+      UPDATE tb_ai_turn
+      SET FINAL_ANSWER = #{finalAnswer},
+          ROUND_COUNT = #{roundCount},
+          AI_FINISH_RSCD = #{aiFinishRscd},
+          ERROR_CODE = #{errorCode},
+          ERROR_MESSAGE = #{errorMessage},
+          LST_UPD_SEQ = #{loginUserSeq},
+          LST_UPD_DTTI = NOW()
+      WHERE TURN_ID = #{turnId}
+    </update>
+    
+    <!-- TOOL CALL -->
+    <insert id="insertAiToolCall" parameterType="map"
+            useGeneratedKeys="true" keyProperty="toolCallId">
+      INSERT INTO tb_ai_tool_call
+      (TURN_ID, ROUND_NO, CALL_ID, TOOL_NM, ARGUMENTS_JSON,
+       FST_REG_SEQ, LST_UPD_SEQ)
+      VALUES
+      (#{turnId}, #{roundNo}, #{callId}, #{toolNm}, #{argumentsJson},
+       #{loginUserSeq}, #{loginUserSeq})
+    </insert>
+    
+    <update id="updateAiToolCallTiming" parameterType="map">
+      UPDATE tb_ai_tool_call
+      SET START_DTTI = #{startDtti},
+          END_DTTI = #{endDtti},
+          DURATION_MS = #{durationMs},
+          LST_UPD_SEQ = #{loginUserSeq},
+          LST_UPD_DTTI = NOW()
+      WHERE TOOL_CALL_ID = #{toolCallId}
+    </update>
+    
+    <!-- TOOL RESULT -->
+    <insert id="insertAiToolResult" parameterType="map">
+      INSERT INTO tb_ai_tool_result
+      (TOOL_CALL_ID, RESULT_JSON, RESULT_ROWS,
+       ERROR_YN, ERROR_MESSAGE, FST_REG_SEQ, LST_UPD_SEQ)
+      VALUES
+      (#{toolCallId}, #{resultJson}, #{resultRows},
+       #{errorYn}, #{errorMessage}, #{fstRegSeq}, #{lstUpdSeq})
+    </insert>
+    
+    <!-- EVENT -->
+    <insert id="insertAiEvent" parameterType="map">
+      INSERT INTO tb_ai_event
+      (TURN_ID, SEQ_NO, EVENT_TYPE, ROLE,
+       TOOL_NM, CALL_ID, CONTENT_TEXT, CONTENT_JSON,
+       FST_REG_SEQ, LST_UPD_SEQ)
+      VALUES
+      (#{turnId}, #{seqNo}, #{eventType}, #{role},
+       #{toolNm}, #{callId}, #{contentText}, #{contentJson},
+       #{loginUserSeq}, #{loginUserSeq})
+    </insert>
+    
+    <select id="selectRecentEventsBySession" parameterType="map" resultType="map">
+      SELECT
+        e.EVENT_TYPE,
+        e.ROLE,
+        e.CALL_ID,
+        e.CONTENT_TEXT,
+        e.CONTENT_JSON
+      FROM tb_ai_event e
+      JOIN tb_ai_turn t ON t.TURN_ID = e.TURN_ID
+      WHERE t.SESSION_ID = #{sessionId}
+      ORDER BY e.FST_REG_DTTI ASC
+      LIMIT #{limit}
+    </select>	
+    
+	<!--토큰 사용량 계산-->
+	<update id="addAiTurnUsage" parameterType="map">
+	  UPDATE tb_ai_turn
+	  SET
+	    INPUT_TOKENS  = COALESCE(INPUT_TOKENS, 0)  + COALESCE(#{inputTokens}, 0),
+	    OUTPUT_TOKENS = COALESCE(OUTPUT_TOKENS, 0) + COALESCE(#{outputTokens}, 0),
+	    TOTAL_TOKENS  = COALESCE(TOTAL_TOKENS, 0)  + COALESCE(#{totalTokens}, 0),
+	    LST_UPD_SEQ   = #{loginUserSeq},
+	    LST_UPD_DTTI  = NOW()
+	  WHERE TURN_ID = #{turnId}
+	</update>    
 </mapper>

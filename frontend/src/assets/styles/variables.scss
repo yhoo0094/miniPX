@@ -4,6 +4,10 @@
 $primary-color: #0c254d;
 $secondary-color: #f4f4f4;
 $text-color: #333;
+$color-red: #c20000;
+.red {
+    color: $color-red;
+}
 
 // 폰트
 $font-family-base: 'Pretendard', sans-serif;

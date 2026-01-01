@@ -1,5 +1,5 @@
 <template>
-  <div class="counsel-box">
+  <div v-if="userStore.aiOpenYn === 'Y'" class="counsel-box">
     <transition name="chat-fade">  
       <div class="counsel-text-box" v-show="isOpenCounsel">
         <div class="bubble">
@@ -22,8 +22,10 @@
 
           <!-- 문의사항 입력창 -->
           <div class="chat-input-box">
-            <BaseInput v-model="question" class="chat-input" placeholder="문의사항을 입력하세요"
-              @keydown.enter.prevent="clickCounselBtn"/>          
+            <BaseTextarea v-if="isDesktop" v-model="question" :height="'2rem'" class="chat-input" placeholder="문의사항을 입력하세요"
+              :maxlength="300" @keydown.enter.exact.prevent="clickCounselBtn"/>   
+            <BaseTextarea v-else v-model="question" :height="'2rem'" class="chat-input" placeholder="문의사항을 입력하세요"
+              :maxlength="300"/>
             <BaseButton
               type="button"
               class="chat-button"
@@ -48,14 +50,20 @@ import { ref, nextTick } from 'vue';
 import counsel from '@/assets/img/counsel.png';
 import api from '@/plugins/axios';
 import BaseInput from '@/components/common/BaseInput.vue';
+import BaseTextarea from '@/components/common/BaseTextarea.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
 import TypingDots from '@/components/common/TypingDots.vue';
 import { renderMarkdownToHtml } from '@/utils/useMarkdown';
+import { useUserStore } from '@/stores/userStore';
 
+const sessionId = ref<number>();
 const question = ref<string>('');
 const isOpenCounsel = ref(false);
 const isLoading = ref(false);
 const chatContentRef = ref<HTMLElement | null>(null);
+const userStore = useUserStore();
+
+const isDesktop = !/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
 
 interface ChatMessage {
   id: number;
@@ -109,8 +117,10 @@ const clickCounselBtn = async () => {
   try {
     const response = await api.post('/openai/getAiAnswer', {
       question: currentQuestion,
+      sessionId: sessionId.value
     });
-    const botText = response.data as string;
+    const botText = response.data['answer'] as string;
+    sessionId.value = response.data['sessionId'];
 
     // 로딩 메시지 찾아서 실제 답변으로 교체
     const index = messages.value.findIndex((m) => m.id === pendingId);
@@ -182,10 +192,8 @@ const scrollToBottom = async () => {
   display: flex;
   flex-direction: column;  
   height: 30rem;
-  width: 50rem;
-  max-width: 100vw;
+  width: clamp(200px, calc(100vw - 2rem), 50rem);
   min-height: 10rem;
-  min-width: 30rem;
   background: #e9f6ff;
   padding: 0.5rem;
   border-radius: 0.5rem;
@@ -197,6 +205,7 @@ const scrollToBottom = async () => {
   word-wrap: break-word;
   resize: both;
   overflow: auto;  
+  box-sizing: border-box;
 }
 
 /* 닫기 버튼 */
@@ -250,6 +259,10 @@ const scrollToBottom = async () => {
 .chat-input {
   flex-grow: 1;
   margin-right: 0.5rem;
+}
+
+.chat-input :deep(textarea) {
+  align-content: center;
 }
 
 /* --------채팅창 나타나기/사라지기 애니메이션-------- */
@@ -307,6 +320,7 @@ const scrollToBottom = async () => {
 }
 .chat-row.user .chat-bubble {
   order: 1;
+  white-space: pre-wrap;  /* 줄바꿈 허용 */
 }
 
 /* 말풍선 공통 */

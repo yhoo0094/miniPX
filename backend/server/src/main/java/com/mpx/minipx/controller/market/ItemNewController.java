@@ -58,7 +58,7 @@ public class ItemNewController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));    	
+        inData.put("userSeq", claims.get("userSeq"));    	
     	
         Map<String, Object> result = new HashMap<>();
         result = itemNewService.getNewOrder(inData);
@@ -90,7 +90,7 @@ public class ItemNewController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));
+        inData.put("userSeq", claims.get("userSeq"));
 
         Map<String, Object> result = itemNewService.insertNewOrder(inData, imageFile);
 
@@ -122,7 +122,7 @@ public class ItemNewController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));
+        inData.put("userSeq", claims.get("userSeq"));
 
         Map<String, Object> result = itemNewService.updateNewOrder(inData, imageFile);
 

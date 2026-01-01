@@ -4,6 +4,10 @@
     <div class="basket-header">
       <div class="basket-title-main">
         <span class="basket-title-pill">장바구니({{ BasketTypes.length }})</span>
+        <span class="basket-title-menual">
+          <p>구매할 상품을 미리 담을 수 있는 장바구니입니다.</p>
+          <p class="red">잊지 말고 구매요청을 눌러주세요.</p>
+        </span>
       </div>
     </div>
 
@@ -275,7 +279,6 @@ const toggleAll = () => {
   background: #f9fbff;
   border-radius: 1rem;
   box-shadow: 0 0.5rem 1.125rem rgba(15, 23, 42, 0.08);
-  min-width: 31.25rem;
 }
 
 /* 전체 페이지 컨테이너 */
@@ -606,7 +609,7 @@ const toggleAll = () => {
 
 .basket-title-main {
   display: flex;
-  flex-direction: column;
+  align-items: center;
 }
 
 .basket-title-pill {
@@ -616,6 +619,12 @@ const toggleAll = () => {
   font-size: 1.3rem;
   font-weight: bold;
   letter-spacing: 0.02rem;
+}
+
+.basket-title-menual {
+ font-size: 0.7rem;
+ font-weight: bold;
+ flex: 1;
 }
 </style>
 

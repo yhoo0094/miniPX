@@ -10,11 +10,15 @@
 		SELECT T1.REQ_SEQ                                /*요청일련번호*/
 			 , DATE_FORMAT(T1.REQ_DTTI, '%Y-%m-%d %H:%i:%s') AS REQ_DTTI   /*요청일시*/
 			 , T1.USER_SEQ                               /*사용자일련번호*/
+			 , T2.USER_ID                                /*사용자아이디*/
+			 , T2.USER_NM                                /*사용자명*/
 			 , T1.IP                                     /*사용자아이피*/
 			 , T1.URI                                    /*요청경로*/
 			 , T1.PARAM                                  /*요청파라미터*/
 			 , T1.REQ_TYPE_CODE                          /*요청타입코드*/
 		  FROM tb_log_req T1							 /*테이블_요청로그*/ 
+		  JOIN tb_user T2								 /*테이블_사용자*/
+		    ON T1.USER_SEQ = T2.USER_SEQ
 		 WHERE 1 = 1
 		 <if test='startDate != null and startDate != "" and endDate != null and endDate != ""'>
 		   AND DATE_FORMAT(T1.REQ_DTTI, '%Y%m%d') BETWEEN DATE_FORMAT(#{startDate}, '%Y%m%d') AND DATE_FORMAT(#{endDate}, '%Y%m%d') 

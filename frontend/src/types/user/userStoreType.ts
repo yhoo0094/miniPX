@@ -14,8 +14,10 @@ export interface UserActions {
 }
 
 export interface UserGetters {
-  isLoggedIn: boolean;
+  userId: string;
   userNm: string;
+  aiOpenYn: string;
+  credit: number | '';
   roleSeq: number | '';
 }
 

@@ -43,15 +43,15 @@ public class OrderController {
         Map<String, Object> result = new HashMap<>();
         
     	// 사용자 정보 추출
-        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
         Claims claims;
         try {
-            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+            claims = JwtUtil.validateToken(accessToken, jwtSecret);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid refresh token");
+            return ResponseEntity.status(401).body("Invalid token");
         }        
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));        
+        inData.put("userSeq", claims.get("userSeq"));        
         
         result = orderService.getOrderList(inData);
         return ResponseEntity.ok(result);
@@ -78,7 +78,7 @@ public class OrderController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }        
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));
+        inData.put("userSeq", claims.get("userSeq"));
         
         inData.put("orderStatusCode", "91");
         result = orderService.updateOrderStatus(inData);
@@ -106,7 +106,7 @@ public class OrderController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }        
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));
+        inData.put("userSeq", claims.get("userSeq"));
         
         inData.put("orderStatusCode", "04");
         result = orderService.updateOrderStatus(inData);

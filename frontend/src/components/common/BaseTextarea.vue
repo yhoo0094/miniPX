@@ -62,16 +62,14 @@ const styleProp = computed(() => {
 
 /* textarea 스타일 */
 .base-textarea textarea {
-  min-height: 4rem;
-  padding: 0.6rem 0.75rem;
+  padding: 0 0.75rem;
   border: 1.5px solid #b8c4d1;
   border-radius: 8px;
   font-size: 1rem;
   outline: none;
   transition: all 0.2s ease;
   background-color: #f8fbff;
-  resize: vertical; /* 세로로만 크기 조절 */
-  line-height: 1.4;
+  resize: vertical;
 }
 
 /* placeholder */

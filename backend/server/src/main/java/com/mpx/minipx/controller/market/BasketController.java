@@ -51,7 +51,7 @@ public class BasketController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }        
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));        
+        inData.put("userSeq", claims.get("userSeq"));        
         
         result = basketService.getBasketList(inData);
         return ResponseEntity.ok(result);
@@ -78,7 +78,7 @@ public class BasketController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }        
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));
+        inData.put("userSeq", claims.get("userSeq"));
         
         result = basketService.upsertBasket(inData);
         return ResponseEntity.ok(result);
@@ -105,7 +105,7 @@ public class BasketController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }        
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));
+        inData.put("userSeq", claims.get("userSeq"));
         
         result = basketService.updateBasketCnt(inData);
         return ResponseEntity.ok(result);
@@ -133,7 +133,7 @@ public class BasketController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }        
         inData.put("userId", (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));
+        inData.put("userSeq", claims.get("userSeq"));
         
         result = basketService.deleteBasket(inData);
         return ResponseEntity.ok(result);
@@ -159,7 +159,7 @@ public class BasketController {
             return ResponseEntity.status(401).body("Invalid refresh token");
         }
         inData.put("userId",  (String) claims.get("userId"));
-        inData.put("userSeq", (String) claims.get("userSeq"));
+        inData.put("userSeq", claims.get("userSeq"));
 
         result = basketService.insertOrder(inData);
 

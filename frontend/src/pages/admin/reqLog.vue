@@ -70,11 +70,10 @@
           <thead>
             <tr>
               <th style="width: 16%;">일시</th>
-              <th style="width: 10%;">요청자</th>
+              <th style="width: 18%;">요청자</th>
               <th style="width: 14%;">아이피</th>
-              <th style="width: 24%;">URI</th>
-              <th style="width: 12%;">요청타입</th>
-              <th style="width: 24%;">파라미터</th>
+              <th style="width: 26%;">주소</th>
+              <th style="width: 26%;">파라미터</th>
             </tr>
           </thead>
 
@@ -82,12 +81,11 @@
             <template v-for="row in logs" :key="row.reqSeq">
               <tr>
                 <td>{{ row.reqDtti }}</td>
-                <td>{{ row.userSeq ?? '-' }}</td>
+                <td>{{ row.userId ? `${row.userNm ?? ''}(${row.userId})` : '-' }}</td>
                 <td>{{ row.ip }}</td>
                 <td class="td-left">
                   <span class="ellipsis" :title="row.uri">{{ row.uri }}</span>
                 </td>
-                <td>{{ row.reqTypeCode }}</td>
                 <td class="td-left">
                   <div class="param-cell">
                     <span class="ellipsis" :title="row.param || ''">
@@ -182,11 +180,14 @@ import BaseToast from '@/components/common/BaseToast.vue';
 import Constant from '@/constants/constant';
 import { useUiStore } from '@/stores/uiStore';
 import type { ApiResponse } from '@/types/api/response';
+import { getCodeList } from '@/api/code';
 
 type ReqLogRow = {
   reqSeq: number;
   reqDtti: string;            // "YYYY-MM-DD HH:mm:ss" 같은 문자열로 내려온다고 가정
   userSeq: number | null;
+  userId: string;
+  userNm: string;
   ip: string;
   uri: string;
   param: string | null;
@@ -202,15 +203,7 @@ const searchKeyword = ref('');
 const reqTypeCode = ref('');     // 전체는 빈값
 
 const logs = ref<ReqLogRow[]>([]);
-
-// 요청타입 옵션(공통코드가 있으면 getCodeList로 바꿔도 됨)
-const reqTypeCodes = ref<{ codeDetailNm: string; codeDetail: string }[]>([
-  { codeDetailNm: 'GET', codeDetail: 'GET' },
-  { codeDetailNm: 'POST', codeDetail: 'POST' },
-  { codeDetailNm: 'PUT', codeDetail: 'PUT' },
-  { codeDetailNm: 'PATCH', codeDetail: 'PATCH' },
-  { codeDetailNm: 'DELETE', codeDetail: 'DELETE' },
-]);
+const reqTypeCodes = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
 
 // 페이지네이션
 const page = ref(1);
@@ -220,7 +213,10 @@ const totalCount = ref(0);
 // 상세 펼침
 const expandedSeq = ref<number | null>(null);
 
-onMounted(() => {
+onMounted(async() => {
+  //공통코드 조회
+  reqTypeCodes.value = await getCodeList('REQ_TYPE_CODE');
+
   // 검색 기간 기본 값 설정(오늘 포함 최근 7일)
   const today = new Date();
   const from = new Date(today);

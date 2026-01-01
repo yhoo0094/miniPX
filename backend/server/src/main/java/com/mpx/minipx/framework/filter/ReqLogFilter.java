@@ -1,13 +1,13 @@
 package com.mpx.minipx.framework.filter;
 
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
@@ -17,13 +17,10 @@ import com.mpx.minipx.framework.util.JwtUtil;
 import com.mpx.minipx.service.admin.ReqLogService;
 
 import io.jsonwebtoken.Claims;
-
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class ReqLogFilter extends OncePerRequestFilter {
@@ -51,9 +48,10 @@ public class ReqLogFilter extends OncePerRequestFilter {
             // ===== 여기서 DB 저장 =====
             ReqLog log = new ReqLog();
             String uri = wrapped.getRequestURI(); 
+            String reqTypeCode = getReqTypeCode(uri);
             log.setIp(getClientIp(wrapped));
             log.setUri(uri);
-            log.setReqTypeCode(wrapped.getMethod()); // REQ_TYPE_CODE를 METHOD로 사용 예시
+            log.setReqTypeCode(reqTypeCode);
             log.setUserSeq(extractUserSeqSafely(wrapped)); // 프로젝트 방식에 맞게 구현
             log.setParam(buildParamText(wrapped));
             if(!isExclusiveUri(uri)) {
@@ -186,13 +184,44 @@ public class ReqLogFilter extends OncePerRequestFilter {
 	    "jwt", "session", "cookie"
 	};    
     
-    //저장 제외 url 목록
+    //reqTypeCode 분류
+    private String getReqTypeCode(String uri) {
+        if (uri == null) return "";
+        uri = uri.toLowerCase();
+        String reqTypeCode;
+        if(uri.contains("/item/".toLowerCase())){
+        	reqTypeCode = "market";
+        } else if(uri.contains("/basket/".toLowerCase())) {
+        	reqTypeCode = "market";
+        } else if(uri.contains("/order/".toLowerCase())) {
+        	reqTypeCode = "market";
+        } else if(uri.contains("/itemNew/".toLowerCase())) {
+        	reqTypeCode = "market";
+        } else if(uri.contains("/itemDetail/".toLowerCase())) {
+        	reqTypeCode = "market";
+        } else if(uri.contains("/mngOrder/".toLowerCase())) {
+        	reqTypeCode = "admin";
+        } else if(uri.contains("/mngUser/".toLowerCase())) {
+        	reqTypeCode = "admin";
+        } else if(uri.contains("/loginLog/".toLowerCase())) {
+        	reqTypeCode = "admin";
+        } else if(uri.contains("/reqLog/".toLowerCase())) {
+        	reqTypeCode = "admin";
+        } else {
+        	reqTypeCode = "etc";
+        }
+        return reqTypeCode;
+    }      
+    
+    //저장 제외 uri 목록
     private boolean isExclusiveUri(String uri) {
         if (uri == null) return false;
         uri = uri.toLowerCase();
 
         return uri.equals("/api/item/getItemImage".toLowerCase())
             || uri.equals("/api/common/getCodeList".toLowerCase())
+            || uri.equals("/actuator/health/liveness".toLowerCase())
+            || uri.equals("/api/auth/check".toLowerCase())
             ;
-    }    
+    }   
 }

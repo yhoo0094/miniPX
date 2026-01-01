@@ -127,7 +127,7 @@ public class AuthController {
         String newAccessToken = JwtUtil.generateToken(user, jwtSecret, Constant.ACCESS_TOKEN_VALIDITY);
         Cookie accessCookie = new Cookie("accessToken", newAccessToken);
         accessCookie.setHttpOnly(true);
-//      accessCookie.setSecure(true);		//HTTPS에서만 전송(주석 풀어야함)
+//        accessCookie.setSecure(true);		//HTTPS에서만 전송(주석 풀어야함)
         accessCookie.setSecure(false);		//개발용도        
         accessCookie.setMaxAge((int)Constant.REFRESH_TOKEN_VALIDITY);
         accessCookie.setPath("/");     
@@ -137,7 +137,7 @@ public class AuthController {
         String newRefreshToken = JwtUtil.generateToken(user, jwtSecret, Constant.REFRESH_TOKEN_VALIDITY);
         Cookie refreshCookie = new Cookie("refreshToken", newRefreshToken);
         refreshCookie.setHttpOnly(true);  // JavaScript에서 쿠키에 접근 불가
-//      refreshCookie.setSecure(true);		//HTTPS에서만 전송(주석 풀어야함)
+//        refreshCookie.setSecure(true);		//HTTPS에서만 전송(주석 풀어야함)
         refreshCookie.setSecure(false);		//개발용도         
         refreshCookie.setMaxAge((int)Constant.REFRESH_TOKEN_VALIDITY);
         refreshCookie.setPath("/");       // 전체 경로에 대해 유효 

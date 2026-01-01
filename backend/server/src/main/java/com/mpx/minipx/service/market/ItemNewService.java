@@ -51,9 +51,15 @@ public class ItemNewService {
     	Map<String, Object> map = sqlSession.selectOne("com.mpx.minipx.mapper.ItemNewMapper.getNewOrder", inData);
     	
     	//조회하는 사용자와 주문자가 일치하지 않을 경우(관리자는 조회 가능)
-    	if( !"admin".equals(inData.get("userId"))
-    			&& (inData.get("userSeq") == null || map.get("userSeq") == null 
-    			|| !inData.get("userSeq").equals(map.get("userSeq").toString()))) {
+    	Long inUserSeq  = ((Number) inData.get("userSeq")).longValue();
+    	Long mapUserSeq = map.get("userSeq") == null 
+    	        ? null 
+    	        : Long.valueOf(map.get("userSeq").toString());
+    	
+    	if (!"admin".equals(inData.get("userId"))
+    		    && (inUserSeq == null
+    		        || mapUserSeq == null
+    		        || !inUserSeq.equals(mapUserSeq))) {
     		result.put(Constant.RESULT, Constant.RESULT_FAILURE);
     		result.put(Constant.RESULT_DETAIL, Constant.UNAUTHORIZED_ACCESS);
     		result.put(Constant.OUT_RESULT_MSG, "본인 주문 내용만 조회할 수 있습니다.");

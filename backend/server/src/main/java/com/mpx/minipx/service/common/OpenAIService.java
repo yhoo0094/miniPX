@@ -1,9 +1,7 @@
 package com.mpx.minipx.service.common;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.Timestamp;
+import java.util.*;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -11,29 +9,28 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mpx.minipx.controller.common.BaseController;
+import com.mpx.minipx.dto.common.AiAnswerResult;
 import com.openai.client.OpenAIClient;
 import com.openai.models.ChatModel;
-import com.openai.models.responses.Response;
-import com.openai.models.responses.ResponseCreateParams;
-import com.openai.models.responses.ResponseFunctionToolCall;
-import com.openai.models.responses.ResponseInputItem;
-import com.openai.models.responses.ResponseOutputMessage;
+import com.openai.models.responses.*;
 
 /**
- * LLM이 SQL을 직접 만들지 않고,
- * 서버가 제공하는 "쿼리 카탈로그(툴/함수 목록)" 중에서 골라 호출하는 구조.
- * 필요하면 tool call을 여러 번 수행(왕복)할 수 있도록 루프 처리.
+ * 세션 유지 + 히스토리 포함 AI Service
  */
 @Service
 public class OpenAIService {
-	protected static final Log log = LogFactory.getLog(BaseController.class);	
+
+    protected static final Log log = LogFactory.getLog(BaseController.class);
 
     private final OpenAIClient openAIClient;
     private final QdrantService qdrantService;
-    
+
     @Autowired
-    private SqlSessionTemplate sqlSession;      
+    private SqlSessionTemplate sqlSession;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     public OpenAIService(OpenAIClient openAIClient,
                          QdrantService qdrantService) {
@@ -41,10 +38,28 @@ public class OpenAIService {
         this.qdrantService = qdrantService;
     }
 
-    public String getAiAnswer(String userInput) {
+    /* ================================
+       Entry Point
+       ================================ */
+    public AiAnswerResult getAiAnswer(Map<String, Object> inData) {
+    	AiAnswerResult aiAnswerResult = new AiAnswerResult();
+    	
+    	Long loginUserSeq = ((Number)inData.get("loginUserSeq")).longValue();
+    	Long sessionId = inData.get("sessionId") == null ? null : ((Number) inData.get("sessionId")).longValue();
+    	String userInput = (String) inData.get("question");
 
-        // 1) 대화 input 리스트 준비
-        List<ResponseInputItem> inputs = new ArrayList<>();
+        long ensuredSessionId = ensureSession(loginUserSeq, sessionId, userInput);
+
+        int turnNo = nextTurnNo(ensuredSessionId);
+        long turnId = createTurn(loginUserSeq, ensuredSessionId, turnNo, userInput);
+
+        int eventSeq = 1;
+
+        // 1) 히스토리 로딩
+        List<ResponseInputItem> inputs =
+            loadConversationHistoryAsInputs(ensuredSessionId);
+
+        // 2) 이번 사용자 질문 추가
         inputs.add(
             ResponseInputItem.ofMessage(
                 ResponseInputItem.Message.builder()
@@ -54,110 +69,403 @@ public class OpenAIService {
             )
         );
 
-        // 2) "쿼리 카탈로그 기반" instructions
+        insertEvent(loginUserSeq, turnId, eventSeq++, "USER_MSG", "user",
+            null, null, userInput, null);
+
+        // 3) OpenAI 설정
         String instructions = """
-        너는 이커머스 쇼핑몰의 AI 상담/데이터 분석 assistant다.
-        사용자는 한국어로 질문한다.
+            너는 이커머스 쇼핑몰의 AI 상담/데이터 분석 assistant다.
+            사용자는 한국어로 질문한다.
 
-        매우 중요:
-        - 데이터가 필요하면, 아래 제공된 "툴 카탈로그" 중에서 골라 호출한다.
-        - 툴을 호출하면 서버가 결과(JSON)를 돌려준다.
-        - 필요한 경우 툴을 여러 번 호출해도 된다(여러 번 왕복 가능).
-        - 툴 결과를 바탕으로 사람이 이해하기 쉬운 한국어로 요약/정리해서 답변한다.
-        
-		[검색/툴 호출 절차 - 매우 중요]
-		1) 사용자의 질문에서 핵심 키워드(예: 향/맛/성분/효능/용도/피부타입/원산지/무알콜/저당 등)를 추출한다.
-		2) 1차 조회: AiGetItemList를 호출해 "상품명/분류" 기반으로 빠르게 후보를 찾는다.
-		3) 2차 조회(필수): AiGetDetailItemList(userQuery=사용자 원문 질문)을 호출하여 상품상세정보를 기반으로 후보를 찾는다.
-		4) 최종 답변 규칙:
-		   - "없습니다/재고가 없습니다/등록되지 않았습니다" 같은 결론은
-		     AiGetItemList + AiGetDetailItemList까지 확인한 뒤에만 말한다.
-		   - 두 툴 결과가 충돌하면, 더 자세한 정보를 가진 AiGetDetailItemList 결과를 우선한다.
-		   - 가격에 대한 질문은 가격(낱개가격 * 판매단위)를 기준으로 답변한다.        
-        
-        [툴 카탈로그]
-        1) AiGetItemList
-	       - 용도: 간단한 상품 목록 조회
-	       - 파라미터:
-	       * itemSeq (optional): 상품일련번호
-	       * itemNm (optional): 상품명
-	       * itemType (optional): 상품 분류("식품" | "화장품" | "기타")
-	       * sort (optional, default="상품명_오름차순"): 정렬 기준("단위가격_오름차순" | "단위가격_내림차순" | "등록일_내림차순")
-	       * excludeSoldOut (optional, default=true): 품절 제외 여부
-	       * limit (optional)
-	       * offset (optional)
-	       - 리턴: 상품일련번호/상품명/낱개가격/판매단위/가격/상품분류/상품상세분류/품절여부/판매량/등록일
-	       - 매우 중요
-		   * 결과가 0건이면: 즉시 AiGetDetailItemList를 호출한다.
-	
-        2) AiGetDetailItemList
-           - 용도: 자세한 설명이 포함된 상품 목록 조회
-           - 파라미터:
-        	 * userQuery: 문의내용
-           - 리턴: 상품일련번호/상품명/낱개가격/판매단위/가격/상품분류/상품상세분류/품절여부/판매량/등록일/상품상세정보               
-        """;
+            매우 중요:
+            - 데이터가 필요하면, 아래 제공된 "툴 카탈로그" 중에서 골라 호출한다.
+            - 툴을 호출하면 서버가 결과(JSON)를 돌려준다.
+            - 필요한 경우 툴을 여러 번 호출해도 된다(여러 번 왕복 가능).
+            - 툴 결과를 바탕으로 사람이 이해하기 쉬운 한국어로 요약/정리해서 답변한다.
+            
+    		[검색/툴 호출 절차 - 매우 중요]
+    		1) 사용자의 질문에서 핵심 키워드(예: 향/맛/성분/효능/용도/피부타입/원산지/무알콜/저당 등)를 추출한다.
+    		2) 1차 조회: AiGetItemList를 호출해 "상품명/분류" 기반으로 빠르게 후보를 찾는다.
+    		3) 2차 조회(필수): AiGetDetailItemList(userQuery=사용자 원문 질문)을 호출하여 상품상세정보를 기반으로 후보를 찾는다.
+    		4) 최종 답변 규칙:
+    		   - "없습니다/재고가 없습니다/등록되지 않았습니다" 같은 결론은
+    		     AiGetItemList + AiGetDetailItemList까지 확인한 뒤에만 말한다.
+    		   - 두 툴 결과가 충돌하면, 더 자세한 정보를 가진 AiGetDetailItemList 결과를 우선한다.
+    		   - 가격에 대한 질문은 가격(낱개가격 * 판매단위)를 기준으로 답변한다.        
+            
+            [툴 카탈로그]
+            1) AiGetItemList
+    	       - 용도: 간단한 상품 목록 조회
+    	       - 파라미터:
+    	       * itemSeq (optional): 상품일련번호
+    	       * itemNm (optional): 상품명
+    	       * itemType (optional): 상품 분류("식품" | "화장품" | "기타")
+    	       * sort (optional, default="상품명_오름차순"): 정렬 기준("단위가격_오름차순" | "단위가격_내림차순" | "등록일_내림차순")
+    	       * excludeSoldOut (optional, default=true): 품절 제외 여부
+    	       * limit (optional)
+    	       * offset (optional)
+    	       - 리턴: 상품일련번호/상품명/낱개가격/판매단위/가격/상품분류/상품상세분류/품절여부/판매량/등록일
+    	       - 매우 중요
+    		   * 결과가 0건이면: 즉시 AiGetDetailItemList를 호출한다.
+    	
+            2) AiGetDetailItemList
+               - 용도: 자세한 설명이 포함된 상품 목록 조회
+               - 파라미터:
+            	 * userQuery: 문의내용
+               - 리턴: 상품일련번호/상품명/낱개가격/판매단위/가격/상품분류/상품상세분류/품절여부/판매량/등록일/상품상세정보               
+            """;
 
-        // 3) 툴 등록 (서버가 제공하는 "함수 목록")
-        ResponseCreateParams.Builder builder = ResponseCreateParams.builder()
-            // 모델은 환경에 맞게 선택 (예: GPT_5_MINI / GPT_4_1_MINI 등)
-            .model(ChatModel.GPT_4_1_MINI)
-            .instructions(instructions)
-            .addTool(AiGetItemList.class)
-            .addTool(AiGetDetailItemList.class)
-            .maxOutputTokens(1024);
+        ResponseCreateParams.Builder builder =
+            ResponseCreateParams.builder()
+                .model(ChatModel.GPT_4_1_MINI)
+                .instructions(instructions)
+                .addTool(AiGetItemList.class)
+                .addTool(AiGetDetailItemList.class)
+                .maxOutputTokens(1024);
 
-        // 4) 멀티 라운드 루프: tool call이 나오면 실행 후 결과를 inputs에 붙이고 다시 호출
         final int MAX_ROUNDS = 5;
-        for (int round = 0; round < MAX_ROUNDS; round++) {
 
-            builder.input(ResponseCreateParams.Input.ofResponse(inputs));
-            Response response = openAIClient.responses().create(builder.build());
+        try {
+            for (int round = 0; round < MAX_ROUNDS; round++) {
 
-            boolean hadAnyToolCallThisRound = false;
-            List<ResponseFunctionToolCall> functionCalls = new ArrayList<>();
+                builder.input(ResponseCreateParams.Input.ofResponse(inputs));
+                Response response = openAIClient.responses().create(builder.build());
+                addTurnUsage(loginUserSeq, turnId, response);
 
-            // 응답 output을 inputs로 누적 + function call 수집
-            for (var item : response.output()) {
+                boolean hasToolCall = false;
+                List<ResponseFunctionToolCall> toolCalls = new ArrayList<>();
 
-                if (item.isFunctionCall()) {
-                    hadAnyToolCallThisRound = true;
-                    functionCalls.add(item.asFunctionCall());
-                    // function call도 inputs에 포함(대화 히스토리로)
-                    inputs.add(ResponseInputItem.ofFunctionCall(item.asFunctionCall()));
-                    continue;
+                for (var item : response.output()) {
+
+                    if (item.isFunctionCall()) {
+                        hasToolCall = true;
+                        ResponseFunctionToolCall fc = item.asFunctionCall();
+
+                        inputs.add(ResponseInputItem.ofFunctionCall(fc));
+
+                        long toolCallId = insertToolCall(loginUserSeq, turnId, round, fc);
+                        cacheToolCallId(fc.callId(), toolCallId);
+
+                        insertEvent(loginUserSeq, turnId, eventSeq++, "TOOL_CALL", "tool",
+                            fc.name(), fc.callId(), null, safeToJson(fc));
+
+                        toolCalls.add(fc);
+                        continue;
+                    }
+
+                    if (item.message().isPresent()) {
+                        ResponseOutputMessage msg = item.message().get();
+                        inputs.add(convertOutputMessageToInput(msg));
+
+                        String txt = extractTextFromMessage(msg);
+                        if (txt != null) {
+                            insertEvent(loginUserSeq, turnId, eventSeq++, "ASSIST_MSG",
+                                "assistant", null, null, txt, null);
+                        }
+                    }
                 }
 
-                // 일반 메시지면 inputs에 누적
-                if (item.message().isPresent()) {
-                    ResponseOutputMessage outMsg = item.message().get();
-                    inputs.add(convertOutputMessageToInput(outMsg));
+                if (!hasToolCall) {
+                    String answer = extractText(response);
+                    updateTurnFinish(loginUserSeq, turnId, answer, round + 1, "01", null, null);
+                    touchSession(ensuredSessionId);
+                    
+                    aiAnswerResult.setSessionId(ensuredSessionId);
+                    aiAnswerResult.setTurnId(turnId);
+                    aiAnswerResult.setTurnNo(turnNo);
+                    aiAnswerResult.setAnswer(answer);
+                    return aiAnswerResult;
+                }
+
+                for (ResponseFunctionToolCall fc : toolCalls) {
+                    long start = System.currentTimeMillis();
+                    Object result = dispatchToolCall(fc);
+                    long end = System.currentTimeMillis();
+
+                    inputs.add(
+                        ResponseInputItem.ofFunctionCallOutput(
+                            ResponseInputItem.FunctionCallOutput.builder()
+                                .callId(fc.callId())
+                                .outputAsJson(result)
+                                .build()
+                        )
+                    );
+
+                    long toolCallId = getToolCallId(fc.callId());
+                    insertToolResult(toolCallId, result);
+                    updateToolCallTiming(loginUserSeq, toolCallId, start, end);
+
+                    insertEvent(loginUserSeq, turnId, eventSeq++, "TOOL_OUTPUT", "tool",
+                        fc.name(), fc.callId(), null, safeToJson(result));
                 }
             }
 
-            // tool call이 없으면 => 이번 응답이 최종 자연어 답변
-            if (!hadAnyToolCallThisRound) {
-                return extractText(response);
+            String answer = "요청이 복잡하여 처리하지 못했습니다.";
+            updateTurnFinish(loginUserSeq, turnId, answer, MAX_ROUNDS, "03", null, null);
+            
+            aiAnswerResult.setSessionId(ensuredSessionId);
+            aiAnswerResult.setTurnId(turnId);
+            aiAnswerResult.setTurnNo(turnNo);
+            aiAnswerResult.setAnswer(answer);
+            return aiAnswerResult;            
+        } catch (Exception e) {
+            updateTurnFinish(loginUserSeq, turnId, "오류가 발생했습니다.",
+                null, "04", "OPENAI_ERROR", e.getMessage());
+            throw e;
+        }
+    }
+
+    /* ================================
+       History Loader
+       ================================ */
+    private List<ResponseInputItem> loadConversationHistoryAsInputs(long sessionId) {
+
+        List<Map<String, Object>> events =
+            sqlSession.selectList(
+                "com.mpx.minipx.mapper.AiMapper.selectRecentEventsBySession",
+                Map.of("sessionId", sessionId, "limit", 30)
+            );
+
+        List<ResponseInputItem> inputs = new ArrayList<>();
+
+        for (Map<String, Object> e : events) {
+            String type = (String) e.get("EVENT_TYPE");
+            String role = (String) e.get("ROLE");
+
+            try {
+                switch (type) {
+                    case "USER_MSG":
+                    case "ASSIST_MSG":
+                        inputs.add(
+                            ResponseInputItem.ofMessage(
+                                ResponseInputItem.Message.builder()
+                                	.role(ResponseInputItem.Message.Role.USER)
+                                    .addInputTextContent((String)e.get("CONTENT_TEXT"))
+                                    .build()
+                            )
+                        );
+                        break;
+
+                    case "TOOL_CALL":
+                        inputs.add(
+                            ResponseInputItem.ofFunctionCall(
+                                objectMapper.readValue(
+                                    (String)e.get("CONTENT_JSON"),
+                                    ResponseFunctionToolCall.class
+                                )
+                            )
+                        );
+                        break;
+
+                    case "TOOL_OUTPUT":
+                        inputs.add(
+                            ResponseInputItem.ofFunctionCallOutput(
+                                ResponseInputItem.FunctionCallOutput.builder()
+                                    .callId((String)e.get("CALL_ID"))
+                                    .outputAsJson(
+                                        objectMapper.readValue(
+                                            (String)e.get("CONTENT_JSON"),
+                                            Object.class
+                                        )
+                                    )
+                                    .build()
+                            )
+                        );
+                        break;
+                }
+            } catch (Exception ignore) {}
+        }
+        return inputs;
+    }
+
+    /* ================================
+       Session / Turn helpers
+       ================================ */
+    private long ensureSession(Long loginUserSeq, Long sessionId, String userInput) {
+        if (sessionId == null || sessionId <= 0) {
+            return createSession(loginUserSeq, userInput);
+        }
+        Integer exists = sqlSession.selectOne(
+            "com.mpx.minipx.mapper.AiMapper.existsAiSession",
+            Map.of("sessionId", sessionId)
+        );
+        return (exists == null || exists == 0)
+            ? createSession(loginUserSeq, userInput)
+            : sessionId;
+    }
+
+    private long createSession(Long loginUserSeq, String firstInput) {
+        Map<String,Object> p = new HashMap<>();
+        p.put("loginUserSeq", loginUserSeq);
+        p.put("title", summarizeTitle(firstInput));
+        p.put("llmModel", "gpt-4.1-mini");
+        p.put("fstRegSeq", 0);
+        p.put("lstUpdSeq", 0);
+
+        sqlSession.insert("com.mpx.minipx.mapper.AiMapper.insertAiSession", p);
+        return ((Number)p.get("sessionId")).longValue();
+    }
+
+    private int nextTurnNo(long sessionId) {
+        Integer max = sqlSession.selectOne(
+            "com.mpx.minipx.mapper.AiMapper.selectMaxTurnNo",
+            Map.of("sessionId", sessionId)
+        );
+        return max == null ? 1 : max + 1;
+    }
+
+    private long createTurn(Long loginUserSeq, long sessionId, int turnNo, String input) {
+        Map<String,Object> p = new HashMap<>();
+        p.put("sessionId", sessionId);
+        p.put("turnNo", turnNo);
+        p.put("userInput", input);
+        p.put("loginUserSeq", loginUserSeq);
+
+        sqlSession.insert("com.mpx.minipx.mapper.AiMapper.insertAiTurn", p);
+        return ((Number)p.get("turnId")).longValue();
+    }
+
+    private void touchSession(long sessionId) {
+        sqlSession.update(
+            "com.mpx.minipx.mapper.AiMapper.touchAiSession",
+            Map.of("sessionId", sessionId, "lstUpdSeq", 0)
+        );
+    }
+
+    /* ================================
+       Tool / Event helpers
+       ================================ */
+    private final Map<String, Long> toolCallIdMap = new HashMap<>();
+
+    private void cacheToolCallId(String callId, long id) {
+        toolCallIdMap.put(callId, id);
+    }
+    private long getToolCallId(String callId) {
+        return toolCallIdMap.get(callId);
+    }
+
+    private long insertToolCall(long loginUserSeq, long turnId, int round, ResponseFunctionToolCall fc) {
+        Map<String,Object> p = new HashMap<>();
+        p.put("turnId", turnId);
+        p.put("roundNo", round);
+        p.put("callId", fc.callId());
+        p.put("toolNm", fc.name());
+        p.put("argumentsJson", safeToJson(fc));
+        p.put("loginUserSeq", loginUserSeq);
+
+        sqlSession.insert("com.mpx.minipx.mapper.AiMapper.insertAiToolCall", p);
+        return ((Number)p.get("toolCallId")).longValue();
+    }
+
+    private void insertToolResult(long toolCallId, Object result) {
+        boolean error = (result instanceof Map<?,?> m && m.containsKey("error"));
+
+        Map<String,Object> p = new HashMap<>();
+        p.put("toolCallId", toolCallId);
+        p.put("resultJson", safeToJson(result));
+        p.put("resultRows", (result instanceof List<?> l) ? l.size() : null);
+        p.put("errorYn", error ? "Y" : "N");
+        p.put("errorMessage", error ? String.valueOf(((Map<?,?>)result).get("message")) : null);
+        p.put("fstRegSeq", 0);
+        p.put("lstUpdSeq", 0);
+
+        sqlSession.insert("com.mpx.minipx.mapper.AiMapper.insertAiToolResult", p);
+    }
+
+    private void updateToolCallTiming(long loginUserSeq, long toolCallId, long start, long end) {
+        Map<String,Object> p = new HashMap<>();
+        p.put("toolCallId", toolCallId);
+        p.put("startDtti", new Timestamp(start));
+        p.put("endDtti", new Timestamp(end));
+        p.put("durationMs", (int)(end - start));
+        p.put("loginUserSeq", loginUserSeq);
+
+        sqlSession.update("com.mpx.minipx.mapper.AiMapper.updateAiToolCallTiming", p);
+    }
+
+    private void insertEvent(long loginUserSeq, long turnId, int seq, String type, String role,
+                             String toolNm, String callId,
+                             String text, String json) {
+
+        Map<String,Object> p = new HashMap<>();
+        p.put("turnId", turnId);
+        p.put("seqNo", seq);
+        p.put("eventType", type);
+        p.put("role", role);
+        p.put("toolNm", toolNm);
+        p.put("callId", callId);
+        p.put("contentText", text);
+        p.put("contentJson", json);
+        p.put("loginUserSeq", loginUserSeq);
+
+        sqlSession.insert("com.mpx.minipx.mapper.AiMapper.insertAiEvent", p);
+    }
+
+    private void updateTurnFinish(long loginUserSeq, long turnId, String answer, Integer rounds,
+                                  String rscd, String errCd, String errMsg) {
+        Map<String,Object> p = new HashMap<>();
+        p.put("turnId", turnId);
+        p.put("finalAnswer", answer);
+        p.put("roundCount", rounds);
+        p.put("aiFinishRscd", rscd);
+        p.put("errorCode", errCd);
+        p.put("errorMessage", errMsg);
+        p.put("loginUserSeq", loginUserSeq);
+
+        sqlSession.update("com.mpx.minipx.mapper.AiMapper.updateAiTurnFinish", p);
+    }
+
+    private String safeToJson(Object o) {
+        try { return objectMapper.writeValueAsString(o); }
+        catch (Exception e) { return "{\"json_error\":\"" + e.getMessage() + "\"}"; }
+    }
+
+    private String extractTextFromMessage(ResponseOutputMessage msg) {
+        StringBuilder sb = new StringBuilder();
+        msg.content().forEach(c -> c.outputText().ifPresent(t -> sb.append(t.text())));
+        return sb.isEmpty() ? null : sb.toString();
+    }
+
+    private String summarizeTitle(String s) {
+        if (s == null) return null;
+        return s.length() <= 30 ? s : s.substring(0, 30);
+    }
+    
+    /**
+     * @메소드명: addTurnUsage
+     * @작성자: KimSangMin
+     * @생성일: 2026. 1. 1.
+     * @설명: 토큰 사용량 계산
+     */
+    private void addTurnUsage(long loginUserSeq, long turnId, Response response) {
+        // SDK에 맞춰 꺼내야 함 (아래는 개념 예시)
+        Integer inputTokens = null;
+        Integer outputTokens = null;
+        Integer totalTokens = null;
+
+        try {
+            // 예시: response.usage()가 Optional 이라고 가정
+            var usageOpt = response.usage();
+            if (usageOpt != null && usageOpt.isPresent()) {
+                var usage = usageOpt.get();
+                inputTokens = (int) usage.inputTokens();
+                outputTokens = (int) usage.outputTokens();
+                totalTokens = (int) usage.totalTokens();
             }
-
-            // tool call 실행 후 결과를 function_call_output으로 inputs에 추가
-            for (ResponseFunctionToolCall fc : functionCalls) {
-                Object toolResult = dispatchToolCall(fc);
-
-                inputs.add(
-                    ResponseInputItem.ofFunctionCallOutput(
-                        ResponseInputItem.FunctionCallOutput.builder()
-                            .callId(fc.callId())
-                            .outputAsJson(toolResult) // 결과(JSON) 주입
-                            .build()
-                    )
-                );
-            }
-
-            // 다음 라운드로 continue: tool 결과를 본 모델이 추가 툴을 부를 수도 있고 최종 답변을 만들 수도 있음
+        } catch (Exception ignore) {
+            // usage가 없거나 SDK getter가 다르면 무시
         }
 
-        return "요청 처리가 복잡하여 처리에 실패했습니다. 조금 더 자세히 설명해 주시겠어요?";
+        Map<String, Object> p = new HashMap<>();
+        p.put("turnId", turnId);
+        p.put("loginUserSeq", loginUserSeq);
+        p.put("inputTokens", inputTokens);
+        p.put("outputTokens", outputTokens);
+        p.put("totalTokens", totalTokens);
+
+        sqlSession.update("com.mpx.minipx.mapper.AiMapper.addAiTurnUsage", p);
     }
+    
     
     /**
      * @메소드명: dispatchToolCall
@@ -243,7 +551,7 @@ public class OpenAIService {
                 );
         }
     }
-
+    
     // ==========================================================
     //       ResponseOutputMessage → ResponseInputItem.Message 변환
     // ==========================================================
@@ -260,8 +568,8 @@ public class OpenAIService {
         );
 
         return ResponseInputItem.ofMessage(msgBuilder.build());
-    }
-
+    }   
+    
     /**
      * 공통: Response에서 첫 번째 text만 뽑는 헬퍼
      */
@@ -294,5 +602,5 @@ public class OpenAIService {
     //상품 설명을 기반으로 문의와 연관된 상품 목록 조회
     public record AiGetDetailItemList(
 		String userQuery
-    ) {}
+    ) {}    
 }

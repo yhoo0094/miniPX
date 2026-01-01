@@ -34,7 +34,8 @@ public class SecurityConfig {
             	.requestMatchers( "/api/user/login"
             					, "/api/auth/check"
             					, "/api/auth/reissue"
-            					, "/css/**", "/js/**").permitAll()  // 로그인 등은 허용
+            					, "/css/**", "/js/**"
+            					, "/actuator/health/**").permitAll()  // 로그인 등은 허용
                 .anyRequest().authenticated()
 //                .anyRequest().permitAll()  // 개발 중 일시적 허용
             )
@@ -55,11 +56,8 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-            "http://10.71.149.18:5173",			//로컬 ip
-            "http://43.200.173.163",        	//운영(80포트)
-            "https://43.200.173.163",        	//운영(443포트)
-            "https://*.ngrok-free.dev",
-            "https://*.ngrok-free.app"            
+            "http://10.71.149.176:5173",			//로컬 ip
+            "https://xn--2j1bx81a8nc.com"        	//운영(443포트)
         ));
 
         // ✅ 모든 메서드 허용 (OPTIONS 포함)

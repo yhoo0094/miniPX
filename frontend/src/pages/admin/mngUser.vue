@@ -197,6 +197,8 @@ const changeMode = (user: MngUser) => {
 
 // 저장
 const updateUser = async(user: MngUser) => {
+  if (!confirm('저장하시겠습니까?')) return;
+
   try {
     uiStore.showLoading('처리 중입니다...');
 
@@ -219,6 +221,8 @@ const updateUser = async(user: MngUser) => {
 
 // 사용자 생성
 const insertUser = async() => {
+  if (!confirm('신규 사용자를 생성하시겠습니까?')) return;
+
   try {
     uiStore.showLoading('처리 중입니다...');
 

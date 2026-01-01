@@ -2,7 +2,10 @@
   <div class="order-container">
     <BaseToast ref="toastRef" />
 
-    <h2 class="title">신규상품주문</h2>
+    <div class="title-main">
+      <span class="title-pill">신규상품주문</span>
+      <span class="title-menual">등록되지 않은 상품을 자유롭게 주문할 수 있습니다.</span>
+    </div>
 
     <form class="order-form" @submit.prevent="requestOrder">
       <div class="form-row">
@@ -15,7 +18,7 @@
         <label class="label">이미지</label>
         <div class="image-box" @click="triggerFileSelect">
           <div class="image-preview">
-            <img v-if="newOrder.imgPath" :src="newOrder.imgPath" alt="상품 이미지 미리보기" />
+            <img v-if="newOrder.imgPath" :src="newOrder.imgPath" alt="상품 이미지" />
             <img v-else :src="plusImage" alt="이미지 업로드" />
           </div>
         </div>
@@ -96,8 +99,6 @@ const handleImageChange = (event: Event) => {
   const file = target.files?.[0];
 
   if (!file) {
-    imageFile.value = null;
-    newOrder.value.imgPath = '';
     return;
   }
 
@@ -215,11 +216,19 @@ onMounted(() => {
   box-sizing: border-box;
 }
 
-.title {
-  margin: 0 0 1.125rem;               /* 18px */
+.title-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.375rem 0.875rem;
   font-size: 1.3rem;
-  font-weight: 700;
-  color: #0f172a;
+  font-weight: bold;
+  letter-spacing: 0.02rem;
+}
+
+.title-menual{
+ font-size: 0.7rem;
+ font-weight: bold;
+ flex: 1;  
 }
 
 .order-form {
@@ -259,27 +268,41 @@ onMounted(() => {
   max-width: 13.75rem;                /* 220px */
 }
 
+.field-wrap :deep(textarea) {
+  padding: 0.3rem;
+}
+
 .image-box {
   width: 10rem;
   height: 10rem;
   border: 0.0625rem solid #b8c4d1;    /* 1px */
+  background: #f9fafb;
   border-radius: 0.25rem;             /* 4px */
   margin-top: 0.25rem;                /* 4px */
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f9fafb;
+  box-sizing: border-box;
   cursor: pointer;
 }
 
 .image-preview {
+  width: 10rem;
+  height: 10rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   text-align: center;
 }
 
 .image-preview img {
-  width: 80%;
-  height: 80%;
+    max-width: 100%;
+    max-height: 100%;
+
+  /* height: 9.9rem;
+  width: 9.9rem; */
   object-fit: contain;
+  align-content: center;
 }
 
 /* file input 완전 숨김 */
@@ -291,9 +314,8 @@ onMounted(() => {
 .image-box {
   width: 10rem;
   height: 10rem;
-  border: 0.0625rem solid #b8c4d1;    /* 1px */
-  border-radius: 0.25rem;             /* 4px */
-  margin-top: 0.25rem;                /* 4px */
+  border: 0.0625rem solid #b8c4d1; 
+  border-radius: 0.25rem;             
   display: flex;
   align-items: center;
   justify-content: center;

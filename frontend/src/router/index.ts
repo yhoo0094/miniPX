@@ -20,6 +20,16 @@ const routes: RouteRecordRaw[] = [
         component: () => import('@/pages/market/itemList.vue'),
         meta: { requiresAuth: true },
       },
+      {
+        path: '/market/itemNew',
+        component: () => import('@/pages/market/itemNew.vue'),
+        meta: { requiresAuth: true },
+      },  
+      {
+        path: '/market/itemDetail',
+        component: () => import('@/pages/market/itemDetail.vue'),
+        meta: { requiresAuth: true },
+      },           
     ],
   },
   {
@@ -39,8 +49,15 @@ const router = createRouter({
 });
 
 // 전역 가드 (타입 자동 추론됨)
+let myInfoFetched = false; 
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore();
+
+  // 사용자 정보 조회
+  if (to.meta.requiresAuth && !myInfoFetched && !userStore.user) {
+    myInfoFetched = true;
+    await userStore.fetchMyInfo();
+  }
 
   //로그인 및 권한 검증
   if (to.meta.requiresAuth) {

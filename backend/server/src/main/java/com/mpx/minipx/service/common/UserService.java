@@ -259,4 +259,31 @@ public class UserService {
         tbLogLoginRepository.save(log);
     }
     
+    /**
+     * @메소드명: me
+     * @작성자: KimSangMin
+     * @생성일: 2025. 12. 30.
+     * @설명: 사용자 정보 재조회
+     */    
+    public Map<String, Object> getLoginInfo(Map<String, Object> inData, HttpServletRequest request) { 
+    	Map<String, Object> result = new HashMap<>();
+    	
+    	// 사용자 조회
+    	TbUser user = tbUserRepository.findByUserSeq(((Number) inData.get("userSeq")).longValue());   
+    	
+        //사용자 정보 저장
+        UserInfoDto userInfo = new UserInfoDto();
+        userInfo.setUserSeq(user.getUserSeq());
+        userInfo.setUserId(user.getUserId());
+        userInfo.setUserNm(user.getUserNm());
+        userInfo.setAiOpenYn(user.getAiOpenYn());
+        userInfo.setCredit(user.getCredit());
+        userInfo.setUseYn(user.getUseYn());
+        userInfo.setRoleSeq(user.getRoleSeq());
+        userInfo.setPwInitYn(user.getPwInitYn());
+        result.put(Constant.OUT_DATA, userInfo);    	
+    	
+        result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
+    	return result;
+    }       
 }

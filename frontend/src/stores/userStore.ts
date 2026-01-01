@@ -2,6 +2,7 @@ import { defineStore } from 'pinia';
 import api from '@/plugins/axios';
 import router from '@/router';
 import type { UserType } from '@/types/user/user.base.type';
+import Constant from '@/constants/constant';
 
 export const useUserStore = defineStore('user', {
   state: () => ({
@@ -35,6 +36,21 @@ export const useUserStore = defineStore('user', {
       }
     },
 
+    //서버에서 사용자 정보 재조회
+    async fetchMyInfo() {
+      try {
+        const response = await api.post('/user/getLoginInfo', {});
+        if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
+          this.user = response.data?.OUT_DATA;
+          return true;
+        }
+        return false;
+      } catch (e) {
+        this.user = null;
+        return false;
+      }
+    },    
+
     // 경로에 대한 권한 설정
     setAuth(path: string, grade: number) {
       this.authMap[path] = grade;
@@ -49,8 +65,10 @@ export const useUserStore = defineStore('user', {
   },
 
   getters: {
-    isLoggedIn: (state): boolean => !!state.user,
+    userId: (state): string => state.user?.userId || '',
     userNm: (state): string => state.user?.userNm || '',
+    aiOpenYn: (state): string => state.user?.aiOpenYn || '',
+    credit: (state): number | '' => state.user?.credit ?? '',
     roleSeq: (state): number | '' => state.user?.roleSeq ?? '',
   },
 });

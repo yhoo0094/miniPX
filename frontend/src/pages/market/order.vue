@@ -2,15 +2,13 @@
   <BaseToast ref="toastRef" />
 
   <div class="order-page-wrap">
-
     <div class="order-header">
       <div class="order-title-main">
         <span class="order-title-pill">
           주문내역({{ orders.length }})
         </span>
+        <span class="order-title-menual">주문 내역을 조회할 수 있습니다.</span>
       </div>
-
-      <!-- 미결제 금액 -->
       <div class="order-unpaid">
         <span class="unpaid-label">미결제 금액</span>
         <span class="unpaid-amount">
@@ -40,13 +38,10 @@
     <!-- 주문 내역 리스트 -->
     <section class="order-list">
       <article class="order-card" v-for="order in orders" :key="order.orderSeq">
-        <!-- 이미지 영역 -->
-        <div class="order-image-box" @click="clickItemCard(order.orderSeq, order.orderDvcd)">
+        <div class="order-image-box" @click="clickItemCard(order.orderDvcd, order.itemSeq, order.orderSeq)">
           <img v-if="order.imgFile" :src="order.imgFile" alt="상품 이미지" class="order-image" />
           <span v-else class="order-no-image">이미지</span>
         </div>
-
-        <!-- 상품 정보 -->
         <div class="order-main-info">
           <div class="field-row">
             <span class="field-label">상품명</span>
@@ -75,7 +70,7 @@
           <!-- 버튼 영역(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소) -->
           <div class="order-actions">
             <BaseButton v-if="order.orderStatusCode == '01' && order.orderDvcd == '02'" class="action-button"
-                @click="clickItemCard(order.orderSeq, order.orderDvcd)" type="button">
+                @click="clickItemCard(order.orderDvcd, order.itemSeq, order.orderSeq)" type="button">
               수정하기
             </BaseButton>           
             <BaseButton v-if="order.orderStatusCode == '01'" class="action-button"
@@ -273,11 +268,12 @@ const paymentCompleted = async (order: Order) => {
 };
 
 //상품 상세보기
-const clickItemCard = (orderSeq: number, orderDvcd: string) => {
-  let path = (orderDvcd === '01') ? '/market/itemDetail' : '/market/itemNew';
+const clickItemCard = (orderDvcd: string, itemSeq: number, orderSeq: number) => {
+  const path = (orderDvcd === '01') ? '/market/itemDetail' : '/market/itemNew';
+  const query = (orderDvcd === '01') ? { itemSeq: itemSeq } : { orderSeq: orderSeq };
   router.push({
     path: path,
-    query: { orderSeq }
+    query: query
   });
 };
 
@@ -525,7 +521,7 @@ onMounted(async () => {
 
 .order-title-main {
   display: flex;
-  flex-direction: column;
+  align-items: baseline;
 }
 
 .order-title-pill {
@@ -535,6 +531,12 @@ onMounted(async () => {
   font-size: 1.3rem;
   font-weight: bold;
   letter-spacing: 0.02rem;
+}
+
+.order-title-menual {
+ font-size: 0.7rem;
+ font-weight: bold;
+ flex: 1;
 }
 </style>
 

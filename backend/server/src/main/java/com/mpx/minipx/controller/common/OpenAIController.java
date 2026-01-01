@@ -1,6 +1,16 @@
 package com.mpx.minipx.controller.common;
 
+import com.mpx.minipx.dto.common.AiAnswerResult;
+import com.mpx.minipx.framework.util.JwtUtil;
 import com.mpx.minipx.service.common.OpenAIService;
+
+import io.jsonwebtoken.Claims;
+import jakarta.servlet.http.HttpServletRequest;
+
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -12,13 +22,10 @@ public class OpenAIController {
     public OpenAIController(OpenAIService openAIService) {
         this.openAIService = openAIService;
     }
+
+    @Value("${jwt.secret}")
+    private String jwtSecret;    
     
-    public static class AskRequest {
-        public String question;
-
-        // 필요시 getter/setter 추가 (Lombok 쓰시면 @Data 등으로 대체 가능)
-    }
-
     /**
      * @메소드명: getAiAnswer
      * @작성자: KimSangMin
@@ -26,8 +33,20 @@ public class OpenAIController {
      * @설명: AI에 답변 받기
      */
     @PostMapping("/getAiAnswer")
-    public String getAiAnswer(@RequestBody AskRequest req) {
+    public ResponseEntity<?> getAiAnswer(@RequestBody Map<String, Object> inData, HttpServletRequest request) {
     	
-        return openAIService.getAiAnswer(req.question);
+        // ---------- 사용자 정보 추출 ----------
+        String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
+        Claims claims;
+        try {
+            claims = JwtUtil.validateToken(accessToken, jwtSecret);
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body("Invalid token");
+        }
+        inData.put("loginUserId", (String) claims.get("userId"));
+        inData.put("loginUserSeq", claims.get("userSeq"));    	
+    	
+        AiAnswerResult result = openAIService.getAiAnswer(inData);
+        return ResponseEntity.ok(result);
     }
 }	

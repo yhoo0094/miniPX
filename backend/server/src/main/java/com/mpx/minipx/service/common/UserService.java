@@ -132,6 +132,10 @@ public class UserService {
         //로그인 정보 저장
         saveLoginLog(user, userId, ip, "01");
         
+        //비밀번호 오입력 횟수 초기화
+        user.resetPwErrCnt();
+        tbUserRepository.save(user);
+        
         //사용자 정보 저장
         UserInfoDto userInfo = new UserInfoDto();
         userInfo.setUserSeq(user.getUserSeq());

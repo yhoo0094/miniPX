@@ -109,4 +109,9 @@ public class TbUser {
     public void increasePwErrCnt() {
     	pwErrCnt++;
     }
+    
+  //비밀번호 오입력 횟수 초기화
+    public void resetPwErrCnt() {
+        this.pwErrCnt = 0;
+    }    
 }

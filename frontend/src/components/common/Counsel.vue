@@ -156,7 +156,6 @@ const scrollToBottom = async () => {
       top: chatContentRef.value.scrollHeight,
       behavior: "smooth"
     });
-
   }
 };
 </script>

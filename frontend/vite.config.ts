@@ -1,14 +1,10 @@
-import { fileURLToPath, URL } from 'node:url';
-
+import { resolve } from 'path';
 import { defineConfig, loadEnv } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import vueDevTools from 'vite-plugin-vue-devtools';
 
 export default defineConfig(({ mode }) => {
-  // .env, .env.development, .env.ec2 등에서 값 읽기
   const env = loadEnv(mode, process.cwd(), '');
-
-  // 환경변수에서 프록시 대상 설정 (없으면 기본값은 localhost:8080)
   const proxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:8080';
 
   return {
@@ -16,18 +12,22 @@ export default defineConfig(({ mode }) => {
       vue(),
       vueDevTools(),
     ],
+
     resolve: {
       alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
+        '@': resolve(__dirname, 'src'),
       },
     },
+
+    // ✅ Quill 사전 번들 대상 포함
+    optimizeDeps: {
+      include: ['quill', 'quill-delta'],
+      needsInterop: ['quill'],
+    },
+
     server: {
-      host: '0.0.0.0',   // 👇 모든 IPv4 인터페이스에서 리슨
+      host: '0.0.0.0',
       port: 5173,
-      allowedHosts: [
-        '.ngrok-free.dev',
-        '.ngrok-free.app',
-      ],
       proxy: {
         '/api': {
           target: proxyTarget,
@@ -36,15 +36,20 @@ export default defineConfig(({ mode }) => {
         },
       },
     },
+
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: `@import "@/assets/styles/variables.scss";`
-        }
-      }
+          additionalData: `@import "@/assets/styles/variables.scss";`,
+        },
+      },
     },
+
     build: {
-      sourcemap: false,      // ✅ JS/CSS sourcemap 생성 안 함
-    },    
+      sourcemap: false,
+      commonjsOptions: {
+        include: [/node_modules/, /quill/, /quill-delta/],
+      },
+    },
   };
 });

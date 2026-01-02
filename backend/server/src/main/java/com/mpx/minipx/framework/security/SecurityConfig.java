@@ -56,7 +56,7 @@ public class SecurityConfig {
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-            "http://10.71.149.176:5173",			//로컬 ip
+            "http://10.71.149.253:5173",			//로컬 ip
             "https://xn--2j1bx81a8nc.com"        	//운영(443포트)
         ));
 

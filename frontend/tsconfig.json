@@ -7,7 +7,7 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["vite/client", "pinia-plugin-persistedstate"],
+    "types": ["vite/client", "pinia-plugin-persistedstate", "node"],
     "allowSyntheticDefaultImports": true,
     "esModuleInterop": true,
   }

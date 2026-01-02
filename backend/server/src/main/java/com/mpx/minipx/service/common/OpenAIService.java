@@ -44,14 +44,23 @@ public class OpenAIService {
     public AiAnswerResult getAiAnswer(Map<String, Object> inData) {
     	AiAnswerResult aiAnswerResult = new AiAnswerResult();
     	
+    	//파라미터 선언
     	Long loginUserSeq = ((Number)inData.get("loginUserSeq")).longValue();
     	Long sessionId = inData.get("sessionId") == null ? null : ((Number) inData.get("sessionId")).longValue();
     	String userInput = (String) inData.get("question");
-
-        long ensuredSessionId = ensureSession(loginUserSeq, sessionId, userInput);
-
+    	long ensuredSessionId = ensureSession(loginUserSeq, sessionId, userInput);
+ 	
+    	
+    	//토큰 사용량 초과 여부 확인
+    	Boolean isTokenOver = sqlSession.selectOne("com.mpx.minipx.mapper.AiMapper.isTokenOver", inData);
+    	if(isTokenOver) {
+            aiAnswerResult.setSessionId(ensuredSessionId);
+            aiAnswerResult.setAnswer("월간 질문한도를 초과하였습니다. 관리자에게 문의해주세요.");
+            return aiAnswerResult;      		
+    	}
+    	
         int turnNo = nextTurnNo(ensuredSessionId);
-        long turnId = createTurn(loginUserSeq, ensuredSessionId, turnNo, userInput);
+        long turnId = createTurn(loginUserSeq, ensuredSessionId, turnNo, userInput);       	
 
         int eventSeq = 1;
 
@@ -247,30 +256,30 @@ public class OpenAIService {
                         break;
 
                     case "TOOL_CALL":
-                        inputs.add(
-                            ResponseInputItem.ofFunctionCall(
-                                objectMapper.readValue(
-                                    (String)e.get("CONTENT_JSON"),
-                                    ResponseFunctionToolCall.class
-                                )
-                            )
-                        );
+//                        inputs.add(
+//                            ResponseInputItem.ofFunctionCall(
+//                                objectMapper.readValue(
+//                                    (String)e.get("CONTENT_JSON"),
+//                                    ResponseFunctionToolCall.class
+//                                )
+//                            )
+//                        );
                         break;
 
                     case "TOOL_OUTPUT":
-                        inputs.add(
-                            ResponseInputItem.ofFunctionCallOutput(
-                                ResponseInputItem.FunctionCallOutput.builder()
-                                    .callId((String)e.get("CALL_ID"))
-                                    .outputAsJson(
-                                        objectMapper.readValue(
-                                            (String)e.get("CONTENT_JSON"),
-                                            Object.class
-                                        )
-                                    )
-                                    .build()
-                            )
-                        );
+//                        inputs.add(
+//                            ResponseInputItem.ofFunctionCallOutput(
+//                                ResponseInputItem.FunctionCallOutput.builder()
+//                                    .callId((String)e.get("CALL_ID"))
+//                                    .outputAsJson(
+//                                        objectMapper.readValue(
+//                                            (String)e.get("CONTENT_JSON"),
+//                                            Object.class
+//                                        )
+//                                    )
+//                                    .build()
+//                            )
+//                        );
                         break;
                 }
             } catch (Exception ignore) {}

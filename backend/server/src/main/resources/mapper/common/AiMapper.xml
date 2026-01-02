@@ -199,4 +199,15 @@
 	    LST_UPD_DTTI  = NOW()
 	  WHERE TURN_ID = #{turnId}
 	</update>    
+	
+	<!--토큰 사용량 초과 여부 확인-->
+	<select id="isTokenOver" parameterType="map" resultType="boolean">
+	    SELECT CASE WHEN IFNULL(SUM(T1.TOTAL_TOKENS), 0) > (SELECT CREDIT FROM tb_user WHERE USER_SEQ = T1.FST_REG_SEQ) THEN TRUE
+	           		ELSE FALSE
+	            END
+	      FROM tb_ai_turn T1				/*테이블_AI턴*/
+	     WHERE T1.FST_REG_SEQ = #{loginUserSeq}
+		   AND T1.FST_REG_DTTI <![CDATA[ >= ]]> DATE_FORMAT(NOW(), '%Y-%m-01')
+		   AND T1.FST_REG_DTTI <![CDATA[ < ]]>  DATE_ADD(DATE_FORMAT(NOW(), '%Y-%m-01'), INTERVAL 1 MONTH)
+	</select>	
 </mapper>

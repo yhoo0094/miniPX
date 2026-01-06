@@ -13,6 +13,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 
 import com.mpx.minipx.dto.common.ReqLog;
+import com.mpx.minipx.framework.util.CommonUtil;
 import com.mpx.minipx.framework.util.JwtUtil;
 import com.mpx.minipx.service.admin.ReqLogService;
 
@@ -49,7 +50,7 @@ public class ReqLogFilter extends OncePerRequestFilter {
             ReqLog log = new ReqLog();
             String uri = wrapped.getRequestURI(); 
             String reqTypeCode = getReqTypeCode(uri);
-            log.setIp(getClientIp(wrapped));
+            log.setIp(CommonUtil.getClientIp(wrapped));
             log.setUri(uri);
             log.setReqTypeCode(reqTypeCode);
             log.setUserSeq(extractUserSeqSafely(wrapped)); // 프로젝트 방식에 맞게 구현
@@ -102,18 +103,6 @@ public class ReqLogFilter extends OncePerRequestFilter {
         }
         sb.append("}");
         return sb.toString();
-    }
-
-    private String getClientIp(HttpServletRequest req) {
-        // 프록시/로드밸런서 환경 고려
-        String xff = req.getHeader("X-Forwarded-For");
-        if (xff != null && !xff.isBlank()) {
-            // 첫 번째가 실제 클라이언트 IP인 경우가 많음
-            return xff.split(",")[0].trim();
-        }
-        String xri = req.getHeader("X-Real-IP");
-        if (xri != null && !xri.isBlank()) return xri.trim();
-        return req.getRemoteAddr();
     }
 
     //userSeq 추출

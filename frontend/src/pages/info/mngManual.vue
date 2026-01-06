@@ -38,6 +38,7 @@
         <div class="field-wrap">
           <div class="quill-wrap">
             <QuillEditor
+              ref="quillRef"
               v-model:content="manual.manualContent"
               contentType="html"
               theme="snow"
@@ -103,6 +104,8 @@ const router = useRouter();
 const userStore = useUserStore();
 const uiStore = useUiStore();
 const toastRef = ref<any>();
+const quillRef = ref<any>(null);
+const selectedImage = ref(null);
 
 // 권한 (프로젝트 기준: authLv > 1이 관리자)
 const authLv = computed(() => userStore.currentAuthLv);
@@ -133,15 +136,19 @@ const manualDvcdCodes = ref<{ codeDetailNm: string; codeDetail: string }[]>([]);
 // Quill 설정
 const editorOptions = ref({
   modules: {
-    toolbar: [
-      [{ header: [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ color: [] }, { background: [] }],
-      [{ list: 'ordered' }, { list: 'bullet' }],
-      [{ align: [] }],
-      ['link'],
-      ['clean'],
-    ],
+    toolbar: {
+      container: [
+        [{ header: [1, 2, 3, false] }],
+        [{ align: [] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ list: 'ordered' }, { list: 'bullet' }],
+        ['link', 'image'],
+        ['clean'],
+      ],
+      handlers: {
+        image: () => handleImageInsert(),
+      },
+    },
   },
   placeholder: '내용을 입력하세요.',
   readOnly: false,
@@ -299,6 +306,63 @@ const deleteManual = async () => {
 
 const goBack = () => {
   router.push('/manual');
+};
+
+const handleImageInsert = async () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.click();
+
+  input.onchange = async () => {
+    const file = input.files?.[0];
+    if (!file) return;
+
+    // 용량 제한 예시(5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toastRef.value?.showToast('이미지는 5MB 이하만 업로드 가능합니다.');
+      return;
+    }
+
+    try {
+      uiStore.showLoading('이미지 업로드 중입니다...');
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const res = await api.post('/common/quillUploadImage', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+
+      if (res.data?.RESULT !== Constant.RESULT_SUCCESS) {
+        toastRef.value?.showToast(res.data?.OUT_RESULT_MSG || '이미지 업로드 실패');
+        return;
+      }
+
+      const imageUrl = res.data?.OUT_DATA?.url;
+      if (!imageUrl) {
+        toastRef.value?.showToast('이미지 URL 응답이 없습니다.');
+        return;
+      }
+
+      // ✅ 에디터에 이미지 삽입
+      const quill = quillRef.value?.getQuill?.();
+      if (!quill) {
+        toastRef.value?.showToast('에디터 인스턴스를 찾을 수 없습니다.');
+        return;
+      }
+
+      const range = quill.getSelection(true);
+      const index = range ? range.index : quill.getLength();
+      quill.insertEmbed(index, 'image', imageUrl, 'user');
+      quill.setSelection(index + 1, 0);
+    } catch (e) {
+      console.error(e);
+      toastRef.value?.showToast('이미지 업로드 중 오류가 발생했습니다.');
+    } finally {
+      uiStore.hideLoading();
+    }
+  };
 };
 
 onMounted(async () => {

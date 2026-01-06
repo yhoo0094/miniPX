@@ -14,6 +14,8 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.mpx.minipx.framework.util.CommonUtil;
+
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
@@ -51,12 +53,13 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
+        String localIp = CommonUtil.getLocalIp();
 
         // ✅ 패턴 기반 허용 (쿠키 사용 가능)
         config.setAllowedOriginPatterns(List.of(
             "http://localhost:5173",
             "http://127.0.0.1:5173",
-            "http://10.71.149.253:5173",			//로컬 ip
+            "http://" + localIp + ":5173",			//로컬 ip
             "https://xn--2j1bx81a8nc.com"        	//운영(443포트)
         ));
 

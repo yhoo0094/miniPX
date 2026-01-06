@@ -68,11 +68,11 @@
               </span>
             </div>
 
-            <span class="caret" :class="{ open: expandedSeq === row.manualSeq }">▼</span>
+            <span class="caret" :class="{ open: expandedSeq === row.manualSeq }">▲</span>
           </button>
 
           <div v-if="expandedSeq === row.manualSeq" class="accordion-body">
-            <pre class="manual-content">{{ row.manualContent }}</pre>
+            <div class="manual-content ql-editor" v-html="safeHtml(row.manualContent)"></div>
           </div>
         </div>
 
@@ -148,6 +148,7 @@ import type { ApiResponse } from '@/types/api/response';
 import { getCodeList } from '@/api/code';
 import { useUserStore } from '@/stores/userStore';
 import router from '@/router';
+import DOMPurify from 'dompurify';  //XSS 방어
 
 type ManualRow = {
   manualSeq: number;
@@ -165,6 +166,7 @@ const toastRef = ref<any>();
 const uiStore = useUiStore();
 const userStore = useUserStore();
 const authLv = computed(() => userStore.currentAuthLv);
+const safeHtml = (html: string) => DOMPurify.sanitize(html);
 
 // 검색 조건
 const manualDvcd = ref('');      // 전체는 빈값
@@ -448,8 +450,7 @@ const moveToMngManual = () => {
   color: #0f172a;
   font-size: 0.95rem;
   line-height: 1.5rem;
-  white-space: pre-wrap;
-  word-break: break-word;
+  white-space: normal;
 }
 
 /* empty */

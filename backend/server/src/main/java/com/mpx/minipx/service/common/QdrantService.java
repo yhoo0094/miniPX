@@ -29,7 +29,6 @@ public class QdrantService {
     private final WebClient webClient;
     private final WebClient embedWebClient;
     private final ObjectMapper objectMapper;    
-    private final String collection;
     private final String model;
     
     @Autowired
@@ -40,7 +39,6 @@ public class QdrantService {
             @Value("${qdrant.base-url}") String baseUrl,
             @Value("${openai.api-key}") String apiKey,
             ObjectMapper objectMapper,
-            @Value("${qdrant.collection}") String collection,
             @Value("${openai.embedding-model}") String model
     ) {
         this.webClient = builder.baseUrl(baseUrl).build();
@@ -50,7 +48,6 @@ public class QdrantService {
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();        
         this.objectMapper = objectMapper;
-        this.collection = collection;
         this.model = model;
     }
 
@@ -80,7 +77,7 @@ public class QdrantService {
         }
 
         Map<String, Object> resp = webClient.post()
-            .uri("/collections/{c}/points/search", collection)
+            .uri("/collections/items/points/search")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(body)
             .retrieve()
@@ -107,7 +104,7 @@ public class QdrantService {
         );
 
         Map<String, Object> resp = webClient.post()
-            .uri("/collections/{c}/points", collection)
+            .uri("/collections/items/points")
             .contentType(MediaType.APPLICATION_JSON)
             .bodyValue(body)
             .retrieve()
@@ -233,7 +230,7 @@ public class QdrantService {
     	//기존 컬렉션 제거
     	try {
 		  webClient.delete()
-		    .uri("/collections/{c}", collection)
+		    .uri("/collections/items")
 		    .retrieve()
 		    .toBodilessEntity()
 		    .block();
@@ -247,7 +244,7 @@ public class QdrantService {
 		);
 
 		webClient.put()
-		  .uri("/collections/{c}", collection)
+		  .uri("/collections/items")
 		  .contentType(MediaType.APPLICATION_JSON)
 		  .bodyValue(body)
 		  .retrieve()
@@ -309,7 +306,7 @@ public class QdrantService {
             );
 
             webClient.post()
-                .uri("/collections/{c}/points/delete?wait=true", collection)
+                .uri("/collections/items/points/delete?wait=true")
                 .header(HttpHeaders.CONTENT_TYPE, "application/json")
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
@@ -335,7 +332,7 @@ public class QdrantService {
             byte[] jsonBytes = objectMapper.writeValueAsBytes(body); // ✅ UTF-8 바이트로 생성됨
 
             webClient.put()
-                    .uri("/collections/{c}/points?wait=true", collection)
+                    .uri("/collections/items/points?wait=true")
                     .header(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8")
                     .accept(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromResource(new ByteArrayResource(jsonBytes)))
@@ -388,7 +385,7 @@ public class QdrantService {
 	  );
 
 	  webClient.put()
-	    .uri("/collections/{c}/index", collection)
+	    .uri("/collections/items/index")
 	    .contentType(MediaType.APPLICATION_JSON)
 	    .bodyValue(idx)
 	    .retrieve()

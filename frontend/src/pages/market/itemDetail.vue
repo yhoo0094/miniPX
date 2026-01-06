@@ -76,7 +76,7 @@
       <div class="form-row">
         <label class="label">상품설명</label>
         <div class="field-wrap">
-          <BaseTextarea v-model="itemDetail.rmrk" :height="'10rem'" :readonly="mode === 'view'" />
+          <BaseTextarea v-model="itemDetail.rmrk" :height="'10rem'" :readonly="mode === 'view'" :maxlength="1000" />
         </div>
       </div>
 

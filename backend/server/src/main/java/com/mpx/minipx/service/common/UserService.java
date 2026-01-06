@@ -18,6 +18,7 @@ import com.mpx.minipx.controller.common.BaseController;
 import com.mpx.minipx.dto.user.UserInfoDto;
 import com.mpx.minipx.entity.TbLogLogin;
 import com.mpx.minipx.entity.TbUser;
+import com.mpx.minipx.framework.util.CommonUtil;
 import com.mpx.minipx.framework.util.Constant;
 import com.mpx.minipx.framework.util.JwtUtil;
 import com.mpx.minipx.repository.RedisPermissionRepository;
@@ -95,11 +96,7 @@ public class UserService {
     	
         String userId = (String) inData.get("userId");
         String userPw = (String) inData.get("userPw");
-        
-        //ip구하기
-        String ip = request.getHeader("X-Forwarded-For");
-        if (ip == null || ip.isBlank()) ip = request.getRemoteAddr();
-        else ip = ip.split(",")[0].trim();        
+        String ip = CommonUtil.getClientIp(request);
         
         // 사용자 조회
         TbUser user = tbUserRepository.findByUserId(userId);   

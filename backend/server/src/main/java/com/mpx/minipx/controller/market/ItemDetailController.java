@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -121,12 +120,12 @@ public class ItemDetailController {
     	) throws Exception {
 
         // ---------- 사용자 정보 추출 ----------
-        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
         Claims claims;
         try {
-            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+            claims = JwtUtil.validateToken(accessToken, jwtSecret);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid refresh token");
+            return ResponseEntity.status(401).body("Invalid token");
         }
         inData.put("userId", (String) claims.get("userId"));
         inData.put("userSeq", claims.get("userSeq"));

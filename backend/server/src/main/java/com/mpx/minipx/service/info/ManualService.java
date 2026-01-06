@@ -1,13 +1,20 @@
 package com.mpx.minipx.service.info;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import com.mpx.minipx.framework.config.QuillSanitizer;
 import com.mpx.minipx.framework.util.Constant;
 
 import lombok.RequiredArgsConstructor;
@@ -44,4 +51,41 @@ public class ManualService {
     	result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
     	return result;    	
     }    
+    
+    /**
+     * @메소드명: upsertManual
+     * @작성자: KimSangMin
+     * @생성일: 2026. 1. 4.
+     * @설명: 매뉴얼 등록/수정
+     */    
+    public Map<String, Object> upsertManual(Map<String, Object> inData) {
+        Map<String, Object> result = new HashMap<>();
+
+        int affected = 0;
+        inData.put("manualContent", QuillSanitizer.sanitize((String) inData.get("manualContent")));
+        if(inData.get("manualSeq") != null && !inData.get("manualSeq").equals("")) {
+        	affected = sqlSession.update("com.mpx.minipx.mapper.ManualMapper.updateManual", inData);
+        } else {
+        	affected = sqlSession.insert("com.mpx.minipx.mapper.ManualMapper.insertManual", inData);
+        }
+
+        if (affected > 0) {
+        	String useYn = String.valueOf(inData.get("useYn"));
+        	
+//            if ("N".equalsIgnoreCase(useYn)) {
+//                qdrantService.qdrantDeleteItem(inData.get("itemSeq"));
+//            } else {
+//                qdrantService.qdrantUpsertItem(inData);
+//            } 
+        	
+            result.put(Constant.OUT_DATA, affected);
+            result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
+        } else {
+            result.put(Constant.OUT_DATA, affected);
+            result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+            result.put(Constant.OUT_RESULT_MSG, "매뉴얼 등록에 실패했습니다.");
+        }
+
+        return result;
+    }        
 }

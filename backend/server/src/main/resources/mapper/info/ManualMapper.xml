@@ -83,5 +83,41 @@
     OFFSET #{offset}
      </if>
   </select>
+  
+	<!-- 매뉴얼 등록 -->
+	<insert id="insertManual" parameterType="map" useGeneratedKeys="true" keyProperty="manualSeq">
+		INSERT INTO tb_manual              /*테이블_매뉴얼*/ 
+		     ( MANUAL_TITLE                /*매뉴얼제목*/
+		     , MANUAL_CONTENT              /*매뉴얼내용*/
+		     , MANUAL_DVCD                 /*매뉴얼구분코드*/
+		     , USE_YN                      /*사용여부*/
+		     , FST_REG_SEQ                 /*최초등록자일련번호*/    
+		     , FST_REG_DTTI                /*최초등록일시*/       
+		     , LST_UPD_SEQ                 /*최종수정자일련번호*/    
+		     , LST_UPD_DTTI                /*최종수정일시*/       
+			 ) 
+		VALUES 
+			 ( #{manualTitle}              /*매뉴얼제목*/
+		     , #{manualContent}            /*매뉴얼내용*/
+		     , #{manualDvcd}               /*매뉴얼구분코드*/
+		     , #{useYn}                    /*사용여부*/
+			 , #{loginUserSeq}             /*최초등록자일련번호*/                    
+			 , NOW()                       /*최초등록일시*/                       
+			 , #{loginUserSeq}             /*최종수정자일련번호*/                    
+			 , NOW()                       /*최종수정일시*/ 		    
+			 )
+	</insert>	
+	
+	<!-- 매뉴얼 수정 -->
+	<update id="updateManual" parameterType="map">
+		UPDATE tb_manual
+		   SET MANUAL_TITLE              = #{manualTitle}                    /*매뉴얼제목*/         
+		     , MANUAL_CONTENT            = #{manualContent}                  /*매뉴얼내용*/         
+		     , MANUAL_DVCD               = #{manualDvcd}                     /*매뉴얼구분코드*/       
+		     , USE_YN                    = #{useYn}                          /*사용여부*/
+		     , LST_UPD_SEQ               = #{loginUserSeq}                   /*최종수정자일련번호*/
+		     , LST_UPD_DTTI              = NOW()                   			 /*최종수정일시*/
+		 WHERE MANUAL_SEQ = #{manualSeq}
+	</update>		  
 
 </mapper>

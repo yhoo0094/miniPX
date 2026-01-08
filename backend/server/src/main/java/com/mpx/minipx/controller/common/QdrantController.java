@@ -33,22 +33,6 @@ public class QdrantController {
     }
 
     public record SearchReq(float[] vector, int topK, String category) {}
-
-    /**
-     * @메소드명: getCandidates
-     * @작성자: KimSangMin
-     * @생성일: 2025. 12. 17.
-     * @설명: Qdrant에서 후보군 추출하기
-     */
-    public record RecommendReq(String query, Integer topK, Integer finalLimit) {}
-    @PostMapping("/candidates")
-    public List<Map<String, Object>> candidates(@RequestBody RecommendReq req) {
-        return qdrantService.getCandidates(
-            req.query(),
-            req.topK() == null ? 30 : req.topK(),
-            req.finalLimit() == null ? 15 : req.finalLimit()
-        );
-    }   
     
     /**
      * @메소드명: upsertAllItem
@@ -80,6 +64,37 @@ public class QdrantController {
         result = qdrantService.upsertAllItem(inData);
         return ResponseEntity.ok(result);    	
     }    
+    
+    /**
+     * @메소드명: upsertAllManual
+     * @작성자: KimSangMin
+     * @생성일: 2026. 1. 9.
+     * @설명: 모든 매뉴얼 정보를 Qdrant에 저장
+     */
+    @PostMapping(value = "/upsertAllManual")
+	public ResponseEntity<?> upsertAllManual(@RequestBody Map<String, Object> inData, HttpServletRequest request, HttpServletResponse response) throws Exception {
+    	Map<String, Object> result = new HashMap<>();
+    	
+		// 사용자 정보 추출
+		String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
+		Claims claims;
+		try {
+			claims = JwtUtil.validateToken(accessToken, jwtSecret);
+		} catch (Exception e) {
+			return ResponseEntity.status(401).body("Invalid refresh token");
+		}        
+		
+		//관리자 권한 검증
+		Integer roleSeq = claims.get("roleSeq", Integer.class);
+		if (!Integer.valueOf(3).equals(roleSeq)) {
+            result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+            result.put(Constant.OUT_RESULT_MSG, "적합한 권한이 아닙니다.");	
+            return ResponseEntity.ok(result);
+		}	    	
+    	
+        result = qdrantService.upsertAllManual(inData);
+        return ResponseEntity.ok(result);    	
+    }     
 
     /**
      * @메소드명: incremental

@@ -58,18 +58,18 @@ public class QdrantService {
      * @설명: Qdrant 데이터 검색
      */
     @SuppressWarnings("unchecked")
-    public List<Map<String, Object>> search(float[] vector, int topK, String categoryFilterOrNull) {
+    public List<Map<String, Object>> searchItems(float[] vector, int topK, String itemTypeCodeNm) {
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("vector", vector);
         body.put("limit", topK);
         body.put("with_payload", true);
 
-        if (categoryFilterOrNull != null && !categoryFilterOrNull.isBlank()) {
+        if (itemTypeCodeNm != null && !itemTypeCodeNm.isBlank()) {
             Map<String, Object> filter = Map.of(
                 "must", List.of(
                     Map.of(
-                        "key", "category",
-                        "match", Map.of("value", categoryFilterOrNull)
+                        "key", "itemTypeCodeNm",
+                        "match", Map.of("value", itemTypeCodeNm)
                     )
                 )
             );
@@ -90,105 +90,6 @@ public class QdrantService {
     }
     
     /**
-     * @메소드명: retrieveVector
-     * @작성자: KimSangMin
-     * @생성일: 2025. 12. 17.
-     * @설명: 
-     */
-    @SuppressWarnings("unchecked")
-    public float[] retrieveVector(long pointId) {
-        Map<String, Object> body = Map.of(
-            "ids", List.of(pointId),
-            "with_vectors", true,
-            "with_payload", false
-        );
-
-        Map<String, Object> resp = webClient.post()
-            .uri("/collections/items/points")
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(body)
-            .retrieve()
-            .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
-            .block();
-
-        if (resp == null) throw new IllegalStateException("Qdrant response is null");
-
-        Object resultObj = resp.get("result");
-        if (!(resultObj instanceof List<?> resultList) || resultList.isEmpty()) {
-            throw new IllegalArgumentException("Point not found: " + pointId);
-        }
-
-        Map<String, Object> first = (Map<String, Object>) resultList.get(0);
-
-        // vector는 보통 float 배열(List<Number>)로 옴
-        Object vectorObj = first.get("vector");
-        if (!(vectorObj instanceof List<?> vList) || vList.isEmpty()) {
-            throw new IllegalStateException("Vector is empty for point: " + pointId);
-        }
-
-        float[] vector = new float[vList.size()];
-        for (int i = 0; i < vList.size(); i++) {
-            vector[i] = ((Number) vList.get(i)).floatValue();
-        }
-        return vector;
-    }
-    
-    /**
-     * @메소드명: getCandidates
-     * @작성자: KimSangMin
-     * @생성일: 2025. 12. 17.
-     * @설명: Qdrant에서 후보군 추출하기
-     */
-    public List<Map<String, Object>> getCandidates(String userQuery, int topK, int finalLimit) {
-        if (topK <= 0) topK = 30;
-        if (finalLimit <= 0) finalLimit = 15;
-
-        // 1) 질문 임베딩
-        float[] qv = embed(userQuery);
-
-        // 2) Qdrant 검색 (category 없음)
-        List<Map<String, Object>> hits = search(qv, topK, null);
-
-        // 3) itemSeq 목록 + 점수 매핑(순서 유지)
-        List<Integer> itemSeqList = new ArrayList<>();
-        Map<Integer, Double> scoreMap = new LinkedHashMap<>();
-
-        for (Map<String, Object> h : hits) {
-            Object idObj = h.get("id"); // Qdrant point id = ITEM_SEQ로 넣었으니 그대로 사용
-            if (idObj == null) continue;
-
-            int itemSeq = (idObj instanceof Number) ? ((Number) idObj).intValue()
-                                                    : Integer.parseInt(String.valueOf(idObj));
-
-            itemSeqList.add(itemSeq);
-
-            Object scoreObj = h.get("score");
-            double score = (scoreObj instanceof Number) ? ((Number) scoreObj).doubleValue() : 0.0;
-            scoreMap.put(itemSeq, score);
-        }
-
-        if (itemSeqList.isEmpty()) return List.of();
-
-        // 4) DB 정보 조회
-        Map<String, Object> param = new LinkedHashMap<>();
-        param.put("itemSeqList", itemSeqList);
-
-        List<Map<String, Object>> rows =
-            sqlSession.selectList("com.mpx.minipx.mapper.QdrantMapper.selectRecommendCandidates", param);
-
-        // 5) 점수 붙이고 최종 후보 개수 제한
-        for (Map<String, Object> r : rows) {
-            Integer itemSeq = ((Number) r.get("itemSeq")).intValue();
-            r.put("score", scoreMap.getOrDefault(itemSeq, 0.0));
-        }
-
-        if (rows.size() > finalLimit) {
-            return rows.subList(0, finalLimit);
-        }
-        return rows;
-    }
-    
-    /**
      * @메소드명: qdrantUpsertItem
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 20.
@@ -196,15 +97,16 @@ public class QdrantService {
      */
     public Map<String, Object> qdrantUpsertItem(Map<String, Object> inData) {
         Map<String, Object> result = new HashMap<>();
+        //코드명 조회 떄문에 select 필요
         Map<String, Object> item = sqlSession.selectOne("com.mpx.minipx.mapper.QdrantMapper.qdrantSelectItem", inData);
 
-        String text = buildEmbeddingText(item);
+        String text = buildEmbeddingTextItem(item);
         float[] vector = embed(text);
 
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("itemSeq", item.get("itemSeq"));
-        payload.put("item_type_code_nm", item.get("itemTypeCodeNm"));
-        payload.put("item_dtl_type_code_nm", item.get("itemDtlTypeCodeNm"));
+        payload.put("itemTypeCodeNm", item.get("itemTypeCodeNm"));
+        payload.put("itemDtlTypeCodeNm", item.get("itemDtlTypeCodeNm"));
         payload.put("text", text);
 
         Map<String, Object> point = new LinkedHashMap<>();
@@ -212,11 +114,42 @@ public class QdrantService {
         point.put("vector", vector);
         point.put("payload", payload);
 
-        upsertPoints(List.of(point));
+        upsertPoints(List.of(point), "items");
 
         result.put("success", true);
         return result;
     }    
+    
+    /**
+     * @메소드명: qdrantUpsertManual
+     * @작성자: KimSangMin
+     * @생성일: 2026. 1. 8.
+     * @설명: Qdrant 매뉴얼 정보 저장(임베딩)
+     */
+    public Map<String, Object> qdrantUpsertManual(Map<String, Object> inData) {
+        Map<String, Object> result = new HashMap<>();
+        
+        //코드명 조회 떄문에 select 필요
+        Map<String, Object> manual = sqlSession.selectOne("com.mpx.minipx.mapper.QdrantMapper.qdrantSelectManual", inData);
+
+        String text = buildEmbeddingTextManual(manual);
+        float[] vector = embed(text);
+
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("manualSeq", manual.get("manualSeq"));
+        payload.put("manualDvcdNm", manual.get("manualDvcdNm"));
+        payload.put("text", text);
+
+        Map<String, Object> point = new LinkedHashMap<>();
+        point.put("id", manual.get("manualSeq"));
+        point.put("vector", vector);
+        point.put("payload", payload);
+
+        upsertPoints(List.of(point), "manuals");
+
+        result.put("success", true);
+        return result;
+    }
     
     /**
      * @메소드명: upsertAllItem
@@ -252,8 +185,8 @@ public class QdrantService {
 		  .block();  
 
 		//인덱스 생성
-		createKeywordIndex("item_type_code_nm");
-		createKeywordIndex("item_dtl_type_code_nm");
+		createKeywordIndex("itemTypeCodeNm");
+		createKeywordIndex("itemDtlTypeCodeNm");
     	
     	//상품 조회
         List<Map<String, Object>> rows = sqlSession.selectList("com.mpx.minipx.mapper.QdrantMapper.qdrantSelectItem");
@@ -264,13 +197,13 @@ public class QdrantService {
         for (int i = 0; i < rows.size(); i++) {
         	Map<String, Object> p = rows.get(i);
 
-            String text = buildEmbeddingText(p);
+            String text = buildEmbeddingTextItem(p);
             float[] vec = embed(text);
 
             Map<String, Object> payload = new LinkedHashMap<>();
             payload.put("itemSeq", p.get("itemSeq"));
-            payload.put("item_type_code_nm", p.get("itemTypeCodeNm"));
-            payload.put("item_dtl_type_code_nm", p.get("itemDtlTypeCodeNm"));
+            payload.put("itemTypeCodeNm", p.get("itemTypeCodeNm"));
+            payload.put("itemDtlTypeCodeNm", p.get("itemDtlTypeCodeNm"));
             payload.put("text", text);
 
             Map<String, Object> point = new LinkedHashMap<>();
@@ -280,7 +213,7 @@ public class QdrantService {
 
             buffer.add(point);
             if (buffer.size() >= batchSize || i == rows.size() - 1) {
-            	upsertPoints(buffer);
+            	upsertPoints(buffer, "items");
                 buffer.clear();
                 log.info("저장 중(" + (i + 1) + "/" + rows.size() + ")...");
             }
@@ -291,22 +224,95 @@ public class QdrantService {
         result.put("total", rows.size());
         result.put("msg", rows.size() + "건 저장하였습니다.");
     	return result;        
-    }    
+    }
     
     /**
-     * @메소드명: qdrantDeleteItem
+     * @메소드명: upsertAllManual
+     * @작성자: KimSangMin
+     * @생성일: 2026. 1. 9.
+     * @설명: 모든 매뉴얼 정보를 Qdrant에 저장
+     */
+    public Map<String, Object> upsertAllManual(Map<String, Object> inData) {
+    	Map<String, Object> result = new HashMap<>();
+    	
+    	//기존 컬렉션 제거
+    	try {
+		  webClient.delete()
+		    .uri("/collections/manuals")
+		    .retrieve()
+		    .toBodilessEntity()
+		    .block();
+		} catch (Exception ignored) {
+		  // 컬렉션이 없으면 무시
+		}
+    	
+    	//컬렉션 생성
+    	Map<String, Object> body = Map.of(
+		  "vectors", Map.of("size", 1536, "distance", "Cosine")
+		);
+
+		webClient.put()
+		  .uri("/collections/manuals")
+		  .contentType(MediaType.APPLICATION_JSON)
+		  .bodyValue(body)
+		  .retrieve()
+		  .toBodilessEntity()
+		  .block();  
+
+		//인덱스 생성
+		createKeywordIndex("manualDvcdNm");
+    	
+    	//상품 조회
+        List<Map<String, Object>> rows = sqlSession.selectList("com.mpx.minipx.mapper.QdrantMapper.qdrantSelectManual");
+
+        //Qdrant에 데이터 적재
+        final int batchSize = 10;
+        List<Map<String, Object>> buffer = new ArrayList<>(batchSize);
+        for (int i = 0; i < rows.size(); i++) {
+        	Map<String, Object> manual = rows.get(i);
+
+            String text = buildEmbeddingTextManual(manual);
+            float[] vector = embed(text);
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("manualSeq", manual.get("manualSeq"));
+            payload.put("manualDvcdNm", manual.get("manualDvcdNm"));
+            payload.put("text", text);
+
+            Map<String, Object> point = new LinkedHashMap<>();
+            point.put("id", manual.get("manualSeq"));
+            point.put("vector", vector);
+            point.put("payload", payload);
+
+            buffer.add(point);
+            if (buffer.size() >= batchSize || i == rows.size() - 1) {
+            	upsertPoints(buffer, "manuals");
+                buffer.clear();
+                log.info("저장 중(" + (i + 1) + "/" + rows.size() + ")...");
+            }
+        }
+        log.info("저장 완료(" + rows.size() + "/" + rows.size() + ")!!!");
+        
+        result.put("success", true);
+        result.put("total", rows.size());
+        result.put("msg", rows.size() + "건 저장하였습니다.");
+    	return result;        
+    }       
+    
+    /**
+     * @메소드명: qdrantDeletePoint
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 22.
-     * @설명: Qdrant 상품정보 삭제
+     * @설명: Qdrant 데이터 삭제
      */
-    public void qdrantDeleteItem(Object itemSeq) {
+    public void qdrantDeletePoint(Object seq, String collection_name) {
         try {
             Map<String, Object> body = Map.of(
-                "points", List.of(Long.valueOf(String.valueOf(itemSeq)))
+                "points", List.of(Long.valueOf(String.valueOf(seq)))
             );
 
             webClient.post()
-                .uri("/collections/items/points/delete?wait=true")
+                .uri("/collections/" + collection_name + "/points/delete?wait=true")
                 .header(HttpHeaders.CONTENT_TYPE, "application/json")
                 .accept(MediaType.APPLICATION_JSON)
                 .bodyValue(body)
@@ -325,14 +331,14 @@ public class QdrantService {
      * @생성일: 2025. 12. 17.
      * @설명: Qdrant에 데이터 저장
      */
-    public void upsertPoints(List<Map<String, Object>> points) {
+    public void upsertPoints(List<Map<String, Object>> points, String collection_name) {
         try {
             Map<String, Object> body = Map.of("points", points);
 
             byte[] jsonBytes = objectMapper.writeValueAsBytes(body); // ✅ UTF-8 바이트로 생성됨
 
             webClient.put()
-                    .uri("/collections/items/points?wait=true")
+                    .uri("/collections/" + collection_name + "/points?wait=true")
                     .header(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8")
                     .accept(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromResource(new ByteArrayResource(jsonBytes)))
@@ -346,12 +352,12 @@ public class QdrantService {
     }    
     
     /**
-     * @메소드명: buildEmbeddingText
+     * @메소드명: buildEmbeddingTextItem
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 17.
-     * @설명: 임베딩 텍스트 생성
+     * @설명: 상품 임베딩 텍스트 생성
      */
-    private String buildEmbeddingText(Map p) {
+    private String buildEmbeddingTextItem(Map p) {
         // 너무 길게 하지 말고, 핵심 필드만
         return String.format(
             "itemNm:%s | itemTypeCodeNm:%s | itemDtlTypeCodeNm:%s | rmrk:%s",
@@ -361,6 +367,22 @@ public class QdrantService {
             nullToEmpty((String)p.get("rmrk"))
         );
     }
+    
+    /**
+     * @메소드명: buildEmbeddingTextManual
+     * @작성자: KimSangMin
+     * @생성일: 2026. 1. 8.
+     * @설명: 매뉴얼 임베딩 텍스트 생성
+     */
+    private String buildEmbeddingTextManual(Map p) {
+        // 너무 길게 하지 말고, 핵심 필드만
+        return String.format(
+            "manualTitle:%s | manualDvcdNm:%s | manualContent:%s",
+            nullToEmpty((String)p.get("manualTitle")),
+            nullToEmpty((String)p.get("manualDvcdNm")),
+            nullToEmpty((String)p.get("manualContent"))
+        );
+    }    
 
     /**
      * @메소드명: nullToEmpty

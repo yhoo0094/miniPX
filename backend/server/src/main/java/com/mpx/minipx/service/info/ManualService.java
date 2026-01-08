@@ -1,21 +1,16 @@
 package com.mpx.minipx.service.info;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import com.mpx.minipx.framework.config.QuillSanitizer;
 import com.mpx.minipx.framework.util.Constant;
+import com.mpx.minipx.service.common.QdrantService;
 
 import lombok.RequiredArgsConstructor;
 
@@ -24,7 +19,10 @@ import lombok.RequiredArgsConstructor;
 public class ManualService {
 	
     @Autowired
-    private SqlSessionTemplate sqlSession;  	
+    private SqlSessionTemplate sqlSession; 
+    
+    @Autowired
+    private QdrantService qdrantService;    
 
     /**
      * @메소드명: getManualList
@@ -72,11 +70,11 @@ public class ManualService {
         if (affected > 0) {
         	String useYn = String.valueOf(inData.get("useYn"));
         	
-//            if ("N".equalsIgnoreCase(useYn)) {
-//                qdrantService.qdrantDeleteItem(inData.get("itemSeq"));
-//            } else {
-//                qdrantService.qdrantUpsertItem(inData);
-//            } 
+            if ("N".equalsIgnoreCase(useYn)) {
+                qdrantService.qdrantDeletePoint(inData.get("manualSeq"), "manuals");
+            } else {
+                qdrantService.qdrantUpsertManual(inData);
+            } 
         	
             result.put(Constant.OUT_DATA, affected);
             result.put(Constant.RESULT, Constant.RESULT_SUCCESS);

@@ -142,7 +142,7 @@ public class ItemDetailService {
         	String useYn = String.valueOf(inData.get("useYn"));
         	
             if ("N".equalsIgnoreCase(useYn)) {
-                qdrantService.qdrantDeleteItem(inData.get("itemSeq"));
+                qdrantService.qdrantDeletePoint(inData.get("itemSeq"), "items");
             } else {
                 qdrantService.qdrantUpsertItem(inData);
             } 

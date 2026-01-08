@@ -191,6 +191,7 @@ const scrollToBottom = async () => {
   display: flex;
   flex-direction: column;  
   height: 30rem;
+  max-height: 70vh;
   width: clamp(200px, calc(100vw - 2rem), 50rem);
   min-height: 10rem;
   background: #e9f6ff;

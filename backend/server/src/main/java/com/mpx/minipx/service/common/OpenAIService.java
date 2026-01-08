@@ -120,9 +120,10 @@ public class OpenAIService {
                - 용도: 자세한 설명이 포함된 상품 목록 조회
                - 파라미터:
             	 * userQuery: 문의내용
+            	 * itemType (optional): 상품 분류("식품" | "화장품" | "기타")
                - 리턴: 상품일련번호/상품명/낱개가격/판매단위/가격/상품분류/상품상세분류/품절여부/판매량/등록일/상품상세정보      
     	       - 매우 중요
-    		   * 상품상세정보를 참고한 경우 답변 마지막에 한 줄 띄우고 '!주의: 상품의 자세한 정보는 AI를 통해 생성되어 오류가 있을 수 있습니다.'라는 문구를 추가한다.                       
+    		   * 상품상세정보를 참고한 경우 답변 마지막에 두 줄 공백을 두고 '!주의: 상품의 자세한 정보는 AI를 통해 생성되어 오류가 있을 수 있습니다.'라는 문구를 추가한다.                       
             """;
 
         ResponseCreateParams.Builder builder =
@@ -506,7 +507,7 @@ public class OpenAIService {
                     float[] qv = qdrantService.embed(args.userQuery);
 
                     // 2) Qdrant 검색
-                    List<Map<String, Object>> hits = qdrantService.search(qv, topK, null);
+                    List<Map<String, Object>> hits = qdrantService.searchItems(qv, topK, args.itemType);
 
                     // 3) itemSeq 목록 + 점수 매핑(순서 유지)
                     List<Integer> itemSeqList = new ArrayList<>();
@@ -611,6 +612,7 @@ public class OpenAIService {
 
     //상품 설명을 기반으로 문의와 연관된 상품 목록 조회
     public record AiGetDetailItemList(
-		String userQuery
+		String userQuery,
+		String itemType
     ) {}    
 }

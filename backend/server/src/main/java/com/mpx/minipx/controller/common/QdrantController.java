@@ -95,16 +95,4 @@ public class QdrantController {
         result = qdrantService.upsertAllManual(inData);
         return ResponseEntity.ok(result);    	
     }     
-
-    /**
-     * @메소드명: incremental
-     * @작성자: KimSangMin
-     * @생성일: 2025. 12. 17.
-     * @설명: 개별 상품 정보를 Qdrant에 저장
-     */
-    @PostMapping("/incremental")
-    public String incremental() {
-        //qdrantService.runIncremental();
-        return "OK";
-    }      
 }

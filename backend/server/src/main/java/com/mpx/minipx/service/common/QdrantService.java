@@ -52,10 +52,10 @@ public class QdrantService {
     }
 
     /**
-     * @메소드명: search
+     * @메소드명: searchItems
      * @작성자: KimSangMin
      * @생성일: 2025. 12. 17.
-     * @설명: Qdrant 데이터 검색
+     * @설명: Qdrant 상품 검색
      */
     @SuppressWarnings("unchecked")
     public List<Map<String, Object>> searchItems(float[] vector, int topK, String itemTypeCodeNm) {
@@ -88,6 +88,44 @@ public class QdrantService {
         Object result = resp.get("result");
         return (result instanceof List) ? (List<Map<String, Object>>) result : List.of();
     }
+    
+    /**
+     * @메소드명: searchManuals
+     * @작성자: KimSangMin
+     * @생성일: 2026. 1. 9.
+     * @설명: Qdrant 매뉴얼 검색
+     */
+    @SuppressWarnings("unchecked")
+    public List<Map<String, Object>> searchManuals(float[] vector, int topK, String manualDvcdNm) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("vector", vector);
+        body.put("limit", topK);
+        body.put("with_payload", true);
+
+        if (manualDvcdNm != null && !manualDvcdNm.isBlank()) {
+            Map<String, Object> filter = Map.of(
+                "must", List.of(
+                    Map.of(
+                        "key", "manualDvcdNm",
+                        "match", Map.of("value", manualDvcdNm)
+                    )
+                )
+            );
+            body.put("filter", filter);
+        }
+
+        Map<String, Object> resp = webClient.post()
+            .uri("/collections/manuals/points/search")
+            .contentType(MediaType.APPLICATION_JSON)
+            .bodyValue(body)
+            .retrieve()
+            .bodyToMono(new ParameterizedTypeReference<Map<String, Object>>() {})
+            .block();
+
+        if (resp == null) return List.of();
+        Object result = resp.get("result");
+        return (result instanceof List) ? (List<Map<String, Object>>) result : List.of();
+    }    
     
     /**
      * @메소드명: qdrantUpsertItem

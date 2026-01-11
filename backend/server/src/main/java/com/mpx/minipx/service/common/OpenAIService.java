@@ -92,14 +92,50 @@ public class OpenAIService {
             - 필요한 경우 툴을 여러 번 호출해도 된다(여러 번 왕복 가능).
             - 툴 결과를 바탕으로 사람이 이해하기 쉬운 한국어로 요약/정리해서 답변한다.
             
-    		[검색/툴 호출 절차 - 매우 중요]
-    		1) 사용자의 질문에서 핵심 키워드(예: 향/맛/성분/효능/용도/피부타입/원산지/무알콜/저당 등)를 추출한다.
-    		2) 1차 조회: AiGetItemList를 호출해 "상품명/분류" 기반으로 빠르게 후보를 찾는다.
-    		3) 2차 조회(필수): AiGetDetailItemList(userQuery=사용자 원문 질문)을 호출하여 상품상세정보를 기반으로 후보를 찾는다.
-    		4) 최종 답변 규칙:
-    		   - "없습니다/등록되지 않았습니다" 같은 결론은
-    		     AiGetItemList + AiGetDetailItemList까지 확인한 뒤에만 말한다.
-    		   - 가격에 대한 질문은 가격(낱개가격 * 판매단위)를 기준으로 답변한다.        
+			[검색/툴 호출 절차 - 매우 중요]
+			1) 사용자 질문 분류(의도 파악)
+			- 질문이 아래 중 무엇인지 먼저 판별한다.
+        		* 상품 문의/추천/재고/가격/정렬/비교/검색 → AiGetItemList 또는 AiGetDetailItemList
+        		* 쇼핑몰 사용 방법/정책/기능 안내(회원가입/주문/결제/배송/취소/반품/쿠폰/포인트/장바구니 등) → AiGetManualList
+        		* 둘 다 해당될 수 있으면 우선 사용방법(매뉴얼) → 상품 순으로 처리하거나, 질문의 핵심에 따라 하나를 먼저 호출한다.
+			2) 상품 검색 1차: AiGetItemList를 “우선” 호출
+			- 상품 관련 질문이면 기본적으로 AiGetItemList를 먼저 호출한다.
+			- 파라미터 구성 규칙
+        		* itemSeq가 명확하면 itemSeq로 조회를 최우선한다.
+				* 상품명이 일부라도 주어지면 itemNm으로 조회한다.
+				* 사용자가 “식품/화장품/기타”를 명시하면 itemType을 넣고, 없으면 생략한다.
+				* 품절 상품을 굳이 포함해달라는 요청이 명시적으로 있지 않으면 excludeSoldOut=true를 유지한다.
+				* “싼 순/비싼 순/최신순” 같은 요구가 있으면 sort에 매핑한다.
+				* 기본 limit는 과도하게 크지 않게(예: 10~30) 잡고, 필요 시 offset으로 추가 조회한다.
+			3) 0건 처리(강제 규칙): AiGetItemList 결과가 0건이면 즉시 AiGetDetailItemList 호출
+			- AiGetItemList 결과가 0건이면 설명 없이 곧바로 AiGetDetailItemList를 호출한다.
+        		* userQuery에는 사용자의 원문 질문을 그대로 넣는다.
+        		* 사용자가 itemType을 명시했으면 함께 넣고, 아니면 생략한다.
+			4) 상품 검색 2차/보강: 필요한 경우 추가 툴 호출(여러 번 왕복 가능)
+			- 다음 상황이면 추가 호출로 보강한다.
+				* 결과가 너무 많아 특정이 어려움 → 정렬 변경/키워드 정교화/limit 조정/페이지네이션(offset)으로 재조회
+				* 사용자가 “다른 추천 더”, “비슷한 상품”, “비교해줘” 요청 → 조건을 바꿔 재조회
+				* 사용자가 특정 상품(번호/이름)을 선택함 → 그 상품을 중심으로 재조회(가능하면 itemSeq 사용)
+				* “상세 설명/성분/사용법/주의사항/특징” 등 설명이 핵심인 질문 → AiGetDetailItemList를 추가로 호출해 상세정보를 확보
+			5) 매뉴얼 검색: AiGetManualList 호출 규칙
+			- 사용방법/이용가이드 성격이면 AiGetManualList를 호출한다.
+				* userQuery에는 사용자 원문 질문을 넣는다.
+				* “마켓/정보/기타”가 명확하면 manualDvcdNm을 넣고, 애매하면 생략한다.
+			- 매뉴얼 결과가 여러 건이면 제목 기준으로 먼저 요약 목록을 제시하고, 사용자 질문에 가장 관련 높은 항목의 내용을 우선 정리한다.
+			6) 툴 결과 해석 및 답변 작성 규칙
+			- 답변은 반드시 툴 결과(JSON)를 근거로 사람이 이해하기 쉬운 한국어로 정리한다.
+			- 상품 목록을 제시할 때 포함할 정보(가능한 범위)
+        		* 상품명, 가격(낱개가격/판매단위/총가격), 상품분류/상세분류, 품절여부, 판매량, 등록일
+			- 사용자가 비교를 요청하면 동일 기준(가격/단위/재고/판매량 등) 으로 표처럼 구조화해 설명한다(단, 실제 표 형식 강제는 아님).
+			- 결과가 부족하거나 모호하면 추측하지 말고 추가 툴 호출로 근거를 확보한다.
+			7) 중요 고지(강제 규칙): 상품상세정보를 참고한 경우 경고 문구 추가
+			- AiGetDetailItemList의 상품상세정보를 참고하여 답변을 작성했다면, 답변 마지막에 두 줄 공백을 두고 아래 문구를 정확히 그대로 추가한다.
+        		* !주의: 상품의 자세한 정보는 AI를 통해 생성되어 오류가 있을 수 있습니다.
+			8) 결과가 없을 때의 사용자 안내
+			- AiGetDetailItemList까지 조회했는데도 적합한 상품/정보가 없으면,
+				* “현재 조건으로는 결과를 찾지 못했다”고 말하고,
+				* 사용자가 바로 선택할 수 있게 대안 검색 키워드/카테고리(식품/화장품/기타) 제안 또는 “원하는 특징(예: 향/용량/가격대/용도)”을 짧게 물어본다.
+			- 단, 가능한 한 먼저 재검색(조건 변경) 툴 호출을 시도한 뒤 부족할 때만 질문한다.  
             
             [툴 카탈로그]
             1) AiGetItemList
@@ -113,8 +149,6 @@ public class OpenAIService {
     	       * limit (optional)
     	       * offset (optional)
     	       - 리턴: 상품일련번호/상품명/낱개가격/판매단위/가격/상품분류/상품상세분류/품절여부/판매량/등록일
-    	       - 매우 중요
-    		   * 결과가 0건이면: 즉시 AiGetDetailItemList를 호출한다.
     	
             2) AiGetDetailItemList
                - 용도: 자세한 설명이 포함된 상품 목록 조회
@@ -122,8 +156,13 @@ public class OpenAIService {
             	 * userQuery: 문의내용
             	 * itemType (optional): 상품 분류("식품" | "화장품" | "기타")
                - 리턴: 상품일련번호/상품명/낱개가격/판매단위/가격/상품분류/상품상세분류/품절여부/판매량/등록일/상품상세정보      
-    	       - 매우 중요
-    		   * 상품상세정보를 참고한 경우 답변 마지막에 두 줄 공백을 두고 '!주의: 상품의 자세한 정보는 AI를 통해 생성되어 오류가 있을 수 있습니다.'라는 문구를 추가한다.                       
+
+            3) AiGetManualList
+               - 용도: 쇼핑몰 이용 방법 조회
+               - 파라미터:
+            	 * userQuery: 문의내용
+            	 * manualDvcdNm (optional): 매뉴얼 구분("마켓" | "정보" | "기타")
+               - 리턴: 매뉴얼일련번호/매뉴얼제목/매뉴얼내용/매뉴얼구분
             """;
 
         ResponseCreateParams.Builder builder =
@@ -545,7 +584,55 @@ public class OpenAIService {
                         return list.subList(0, finalLimit);
                     }
                     return list;                	
-                }                
+                }           
+                case "AiGetManualList": {
+                	AiGetManualList args = functionCall.arguments(AiGetManualList.class);
+                    int topK = 30;
+                    int finalLimit = 15;
+
+                    // 1) 질문 임베딩
+                    float[] qv = qdrantService.embed(args.userQuery);
+
+                    // 2) Qdrant 검색
+                    List<Map<String, Object>> hits = qdrantService.searchManuals(qv, topK, args.manualDvcdNm);
+
+                    // 3) manualSeq 목록 + 점수 매핑(순서 유지)
+                    List<Integer> manualSeqList = new ArrayList<>();
+                    Map<Integer, Double> scoreMap = new LinkedHashMap<>();
+
+                    for (Map<String, Object> h : hits) {
+                        Object idObj = h.get("id"); // Qdrant point id = MANUAL_SEQ로 넣었으니 그대로 사용
+                        if (idObj == null) continue;
+
+                        int manualSeq = (idObj instanceof Number) ? ((Number) idObj).intValue()
+                                                                : Integer.parseInt(String.valueOf(idObj));
+
+                        manualSeqList.add(manualSeq);
+
+                        Object scoreObj = h.get("score");
+                        double score = (scoreObj instanceof Number) ? ((Number) scoreObj).doubleValue() : 0.0;
+                        scoreMap.put(manualSeq, score);
+                    }
+
+                    if (manualSeqList.isEmpty()) return List.of();
+
+                    // 4) DB 정보 조회
+                    Map<String, Object> param = new LinkedHashMap<>();
+                    param.put("manualSeqList", manualSeqList);
+
+                    List<Map<String, Object>> list = sqlSession.selectList("com.mpx.minipx.mapper.AiMapper.aiGetDetailManualList", param);
+
+                    // 5) 점수 붙이고 최종 후보 개수 제한
+                    for (Map<String, Object> r : list) {
+                        Integer manualSeq = ((Number) r.get("매뉴얼일련번호")).intValue();
+                        r.put("score", scoreMap.getOrDefault(manualSeq, 0.0));
+                    }
+
+                    if (list.size() > finalLimit) {
+                        return list.subList(0, finalLimit);
+                    }
+                    return list;                 	
+                }
                 default:
                     // 알 수 없는 툴이면 에러를 툴 결과로 반환해 모델이 스스로 수정하게 함
                     return Map.of(
@@ -615,4 +702,10 @@ public class OpenAIService {
 		String userQuery,
 		String itemType
     ) {}    
+    
+    //매뉴얼 정보 조회
+    public record AiGetManualList(
+		String userQuery,		//사용자 질문
+		String manualDvcdNm		//매뉴얼구분코드(01: 마켓, 02: 정보, 99:기타)
+    ) {}      
 }

@@ -167,22 +167,8 @@ const guardAdmin = () => {
 
 // 코드 조회
 const loadCodes = async () => {
-  try {
-    manualDvcdCodes.value = await getCodeList('MANUAL_DVCD');
-    if (!manualDvcdCodes.value || manualDvcdCodes.value.length === 0) {
-      manualDvcdCodes.value = fallbackDvcdCodes();
-    }
-  } catch (e) {
-    manualDvcdCodes.value = fallbackDvcdCodes();
-  }
+  manualDvcdCodes.value = await getCodeList('MANUAL_DVCD');
 };
-
-const fallbackDvcdCodes = () => ([
-  { codeDetailNm: '마켓', codeDetail: '01' },
-  { codeDetailNm: '정보', codeDetail: '02' },
-  { codeDetailNm: 'AI',   codeDetail: '03' },
-  { codeDetailNm: '기타', codeDetail: '99' },
-]);
 
 // 상세 조회
 const getManualDetail = async () => {

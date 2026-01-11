@@ -1,6 +1,6 @@
   <template>
     <BaseToast ref="toastRef" />
-    <div class="">
+    <div class="buttonArea">
       <BaseButton 
         @click="upsertAllItem" 
         class="button"
@@ -77,5 +77,9 @@
   </script>
   
   <style scoped>
+    .buttonArea {
+      display: flex;
+      gap: 1rem;
+    }
   </style>
   

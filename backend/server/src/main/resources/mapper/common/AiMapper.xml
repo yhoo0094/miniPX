@@ -75,8 +75,8 @@
 			       GROUP BY ITEM_SEQ) O
 		    ON T1.ITEM_SEQ = O.ITEM_SEQ	
 	  	 WHERE T1.ITEM_SEQ IN
-	     <foreach collection="itemSeqList" item="id" open="(" separator="," close=")">
-	       #{id}
+	     <foreach collection="itemSeqList" item="itemSeq" open="(" separator="," close=")">
+	       #{itemSeq}
 	     </foreach>
 		 <if test='itemType != null and itemType != ""'>
 		   AND T1.ITEM_TYPE_CODE = (SELECT CODE_DETAIL FROM tb_code_detail WHERE CODE_GROUP = 'ITEM_TYPE_CODE' AND CODE_DETAIL_NM = #{itemType}) 
@@ -84,8 +84,8 @@
 	       AND T1.USE_YN = 'Y'
 	       AND T1.SOLD_OUT_YN = 'N'
 	     ORDER BY FIELD(T1.ITEM_SEQ,
-	     <foreach collection="itemSeqList" item="id" separator=",">
-	       #{id}
+	     <foreach collection="itemSeqList" item="itemSeq" separator=",">
+	       #{itemSeq}
 	     </foreach>
 	     )
 	</select>	
@@ -98,16 +98,16 @@
 			 , (SELECT CODE_DETAIL_NM FROM tb_code_detail WHERE CODE_GROUP = 'MANUAL_DVCD' AND CODE_DETAIL = T1.MANUAL_DVCD)	AS "매뉴얼구분"
 		  FROM tb_manual T1					       								 /*테이블_매뉴얼*/
 	  	 WHERE T1.MANUAL_SEQ IN
-	     <foreach collection="manualSeqList" item="id" open="(" separator="," close=")">
-	       #{id}
+	     <foreach collection="manualSeqList" item="manualSeq" open="(" separator="," close=")">
+	       #{manualSeq}
 	     </foreach>
 		 <if test='manualDvcdNm != null and manualDvcdNm != ""'>
-		   AND T1.ITEM_TYPE_CODE = (SELECT CODE_DETAIL FROM tb_code_detail WHERE CODE_GROUP = 'MANUAL_DVCD' AND CODE_DETAIL_NM = #{manualDvcdNm}) 
+		   AND T1.MANUAL_DVCD = (SELECT CODE_DETAIL FROM tb_code_detail WHERE CODE_GROUP = 'MANUAL_DVCD' AND CODE_DETAIL_NM = #{manualDvcdNm}) 
 		 </if>	     
 	       AND T1.USE_YN = 'Y'
 	     ORDER BY FIELD(T1.MANUAL_SEQ,
-	     <foreach collection="itemSeqList" item="id" separator=",">
-	       #{id}
+	     <foreach collection="manualSeqList" item="manualSeq" separator=",">
+	       #{manualSeq}
 	     </foreach>
 	     )
 	</select>		

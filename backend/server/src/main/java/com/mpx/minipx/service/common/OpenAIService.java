@@ -95,8 +95,8 @@ public class OpenAIService {
 			[검색/툴 호출 절차 - 매우 중요]
 			1) 사용자 질문 분류(의도 파악)
 			- 질문이 아래 중 무엇인지 먼저 판별한다.
-        		* 상품 문의/추천/재고/가격/정렬/비교/검색 → AiGetItemList 또는 AiGetDetailItemList
-        		* 쇼핑몰 사용 방법/정책/기능 안내(회원가입/주문/결제/배송/취소/반품/쿠폰/포인트/장바구니 등) → AiGetManualList
+        		* 상품 문의/추천/재고/가격/비교/검색 → AiGetItemList 또는 AiGetDetailItemList
+        		* 쇼핑몰 사용 방법/정책/기능 안내(회원가입/주문/결제/배송/취소/반품/장바구니 등) → AiGetManualList
         		* 둘 다 해당될 수 있으면 우선 사용방법(매뉴얼) → 상품 순으로 처리하거나, 질문의 핵심에 따라 하나를 먼저 호출한다.
 			2) 상품 검색 1차: AiGetItemList를 “우선” 호출
 			- 상품 관련 질문이면 기본적으로 AiGetItemList를 먼저 호출한다.
@@ -120,7 +120,6 @@ public class OpenAIService {
 			5) 매뉴얼 검색: AiGetManualList 호출 규칙
 			- 사용방법/이용가이드 성격이면 AiGetManualList를 호출한다.
 				* userQuery에는 사용자 원문 질문을 넣는다.
-				* “마켓/정보/기타”가 명확하면 manualDvcdNm을 넣고, 애매하면 생략한다.
 			- 매뉴얼 결과가 여러 건이면 제목 기준으로 먼저 요약 목록을 제시하고, 사용자 질문에 가장 관련 높은 항목의 내용을 우선 정리한다.
 			6) 툴 결과 해석 및 답변 작성 규칙
 			- 답변은 반드시 툴 결과(JSON)를 근거로 사람이 이해하기 쉬운 한국어로 정리한다.
@@ -161,7 +160,6 @@ public class OpenAIService {
                - 용도: 쇼핑몰 이용 방법 조회
                - 파라미터:
             	 * userQuery: 문의내용
-            	 * manualDvcdNm (optional): 매뉴얼 구분("마켓" | "정보" | "기타")
                - 리턴: 매뉴얼일련번호/매뉴얼제목/매뉴얼내용/매뉴얼구분
             """;
 
@@ -171,6 +169,7 @@ public class OpenAIService {
                 .instructions(instructions)
                 .addTool(AiGetItemList.class)
                 .addTool(AiGetDetailItemList.class)
+                .addTool(AiGetManualList.class)
                 .maxOutputTokens(1024);
 
         final int MAX_ROUNDS = 5;
@@ -706,6 +705,6 @@ public class OpenAIService {
     //매뉴얼 정보 조회
     public record AiGetManualList(
 		String userQuery,		//사용자 질문
-		String manualDvcdNm		//매뉴얼구분코드(01: 마켓, 02: 정보, 99:기타)
+		String manualDvcdNm
     ) {}      
 }

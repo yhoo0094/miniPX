@@ -21,6 +21,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mpx.minipx.controller.common.BaseController;
+import com.mpx.minipx.framework.util.Constant;
 
 @Service
 public class QdrantService {
@@ -258,7 +259,7 @@ public class QdrantService {
         }
         log.info("저장 완료(" + rows.size() + "/" + rows.size() + ")!!!");
         
-        result.put("success", true);
+        result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
         result.put("total", rows.size());
         result.put("msg", rows.size() + "건 저장하였습니다.");
     	return result;        
@@ -331,7 +332,7 @@ public class QdrantService {
         }
         log.info("저장 완료(" + rows.size() + "/" + rows.size() + ")!!!");
         
-        result.put("success", true);
+        result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
         result.put("total", rows.size());
         result.put("msg", rows.size() + "건 저장하였습니다.");
     	return result;        

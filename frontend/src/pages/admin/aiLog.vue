@@ -826,6 +826,7 @@ const scrollToBottom = async () => {
 /* ✅ 접기(라인 클램프) */
 .chat-bubble-content {
   cursor: default;
+  overflow: auto;
 }
 .chat-bubble-content.clamp {
   display: -webkit-box;

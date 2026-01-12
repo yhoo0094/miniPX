@@ -49,9 +49,12 @@
         </div>
 
         <div class="info-row">
-          <div class="rating">
+          <!-- <div class="rating">
             {{ item.starRating }}
-          </div>
+          </div> -->
+          <div class="saleCnt">
+            판매 횟수: {{ item.saleCnt }}
+          </div>          
           <BaseButton stop @click="clickBasketBtn(item)" class="basket-button" type="button" size="sm">🛒 장바구니</BaseButton>
         </div>
       </div>
@@ -357,6 +360,12 @@ const moveToItemDetail = () => {
 .rating {
   font-size: 0.85rem;
   color: #f97316;
+}
+
+.saleCnt {
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: gray;
 }
 
 /* 장바구니 버튼 */

@@ -16,6 +16,11 @@
       <span class="unpaid-amount">
         {{ unpaidAmount.toLocaleString() }}원
       </span>
+      <span class="unpaid-label">/</span>
+      <span class="unpaid-label">총액</span>
+      <span class="unpaid-amount">
+        {{ totalAmount.toLocaleString() }}원
+      </span>     
     </div>
   </div>
 
@@ -41,7 +46,7 @@
     <section class="order-list">
       <article class="order-card" v-for="order in orders" :key="order.orderSeq">
         <!-- 이미지 영역 -->
-        <div class="order-image-box">
+        <div class="order-image-box" @click="clickItemCard(order.orderDvcd, order.itemSeq, order.orderSeq)">
           <img v-if="order.imgFile" :src="order.imgFile" alt="상품 이미지" class="order-image" />
           <span v-else class="order-no-image">이미지</span>
         </div>
@@ -56,6 +61,7 @@
             <span class="field-label">가격</span>
             <BaseInput v-if="order.orderStatusCode == '01'" type="number" align="right" width="6rem" height="2.125rem" v-model="order.price"/>
             <span v-else class="field-cont">{{ order.price.toLocaleString() }} 원</span>
+            <span v-if="order.cnt > 1" class="field-cont">(총 {{ (order.price * order.cnt).toLocaleString() }}원)</span>
           </div>
           <div class="field-row">
             <span class="field-label">개수</span>
@@ -114,6 +120,7 @@ import BaseToast from '@/components/common/BaseToast.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
 import { useUiStore } from '@/stores/uiStore';
 import { getCodeList } from '@/api/code';
+import router from '@/router';
 
 const uiStore = useUiStore();
 const toastRef = ref();
@@ -271,6 +278,7 @@ onMounted(async () => {
   ];
   list.unshift(...extra);
   orderStatusCodesSch.value = list;
+  searchForm.value.orderStatusCode = '001';
 
   initDefaultDates();
   await searchOrders();
@@ -282,6 +290,22 @@ const unpaidAmount = computed(() => {
     .filter(o => o.orderStatusCode === '03' || o.orderStatusCode === '04') // 미결제/송금완료
     .reduce((sum, o) => sum + o.price * o.cnt, 0);
 });
+
+/** 조회된 금액 합계 */
+const totalAmount = computed(() => {
+  return orders.value
+    .reduce((sum, o) => sum + o.price * o.cnt, 0);
+});
+
+//상품 상세보기
+const clickItemCard = (orderDvcd: string, itemSeq: number, orderSeq: number) => {
+  const path = (orderDvcd === '01') ? '/market/itemDetail' : '/market/itemNew';
+  const query = (orderDvcd === '01') ? { itemSeq: itemSeq } : { orderSeq: orderSeq };
+  router.push({
+    path: path,
+    query: query
+  });
+};
 </script>
 
 <style scoped>

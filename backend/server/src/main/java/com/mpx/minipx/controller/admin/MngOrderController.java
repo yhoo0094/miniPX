@@ -49,7 +49,7 @@ public class MngOrderController {
 		try {
 			claims = JwtUtil.validateToken(accessToken, jwtSecret);
 		} catch (Exception e) {
-			return ResponseEntity.status(401).body("Invalid refresh token");
+			return ResponseEntity.status(401).body("Invalid token");
 		}        
 		
 		//관리자 권한 검증
@@ -82,7 +82,7 @@ public class MngOrderController {
 		try {
 			claims = JwtUtil.validateToken(accessToken, jwtSecret);
 		} catch (Exception e) {
-			return ResponseEntity.status(401).body("Invalid refresh token");
+			return ResponseEntity.status(401).body("Invalid token");
 		}        
 		inData.put("loginUserId", (String) claims.get("userId"));
 		inData.put("loginUserSeq", claims.get("userSeq"));

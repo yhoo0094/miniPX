@@ -51,6 +51,20 @@ public class ManualService {
     }    
     
     /**
+     * @메소드명: getManual
+     * @작성자: KimSangMin
+     * @생성일: 2026. 1. 14.
+     * @설명: 매뉴얼 조회
+     */
+    public Map<String, Object> getManual(Map<String, Object> inData) {
+    	Map<String, Object> result = new HashMap<String, Object>(); 
+    	Map<String, Object> map = sqlSession.selectOne("com.mpx.minipx.mapper.ManualMapper.getManual", inData);
+    	result.put(Constant.OUT_DATA, map);
+    	result.put(Constant.RESULT, Constant.RESULT_SUCCESS);
+    	return result;    	
+    }
+    
+    /**
      * @메소드명: upsertManual
      * @작성자: KimSangMin
      * @생성일: 2026. 1. 4.

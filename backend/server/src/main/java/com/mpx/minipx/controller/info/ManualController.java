@@ -46,12 +46,37 @@ public class ManualController {
 		try {
 			claims = JwtUtil.validateToken(accessToken, jwtSecret);
 		} catch (Exception e) {
-			return ResponseEntity.status(401).body("Invalid refresh token");
+			return ResponseEntity.status(401).body("Invalid token");
 		}        
         
         result = manualService.getManualList(inData);
         return ResponseEntity.ok(result);
     }
+    
+    /**
+     * @메소드명: getManual
+     * @작성자: KimSangMin
+     * @생성일: 2026. 1. 14.
+     * @설명: 매뉴얼 조회
+     */
+    @PostMapping("/getManual")
+    public ResponseEntity<?> getManual(@RequestBody Map<String, Object> inData,
+                                           HttpServletRequest request,
+                                           HttpServletResponse response) throws Exception {
+        Map<String, Object> result = new HashMap<>();
+        
+		// 사용자 정보 추출
+		String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
+		Claims claims;
+		try {
+			claims = JwtUtil.validateToken(accessToken, jwtSecret);
+		} catch (Exception e) {
+			return ResponseEntity.status(401).body("Invalid token");
+		}        
+        
+        result = manualService.getManual(inData);
+        return ResponseEntity.ok(result);
+    }    
     
     
     /**

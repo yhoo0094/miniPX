@@ -43,12 +43,12 @@ public class BasketController {
         Map<String, Object> result = new HashMap<>();
         
     	// 사용자 정보 추출
-        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
         Claims claims;
         try {
-            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+            claims = JwtUtil.validateToken(accessToken, jwtSecret);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid refresh token");
+            return ResponseEntity.status(401).body("Invalid token");
         }        
         inData.put("userId", (String) claims.get("userId"));
         inData.put("userSeq", claims.get("userSeq"));        
@@ -70,12 +70,12 @@ public class BasketController {
         Map<String, Object> result = new HashMap<>();
 
     	// 사용자 정보 추출
-        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
         Claims claims;
         try {
-            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+            claims = JwtUtil.validateToken(accessToken, jwtSecret);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid refresh token");
+            return ResponseEntity.status(401).body("Invalid token");
         }        
         inData.put("userId", (String) claims.get("userId"));
         inData.put("userSeq", claims.get("userSeq"));
@@ -97,12 +97,12 @@ public class BasketController {
         Map<String, Object> result = new HashMap<>();
 
     	// 사용자 정보 추출
-        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
         Claims claims;
         try {
-            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+            claims = JwtUtil.validateToken(accessToken, jwtSecret);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid refresh token");
+            return ResponseEntity.status(401).body("Invalid token");
         }        
         inData.put("userId", (String) claims.get("userId"));
         inData.put("userSeq", claims.get("userSeq"));
@@ -125,12 +125,12 @@ public class BasketController {
         Map<String, Object> result = new HashMap<>();
 
     	// 사용자 정보 추출
-        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
         Claims claims;
         try {
-            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+            claims = JwtUtil.validateToken(accessToken, jwtSecret);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid refresh token");
+            return ResponseEntity.status(401).body("Invalid token");
         }        
         inData.put("userId", (String) claims.get("userId"));
         inData.put("userSeq", claims.get("userSeq"));
@@ -151,12 +151,12 @@ public class BasketController {
                                           HttpServletResponse response) throws Exception {
         Map<String, Object> result = new HashMap<>();
 
-        String refreshToken = JwtUtil.extractTokenFromCookies(request, "refreshToken");
+        String accessToken = JwtUtil.extractTokenFromCookies(request, "accessToken");
         Claims claims;
         try {
-            claims = JwtUtil.validateToken(refreshToken, jwtSecret);
+            claims = JwtUtil.validateToken(accessToken, jwtSecret);
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Invalid refresh token");
+            return ResponseEntity.status(401).body("Invalid token");
         }
         inData.put("userId",  (String) claims.get("userId"));
         inData.put("userSeq", claims.get("userSeq"));

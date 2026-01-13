@@ -47,7 +47,7 @@ public class ReqLogController {
 		try {
 			claims = JwtUtil.validateToken(accessToken, jwtSecret);
 		} catch (Exception e) {
-			return ResponseEntity.status(401).body("Invalid refresh token");
+			return ResponseEntity.status(401).body("Invalid token");
 		}        
 		
 		//관리자 권한 검증

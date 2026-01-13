@@ -67,12 +67,15 @@
                 {{ row.manualTitle }}
               </span>
             </div>
-
             <span class="caret" :class="{ open: expandedSeq === row.manualSeq }">▲</span>
           </button>
-
           <div v-if="expandedSeq === row.manualSeq" class="accordion-body">
             <div class="manual-content ql-editor" v-html="safeHtml(row.manualContent)"></div>
+            <div v-if="authLv > 1" class="btn-box">
+              <BaseButton type="button" height="2.125rem" @click="moveToMngManual(row.manualSeq)" class="action-btn">
+                수정
+              </BaseButton>
+            </div>
           </div>
         </div>
 
@@ -86,7 +89,6 @@
         <div class="pagination-left">
           총 <b>{{ totalCount.toLocaleString() }}</b>건
         </div>
-
         <div class="pagination-right">
           <BaseButton
             class="pagination-btn"
@@ -95,7 +97,6 @@
           >
             <<
           </BaseButton>
-
           <BaseButton
             class="pagination-btn"
             :disabled="page <= 1"
@@ -103,11 +104,9 @@
           >
             <
           </BaseButton>
-
           <span class="page-info">
             {{ page }} / {{ totalPages }}
           </span>
-
           <BaseButton
             class="pagination-btn"
             :disabled="page >= totalPages"
@@ -115,7 +114,6 @@
           >
             >
           </BaseButton>
-
           <BaseButton
             class="pagination-btn"
             :disabled="page >= totalPages"
@@ -283,10 +281,11 @@ const getManualList = async (resetPage = false) => {
   }
 };
 
-//매뉴얼 등록 화면 이동
-const moveToMngManual = () => {
+// 매뉴얼 등록 화면 이동
+const moveToMngManual = (manualSeq?: number) => {
   router.push({
     path: '/info/mngManual',
+    ...((manualSeq > 0) ? { query: { manualSeq } } : {})
   });
 };
 </script>

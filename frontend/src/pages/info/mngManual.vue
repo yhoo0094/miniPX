@@ -4,7 +4,6 @@
 
     <h2 class="title">{{ isModify ? '매뉴얼 수정' : '매뉴얼 등록' }}</h2>
 
-    <!-- 관리자 전용 (항상 입력 모드) -->
     <form class="manual-form" @submit.prevent="upsertManual">
       <div class="form-row">
         <label class="label">제목</label>
@@ -54,17 +53,6 @@
         <BaseButton type="submit" class="action-btn">
           저장
         </BaseButton>
-
-        <BaseButton
-          v-if="isModify"
-          variant="danger"
-          type="button"
-          class="action-btn"
-          @click="deleteManual"
-        >
-          삭제
-        </BaseButton>
-
         <BaseButton variant="secondary" type="button" class="action-btn" @click="goBack">
           목록
         </BaseButton>
@@ -178,7 +166,7 @@ const getManualDetail = async () => {
     uiStore.showLoading('매뉴얼 정보를 조회 중입니다...');
 
     const payload = { manualSeq: manualSeq.value };
-    const response = await api.post('/manual/getManualDetail', payload);
+    const response = await api.post('/manual/getManual', payload);
 
     if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
       const data = response.data?.OUT_DATA || null;
@@ -265,33 +253,8 @@ const upsertManual = async () => {
   }
 };
 
-// 삭제
-const deleteManual = async () => {
-  if (!manualSeq.value) return;
-  if (!confirm('삭제하시겠습니까?')) return;
-
-  try {
-    uiStore.showLoading('삭제 중입니다...');
-
-    const payload = { manualSeq: manualSeq.value };
-    const response = await api.post('/manual/deleteManual', payload);
-
-    if (response.data?.RESULT === Constant.RESULT_SUCCESS) {
-      toastRef.value?.showToast('삭제되었습니다.');
-      goBack();
-    } else {
-      toastRef.value?.showToast(response.data?.OUT_RESULT_MSG || '삭제에 실패했습니다.');
-    }
-  } catch (e) {
-    console.error(e);
-    toastRef.value?.showToast('삭제 중 오류가 발생했습니다.');
-  } finally {
-    uiStore.hideLoading();
-  }
-};
-
 const goBack = () => {
-  router.push('/manual');
+  router.push('/info/manual');
 };
 
 const handleImageInsert = async () => {

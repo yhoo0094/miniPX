@@ -4,8 +4,6 @@
 
 
 ----------AI 기능 구현----------
-* 매뉴얼 페이지 구현
-- 수정 기능 구현
 
 
 ----------나중에----------
@@ -17,29 +15,3 @@
 * composable만들기
 ex) useBasket.ts
 * 엣지 브라우저 테스트
-* refreshToken 제거
-
----------관리자 API 권한 검증---------
-// 사용자 정보 추출 (가능하면 accessToken으로 바꾸는 걸 권장)
-String token = JwtUtil.extractTokenFromCookies(request, "accessToken");
-if (token == null) {
-    return ResponseEntity.status(401).body("Missing access token");
-}
-
-Claims claims;
-try {
-    claims = JwtUtil.validateToken(token, jwtSecret);
-} catch (Exception e) {
-    return ResponseEntity.status(401).body("Invalid token");
-}
-
-// 관리자 권한 검증
-Integer roleSeq = claims.get("roleSeq", Integer.class);
-if (!Integer.valueOf(3).equals(roleSeq)) {
-    return ResponseEntity.status(403).body("권한이 없습니다.");
-}
----------관리자 API 권한 검증---------
-
-
-
-Default(나머지) → TG-frontend(80)

@@ -34,7 +34,12 @@
     <div class="item-list">
       <div class="item-card" v-for="(item, index) in itemList" :key="item.itemSeq" >
         <div class="image-box" @click="clickItemCard(item.itemSeq)">
-          <img v-if="item.imgFile" :src="item.imgFile" alt="상품 이미지" class="item-image" />
+          <LazyImg
+            v-if="item.img" 
+            :src="getItemImageUrl(item.img)"
+            alt="상품 이미지"
+            class="item-image"
+          />
           <span v-else class="no-image">이미지 없음</span>
         </div>
 
@@ -84,6 +89,7 @@ import BaseInput from '@/components/common/BaseInput.vue';
 import BaseButton from '@/components/common/BaseButton.vue';
 import BaseDropdown from '@/components/common/BaseDropdown.vue';
 import BaseToast from '@/components/common/BaseToast.vue';
+import LazyImg from '@/components/common/LazyImg.vue';
 import api from '@/plugins/axios';
 import Constant from '@/constants/constant';
 import { useUiStore } from '@/stores/uiStore';
@@ -168,7 +174,7 @@ const getItemList = async () => {
     // 실제 응답 형식에 맞게 추출
     itemList.value = (response.data?.OUT_DATA || []).map(item => ({
       ...item,
-      imgFile: getItemImageUrl(item.img),   // 이미지 경로 자동 매핑
+      //imgFile: getItemImageUrl(item.img),   // 이미지 경로 자동 매핑
       starRating: '★★★★★',                    // 서버에서 별점이 없으면 기본값 설정
     }));
   } catch (error) {

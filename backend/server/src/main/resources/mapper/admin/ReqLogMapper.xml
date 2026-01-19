@@ -29,6 +29,8 @@
 		 <if test='searchKeyword != null and searchKeyword != ""'>
 		   AND 	( T1.URI LIKE CONCAT('%', #{searchKeyword}, '%')
 		   	   OR T1.IP LIKE CONCAT('%', #{searchKeyword}, '%')
+		   	   OR T2.USER_NM LIKE CONCAT('%', #{searchKeyword}, '%')
+		   	   OR T2.USER_ID LIKE CONCAT('%', #{searchKeyword}, '%')
 		   	   	)
 		 </if>	 
 		 ORDER BY T1.REQ_DTTI DESC

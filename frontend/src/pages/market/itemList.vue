@@ -3,6 +3,10 @@
     <BaseToast ref="toastRef" />
     <!-- 검색 조건 -->
     <div class="filters">
+      <div class="infoTextBox">
+        <p class="infoText">* PX 상품 가격이 변동될 경우 주문 가격과 실제 구매 가격에 차이가 발생할 수 있습니다.</p>
+        <p>(일반적으로 2~3% 이내)</p>
+      </div>
       <BaseDropdown label="분류" v-model="selectedCategory" :options="categoryOptions" :showPlaceholder="true"
         placeholderLabel="전체" @change="handleCategoryChange" 
         />
@@ -254,6 +258,18 @@ const moveToItemDetail = () => {
   box-shadow: 0 0.125rem 0.375rem rgba(15, 23, 42, 0.05); /* 2px 6px */
 }
 
+.infoTextBox{
+  display: flex;
+  flex: 1 0 100%;
+  text-align: right;
+  color: red;  
+  font-size: 0.8rem;
+}
+
+.infoText{
+  flex: 1 ;
+}
+
 .search-group {
   display: flex;
   align-items: flex-end;
@@ -413,5 +429,10 @@ const moveToItemDetail = () => {
   .item-list {
     grid-template-columns: repeat(2, 1fr);
   }
+
+  .infoTextBox{
+    flex-direction: column;
+    font-size: 0.7rem;
+  }  
 }
 </style>

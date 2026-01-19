@@ -47,7 +47,7 @@
             v-model="searchKeyword"
             class="search-text"
             height="2.125rem"
-            placeholder="URI / IP 입력"
+            placeholder="요청자 / IP / URI"
             @keydown.enter.prevent="getReqLogList(true)"
           />
 
@@ -71,8 +71,8 @@
             <tr>
               <th style="width: 16%;">일시</th>
               <th style="width: 18%;">요청자</th>
-              <th style="width: 14%;">아이피</th>
-              <th style="width: 26%;">주소</th>
+              <th style="width: 14%;">IP</th>
+              <th style="width: 26%;">URI</th>
               <th style="width: 26%;">파라미터</th>
             </tr>
           </thead>

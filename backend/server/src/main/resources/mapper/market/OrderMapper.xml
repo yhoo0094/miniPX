@@ -73,12 +73,12 @@
 		SELECT IFNULL(SUM(TA1.PRICE * TA1.CNT), 0)
 		  from (SELECT T1.PRICE, T1.CNT
 				  FROM tb_order T1						/*테이블_주문*/
-				 WHERE T1.USER_SEQ = 1
+				 WHERE T1.USER_SEQ = #{userSeq}
 				   AND T1.ORDER_STATUS_CODE IN ('03')
 				 UNION ALL
 				SELECT T2.PRICE, T2.CNT
 				  FROM tb_new_order T2					/*테이블_신규상품주문*/
-				 WHERE T2.USER_SEQ = 1
+				 WHERE T2.USER_SEQ = #{userSeq}
 				   AND T2.ORDER_STATUS_CODE IN ('03')		   
 		   	   ) TA1		   
 	</select>		

@@ -58,9 +58,9 @@
 
 <a href="./산출물/완료보고서/miniPX_완료보고서.pdf">miniPX_완료보고서.pdf</a>
 
-<a href="./산출물/테이블 명세서/miniPX_테이블 명세서.xlsx">miniPX_테이블명세서.xlsx</a>
+<a href="./산출물/테이블 명세서/miniPX_테이블명세서.xlsx">miniPX_테이블명세서.xlsx</a>
 
-<a href="./산출물/요구사항 명세서/miniPX_요구사항_명세서.xlsx">miniPX_요구사항명세서.xlsx</a>
+<a href="./산출물/요구사항명세서/miniPX_요구사항명세서.xlsx">miniPX_요구사항명세서.xlsx</a>
 
 <a href="./산출물/화면정의서/miniPX_화면정의서.pptx">miniPX_화면정의서.pptx</a>
 

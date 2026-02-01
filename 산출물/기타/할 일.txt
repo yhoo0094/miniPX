@@ -1,0 +1,17 @@
+
+----------MPX 기능 구현----------
+* log4jdbc 넣어서 SQL로그 찍기
+
+
+----------AI 기능 구현----------
+
+
+----------나중에----------
+* 동시 로그인 관리 로직 추가
+* '/auth/check'에 권한 없을 경우 사유 나오도록 수정
+* exception 처리
+* 백엔드 userId, userSeq => login 붙이기
+* 공통 import -> default layout으로 옮기기
+* composable만들기
+ex) useBasket.ts
+* 엣지 브라우저 테스트

@@ -12,13 +12,13 @@
 
 ## 나. 개발 및 배포 환경
 
-<img src="./산출물/images/README/image-20260202073121061.png" alt="image-20260202073121061" style="zoom:80%;" />
+<img src="./산출물/images/README/image-20260202073121061.png" alt="image-20260202073121061" style="zoom: 80%;" />
 
 
 
 ## 다. 메뉴 구조도
 
-<img src="./산출물/images/README/image-20260202073340030.png" alt="image-20260202073340030" style="zoom:80%;" />
+<img src="./산출물/images/README/image-20260202073340030.png" alt="image-20260202073340030"  />
 
 **1.** **마켓 메뉴**
 
@@ -42,7 +42,7 @@
 
 ## 라. 서비스 구조도
 
-<img src="./산출물/images/README/image-20260202073414455.png" alt="image-20260202073414455" style="zoom:80%;" />
+<img src="./산출물/images/README/image-20260202073414455.png" alt="image-20260202073414455"  />
 
 * 본 서비스는 AWS EC2 환경에서 구동되는 단일 서버 기반의 웹 애플리케이션으로, 프런트엔드, 백엔드, 인메모리 DB 및 벡터 DB로 구성하였다.
 

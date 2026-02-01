@@ -12,7 +12,7 @@
 
 ## 나. 개발 및 배포 환경
 
-<img src="./산출물/images/README/image-20260202073121061.png" alt="image-20260202073121061" style="zoom: 80%;" />
+<img src="./산출물/images/README/image-20260202073121061.png" alt="image-20260202073121061" style="zoom: 67%;" />
 
 
 

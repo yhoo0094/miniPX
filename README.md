@@ -62,6 +62,6 @@
 
 <a href="./산출물/요구사항명세서/miniPX_요구사항명세서.xlsx">miniPX_요구사항명세서.xlsx</a>
 
-<a href="./산출물/화면정의서/miniPX_화면정의서.pptx">miniPX_화면정의서.pptx</a>
+<a href="./산출물/화면정의서/miniPX_화면정의서.pdf">miniPX_화면정의서.pdf</a>
 
 <a href="./산출물/사내튜터/AI상담사_구축_사례_공유.pdf">AI상담사_구축_사례_공유.pdf</a>

@@ -1,0 +1,161 @@
+# ---------------------------------------------------------------------------
+# DB 접속 정보
+# ---------------------------------------------------------------------------
+source:
+  host: <SOURCE_DB_HOST>
+  port: 3306
+  user: <SOURCE_DB_USER>
+  password: <SOURCE_DB_PASSWORD>
+  database: <SOURCE_DB_NAME>
+
+# SSH tunnel 접속 정보(Optional)
+source_ssh_tunnel:
+  ssh_host: <SOURCE_BASTION_HOST>
+  ssh_port: 22
+  ssh_user: <SOURCE_SSH_USER>
+  ssh_pkey_path: <PATH_TO_SOURCE_SSH_KEY>
+  remote_host: <SOURCE_DB_HOST>
+  remote_port: 3306
+  local_port: 3308  # 예시 로컬 포트
+
+destination:
+  host: <DEST_DB_HOST>
+  port: 3306
+  user: <DEST_DB_USER>
+  password: <DEST_DB_PASSWORD>
+  # database: <DEST_DB_NAME>
+  database: <DEST_DB_NAME>
+
+# destination_ssh_tunnel:
+#   ssh_host: <DEST_BASTION_HOST>
+#   ssh_port: 22
+#   ssh_user: <DEST_SSH_USER>
+#   ssh_pkey_path: <PATH_TO_DEST_SSH_KEY>
+#   remote_host: <DEST_DB_HOST>
+#   remote_port: 3306
+#   local_port: 3309
+
+
+# ---------------------------------------------------------------------------
+# 마이그레이션 작업 정의
+#
+# - 하나 이상의 마이그레이션 작업을 순차적으로 실행합니다.
+# - 각 항목에 대해 extract_sql을 실행하고 destination_table로 저장합니다.
+# ---------------------------------------------------------------------------
+migrations:
+  - name: tb_user
+    source_table: tb_user  
+    destination_table: tb_user
+    extract_sql: |
+      SELECT * FROM tb_user
+    #destination_columns: [USER_SEQ]
+
+  - name: tb_code_group
+    source_table: tb_code_group
+    destination_table: tb_code_group
+    extract_sql: |
+      SELECT * FROM tb_code_group
+
+  - name: tb_code_detail
+    source_table: tb_code_detail
+    destination_table: tb_code_detail
+    extract_sql: |
+      SELECT * FROM tb_code_detail
+
+  - name: tb_log_login
+    source_table: tb_log_login
+    destination_table: tb_log_login
+    extract_sql: |
+      SELECT * FROM tb_log_login
+
+  - name: tb_mnu
+    source_table: tb_mnu
+    destination_table: tb_mnu
+    extract_sql: |
+      SELECT * FROM tb_mnu
+
+  - name: tb_role
+    source_table: tb_role
+    destination_table: tb_role
+    extract_sql: |
+      SELECT * FROM tb_role
+
+  - name: tb_user_role_map
+    source_table: tb_user_role_map
+    destination_table: tb_user_role_map
+    extract_sql: |
+      SELECT * FROM tb_user_role_map
+
+  - name: tb_auth
+    source_table: tb_auth
+    destination_table: tb_auth
+    extract_sql: |
+      SELECT * FROM tb_auth
+
+  - name: tb_token
+    source_table: tb_token
+    destination_table: tb_token
+    extract_sql: |
+      SELECT * FROM tb_token
+
+  - name: tb_item
+    source_table: tb_item
+    destination_table: tb_item
+    extract_sql: |
+      SELECT * FROM tb_item
+
+  - name: tb_basket
+    source_table: tb_basket
+    destination_table: tb_basket
+    extract_sql: |
+      SELECT * FROM tb_basket
+
+  - name: tb_order
+    source_table: tb_order
+    destination_table: tb_order
+    extract_sql: |
+      SELECT * FROM tb_order
+
+  - name: tb_new_order
+    source_table: tb_new_order
+    destination_table: tb_new_order
+    extract_sql: |
+      SELECT * FROM tb_new_order
+
+  - name: tb_ai_session
+    source_table: tb_ai_session
+    destination_table: tb_ai_session
+    extract_sql: |
+      SELECT * FROM tb_ai_session
+
+  - name: tb_ai_turn
+    source_table: tb_ai_turn
+    destination_table: tb_ai_turn
+    extract_sql: |
+      SELECT * FROM tb_ai_turn
+
+  - name: tb_ai_tool_call
+    source_table: tb_ai_tool_call
+    destination_table: tb_ai_tool_call
+    extract_sql: |
+      SELECT * FROM tb_ai_tool_call
+
+  - name: tb_ai_tool_result
+    source_table: tb_ai_tool_result
+    destination_table: tb_ai_tool_result
+    extract_sql: |
+      SELECT * FROM tb_ai_tool_result
+
+  - name: tb_ai_event
+    source_table: tb_ai_event
+    destination_table: tb_ai_event
+    extract_sql: |
+      SELECT * FROM tb_ai_event
+
+  - name: tb_manual
+    source_table: tb_manual
+    destination_table: tb_manual
+    extract_sql: |
+      SELECT * FROM tb_manual
+
+batch_size: 1000

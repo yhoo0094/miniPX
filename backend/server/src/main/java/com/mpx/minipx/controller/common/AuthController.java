@@ -54,39 +54,39 @@ public class AuthController {
     public Map<String, Object> checkAuth(@RequestBody Map<String, Object> inData, HttpServletRequest request, HttpServletResponse response) {
     	Map<String, Object> result = new HashMap<>();
 
-    	String token = JwtUtil.extractTokenFromCookies(request, "accessToken");    	
+    		String token = JwtUtil.extractTokenFromCookies(request, "accessToken");    	
     	
-    	// 쿠키에 token이 없을 때
-        if (token == null) {		
-        	result.put("authenticated", false);
-        	return result;  
-        }
-        
-        //토큰 유효성 체크
-        Claims claims = JwtUtil.validateToken(token, jwtSecret);
-        if (claims == null) {
-        	result.put("authenticated", false);
-        	return result;  
-        }
+		// 쿠키에 token이 없을 때
+		if (token == null) {
+			result.put("authenticated", false);
+			return result;
+		}
 
-        //권한 체크
-        String path = (String) inData.get("path");
-        if("/main".equals(path)) {	//main 접속은 권한 체크 X
-        	result.put("authGrade", 1);
-        } else {
-        	String userId = claims.getSubject();
-        	Optional<Integer> authGrade = redisPermissionRepository.getPermission(userId, path);
-        	if (!authGrade.isPresent()) {	//해당 경로에 대한 권한 정보가 없음
-        		result.put("authenticated", false);
-        		return result; 
-        	} else {
-        		result.put("authGrade", authGrade.get());
-        	}
-        }
-        
-        result.put("authenticated", true);
-        return result;        
-    }
+		// 토큰 유효성 체크
+		Claims claims = JwtUtil.validateToken(token, jwtSecret);
+		if (claims == null) {
+			result.put("authenticated", false);
+			return result;
+		}
+
+		// 권한 체크
+		String path = (String) inData.get("path");
+		if ("/main".equals(path)) { // main 접속은 권한 체크 X
+			result.put("authGrade", 1);
+		} else {
+			String userId = claims.getSubject();
+			Optional<Integer> authGrade = redisPermissionRepository.getPermission(userId, path);
+			if (!authGrade.isPresent()) { // 해당 경로에 대한 권한 정보가 없음
+				result.put("authenticated", false);
+				return result;
+			} else {
+				result.put("authGrade", authGrade.get());
+			}
+		}
+
+		result.put("authenticated", true);
+		return result;
+	}
     
     /**
      * @메소드명: reissue

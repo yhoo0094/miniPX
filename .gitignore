@@ -1,4 +1,4 @@
 *.ppk
 *.pem
 ignore/*
-/tools/migration/config.yaml
+tools/migration/config.yaml

@@ -108,12 +108,12 @@ public class UserService {
         }
         
         //오입력 횟수 초과
-        if (5 <= user.getPwErrCnt()) {
-        	saveLoginLog(user, userId, ip, "05");
-        	result.put(Constant.RESULT, Constant.RESULT_FAILURE);
-        	result.put(Constant.OUT_RESULT_MSG, "비밀번호 오입력 횟수를 초과하였습니다. 관리자에게 문의하세요.");
-        	return result;
-        }   
+//        if (5 <= user.getPwErrCnt()) {
+//        	saveLoginLog(user, userId, ip, "05");
+//        	result.put(Constant.RESULT, Constant.RESULT_FAILURE);
+//        	result.put(Constant.OUT_RESULT_MSG, "비밀번호 오입력 횟수를 초과하였습니다. 관리자에게 문의하세요.");
+//        	return result;
+//        }   
         
         // BCrypt로 비밀번호 비교
         if (!passwordEncoder.matches(userPw, user.getUserPw())) {

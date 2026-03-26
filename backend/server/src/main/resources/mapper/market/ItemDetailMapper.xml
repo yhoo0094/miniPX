@@ -37,13 +37,13 @@
 	
 	<!-- 주문 등록 -->
 	<insert id="insertOrder" parameterType="map">
-		INSERT INTO tb_order				/*테이블_주문*/ 
+		INSERT INTO tb_order				   /*테이블_주문*/ 
 		     ( USER_SEQ                     /*사용자일련번호*/
 			 , ITEM_SEQ                     /*상품일련번호*/
 			 , PRICE                        /*가격*/
 			 , CNT                          /*개수*/
 			 , ORDER_STATUS_CODE            /*주문상태코드*/
-			 , ORDER_DTTI					/*주문일시*/
+			 , ORDER_DTTI				   /*주문일시*/
 			 , FST_REG_SEQ                  /*최초등록자일련번호*/
 			 , FST_REG_DTTI                 /*최초등록일시*/
 			 , LST_UPD_SEQ                  /*최종수정자일련번호*/
@@ -53,13 +53,13 @@
 		 	 ( #{userSeq}                   /*사용자일련번호*/                      
 			 , #{itemSeq}                   /*상품일련번호*/                       
 			 , #{price}                     /*가격*/                           
-			 , #{cnt}        				/*개수*/                           
+			 , #{unit} * #{cnt}    		   /*개수*/                          
 			 , '01'                         /*주문상태코드(01:구매요청, 02:배송중, 03:미결제, 04:송금완료, 11:구매완료, 12:품절, 91:취소)*/    
-			 , NOW()						/*주문일시*/
+			 , NOW()						   /*주문일시*/
 			 , #{userSeq}                   /*최초등록자일련번호*/                    
-			 , NOW()                    	/*최초등록일시*/                       
+			 , NOW()                    	   /*최초등록일시*/                       
 			 , #{userSeq}                   /*최종수정자일련번호*/                    
-			 , NOW()                    	/*최종수정일시*/                       
+			 , NOW()                    	   /*최종수정일시*/                       
 			 )	 
 	</insert>	
 	
@@ -77,7 +77,7 @@
 		VALUES 
 			 ( #{userSeq}                  /*사용자일련번호*/            
 			 , #{itemSeq}                  /*상품일련번호*/             
-		     , #{unit} * #{cnt}    		   /*개수*/                 
+		     , #{unit} * #{cnt}    		  /*개수*/                 
 			 , #{userSeq}                  /*최초등록자일련번호*/                    
 			 , NOW()                       /*최초등록일시*/                       
 			 , #{userSeq}                  /*최종수정자일련번호*/                    
